@@ -19,6 +19,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Dynamic Year
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -127,6 +130,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
           >
             <LogOut size={18} /> {t('logout')}
           </button>
+          
+          {/* Copyright Footer */}
+          <div className="mt-4 text-center">
+            <p className="text-[10px] text-slate-400 font-medium">
+              &copy; {currentYear} Ziezan POS
+            </p>
+          </div>
         </div>
       </aside>
 

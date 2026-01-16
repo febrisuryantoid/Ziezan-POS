@@ -1,5 +1,4 @@
 import { supabase } from './supabaseClient';
-import { Transaction, Member, Console } from '../types';
 import * as Storage from './storage';
 
 class SyncService {
@@ -11,17 +10,44 @@ class SyncService {
     window.dispatchEvent(new Event('sync-start'));
 
     try {
-      await this.syncMembers();
+      // Parallel sync for independent tables
+      await Promise.all([
+        this.syncConsoles(),
+        this.syncMembers()
+      ]);
+      // Transactions usually depend on members/consoles being present (foreign keys), 
+      // but upsert handles basic consistency. We sync transactions last to be safe.
       await this.syncTransactions();
-      // Consoles usually don't change much, but can be synced too
-      // await this.syncConsoles();
       
-      console.log('Sync completed successfully');
+      console.log('Cloud Sync completed successfully');
     } catch (error) {
-      console.error('Sync failed:', error);
+      console.error('Cloud Sync failed:', error);
     } finally {
       this.isSyncing = false;
       window.dispatchEvent(new Event('sync-end'));
+    }
+  }
+
+  private async syncConsoles() {
+    const consoles = Storage.getConsoles();
+    // We sync all consoles to ensure status (AVAILABLE/IN_USE) is up to date across devices
+    // Optimization: In a real app, only sync those with `synced: false` or `updated_at` check.
+    
+    if (consoles.length === 0) return;
+
+    const payload = consoles.map(c => ({
+        id: c.id,
+        name: c.name,
+        status: c.status,
+        total_hours_used: c.totalHoursUsed,
+        current_session_id: c.currentSessionId || null,
+        updated_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase.from('consoles').upsert(payload);
+
+    if (error) {
+        console.error('Error syncing consoles:', error);
     }
   }
 
@@ -41,8 +67,12 @@ class SyncService {
       membership_expiry_date: m.membershipExpiryDate,
       joined_at: m.joinDate,
       total_hours_played: m.totalPlayTime,
+      total_amount_paid: m.totalAmountPaid,
+      hours_progress_bonus: m.hoursProgressToNextBonus,
       bonus_balance: m.freeHoursBalance,
       bonus_total_used: m.totalBonusHoursUsed,
+      status: m.status,
+      notes: m.notes,
       updated_at: new Date().toISOString()
     }));
 
@@ -67,13 +97,18 @@ class SyncService {
 
     const payload = unsyncedTx.map(t => ({
       id: t.id,
-      member_id: t.memberId,
       console_id: t.consoleId,
-      play_hours_total: t.durationHours,
-      total_price: t.cost,
+      member_id: t.memberId,
+      console_name: t.consoleName,
+      member_name: t.memberName,
+      start_time: t.startTime,
+      end_time: t.endTime || null,
+      duration_hours: t.durationHours,
+      cost: t.cost,
+      discount_applied: t.discountApplied,
       payment_method: t.paymentMethod,
-      started_at: t.startTime,
-      ended_at: t.endTime || null,
+      status: t.status,
+      operator_name: t.operatorName,
       updated_at: new Date().toISOString()
     }));
 

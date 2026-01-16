@@ -12,6 +12,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState(''); 
   const [error, setError] = useState('');
   const { t, language, setLanguage } = useLanguage();
+  
+  // Dynamic Year
+  const currentYear = new Date().getFullYear();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,9 +82,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-400">{t('system_access')}</p>
-          <div className="flex justify-center gap-4 mt-2">
+          <div className="flex justify-center gap-4 mt-2 mb-6">
             <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300 font-mono">ziezan</span>
           </div>
+
+          <p className="text-[10px] text-slate-300 font-medium">
+            &copy; {currentYear} Ziezan POS
+          </p>
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ Aplikasi ini dilengkapi dengan fitur-fitur canggih untuk memudahkan operasional 
 
 ## 🛠️ Teknologi yang Digunakan
 
-*   **Frontend:** React 19, TypeScript, Tailwind CSS
+*   **Frontend:** React 18, TypeScript, Tailwind CSS
 *   **Backend / Database:** Supabase (PostgreSQL)
 *   **Hardware Interface:** Web Bluetooth API
 *   **AI:** Google Gemini API
@@ -74,9 +74,8 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi ini di lingkungan lokal
 ## 📖 Panduan Penggunaan
 
 ### 1. Masuk Sistem (Login)
-*   Gunakan akun default untuk admin:
-    *   **Username:** `ziezan`
-    *   **Password:** `myp5`
+*   Untuk alasan keamanan dan privasi, kredensial login tidak ditampilkan secara publik.
+*   **Silakan hubungi pengembang (Febri Suryanto) melalui WhatsApp atau Email untuk mendapatkan akses login.**
 
 ### 2. Menambah Unit Console
 *   Masuk ke menu **Unit**.
@@ -113,4 +112,4 @@ Aplikasi ini dikembangkan dan dipelihara oleh:
 *   **WhatsApp:** [+62 823-1290-7731](https://wa.me/6282312907731)
 
 ---
-*© 2024 Ziezan Station POS System. All Rights Reserved.*
+*© 2026 Ziezan Station POS System. All Rights Reserved.*
