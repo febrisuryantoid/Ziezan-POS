@@ -73,7 +73,7 @@ const dictionary = {
     daily_recap: "Rekap Harian",
     all: "Semua",
     system_settings: "Pengaturan Sistem",
-    config_subtitle: "Konfigurasi harga dan aturan loyalty.",
+    config_subtitle: "Konfigurasi harga, perangkat keras, dan loyalty.",
     rate_and_bonus: "Tarif & Membership",
     hourly_rate: "Harga Rental Per Jam",
     rate_desc: "Harga dasar untuk perhitungan biaya rental.",
@@ -97,7 +97,16 @@ const dictionary = {
     price_plan: "Harga Membership",
     active_status: "Status Aktif",
     general_settings: "Umum",
-    membership_settings: "Konfigurasi Membership"
+    membership_settings: "Konfigurasi Membership",
+    bluetooth_settings: "Koneksi TV & Perangkat",
+    bt_connected: "Terhubung ke TV Receiver",
+    bt_disconnected: "Tidak Terhubung",
+    connect_bt: "Hubungkan Bluetooth",
+    disconnect_bt: "Putuskan Koneksi",
+    bt_desc: "Hubungkan ke perangkat keras untuk mengontrol daya TV otomatis.",
+    developer_info: "Tentang Pengembang",
+    developed_by: "Dikembangkan oleh",
+    contact_dev: "Hubungi Developer"
   },
   en: {
     dashboard: "Dashboard",
@@ -192,7 +201,16 @@ const dictionary = {
     price_plan: "Membership Price",
     active_status: "Active Status",
     general_settings: "General",
-    membership_settings: "Membership Config"
+    membership_settings: "Membership Config",
+    bluetooth_settings: "TV & Device Connection",
+    bt_connected: "Connected to TV Receiver",
+    bt_disconnected: "Not Connected",
+    connect_bt: "Connect Bluetooth",
+    disconnect_bt: "Disconnect",
+    bt_desc: "Connect to hardware to control TV power automatically.",
+    developer_info: "Developer Info",
+    developed_by: "Developed by",
+    contact_dev: "Contact Developer"
   }
 };
 
