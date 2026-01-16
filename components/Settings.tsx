@@ -45,9 +45,9 @@ const Settings: React.FC = () => {
 
   const getIcon = (id: string) => {
     switch(id) {
-      case 'VIP': return <Crown size={24} className="text-amber-500" />;
-      case 'PLUS': return <Star size={24} className="text-violet-500" />;
-      default: return <Shield size={24} className="text-slate-500" />;
+      case 'VIP': return <Crown size={24} className="text-brand-500" />;
+      case 'PLUS': return <Star size={24} className="text-brand-400" />;
+      default: return <Shield size={24} className="text-slate-400" />;
     }
   };
 
@@ -134,7 +134,7 @@ const Settings: React.FC = () => {
              </h3>
              
              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-brand-500/30">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-700 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-brand-500/30">
                    FS
                 </div>
                 <div>
@@ -177,11 +177,11 @@ const Settings: React.FC = () => {
            </h3>
            <div className="space-y-6">
              {localMemberships.map(m => (
-              <div key={m.id} className={`bg-white dark:bg-slate-900 rounded-3xl border shadow-sm overflow-hidden flex flex-col ${m.id === 'VIP' ? 'border-amber-200 dark:border-amber-900/30 ring-1 ring-amber-100 dark:ring-amber-900/20' : 'border-slate-200 dark:border-slate-800'}`}>
+              <div key={m.id} className={`bg-white dark:bg-slate-900 rounded-3xl border shadow-sm overflow-hidden flex flex-col ${m.id === 'VIP' ? 'border-brand-200 dark:border-brand-900/30 ring-1 ring-brand-100 dark:ring-brand-900/20' : 'border-slate-200 dark:border-slate-800'}`}>
                   {/* Card Header */}
                   <div className={`p-4 border-b flex justify-between items-center ${
-                     m.id === 'VIP' ? 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30' : 
-                     m.id === 'PLUS' ? 'bg-violet-50/50 dark:bg-violet-900/10 border-violet-100 dark:border-violet-900/30' : 
+                     m.id === 'VIP' ? 'bg-brand-50/50 dark:bg-brand-900/10 border-brand-100 dark:border-brand-900/30' : 
+                     m.id === 'PLUS' ? 'bg-brand-50/20 dark:bg-brand-900/5 border-brand-100 dark:border-brand-900/20' : 
                      'bg-slate-50/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800'
                   }`}>
                      <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ const Settings: React.FC = () => {
             className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-lg ${
               saved 
               ? 'bg-green-600 text-white shadow-green-500/20' 
-              : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/20 hover:-translate-y-1'
+              : 'bg-brand-400 hover:bg-brand-500 text-slate-900 shadow-brand-500/20 hover:-translate-y-1'
             }`}
           >
             {saved ? t('saved') : <><Save size={18} /> {t('save_changes')}</>}

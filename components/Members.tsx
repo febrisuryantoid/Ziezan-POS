@@ -115,7 +115,7 @@ const Members: React.FC = () => {
               placeholder={t('search_placeholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm"
+              className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all shadow-sm text-slate-900 dark:text-white"
             />
           </div>
 
@@ -123,7 +123,7 @@ const Members: React.FC = () => {
           <select 
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value as SortOption)}
-            className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-400 shadow-sm text-slate-900 dark:text-white"
           >
             <option value="NAME_ASC">{t('sort_name_asc')}</option>
             <option value="NAME_DESC">{t('sort_name_desc')}</option>
@@ -134,7 +134,7 @@ const Members: React.FC = () => {
           {/* Add Button */}
           <button 
             onClick={() => setIsAdding(true)}
-            className="px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg transition-all bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/20"
+            className="px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg transition-all bg-brand-400 text-slate-900 hover:bg-brand-500 shadow-brand-400/20"
           >
             <UserPlus size={18} /> {t('add_member')}
           </button>
@@ -145,7 +145,7 @@ const Members: React.FC = () => {
       <div className="space-y-4">
         {/* Widget Header */}
         <div className="flex items-center gap-3 px-1">
-          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400 shadow-sm">
+          <div className="p-2 bg-brand-400/20 rounded-lg text-brand-600 dark:text-brand-400 shadow-sm">
             <Users size={20} className="md:w-6 md:h-6" />
           </div>
           <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
@@ -169,7 +169,10 @@ const Members: React.FC = () => {
 
                 <div className="p-6 pb-4 flex justify-between items-start">
                    <div className="flex gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-100 to-blue-50 dark:from-brand-900/40 dark:to-slate-800 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg shadow-inner">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold shadow-inner ${
+                          member.membershipId === 'VIP' ? 'bg-gradient-to-br from-brand-300 to-brand-500 text-slate-900' : 
+                          'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}>
                          {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -202,7 +205,7 @@ const Members: React.FC = () => {
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-950/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">{t('bonus_balance')}</p>
-                       <p className="text-lg font-bold text-violet-600 dark:text-violet-400 flex items-center gap-1">
+                       <p className="text-lg font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1">
                           <Gift size={16}/> {member.freeHoursBalance}h
                        </p>
                     </div>
@@ -215,7 +218,7 @@ const Members: React.FC = () => {
                           <span className="font-bold">{member.hoursProgressToNextBonus} / {membership.bonusThreshold} Jam</span>
                        </div>
                        <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${membership.id === 'VIP' ? 'bg-amber-500' : 'bg-brand-500'}`} style={{ width: `${Math.min((member.hoursProgressToNextBonus / membership.bonusThreshold) * 100, 100)}%` }} />
+                          <div className={`h-full rounded-full transition-all duration-500 ${membership.id === 'VIP' ? 'bg-brand-400' : 'bg-slate-400'}`} style={{ width: `${Math.min((member.hoursProgressToNextBonus / membership.bonusThreshold) * 100, 100)}%` }} />
                        </div>
                        
                        {/* Effective Rate Display */}
@@ -233,7 +236,7 @@ const Members: React.FC = () => {
            )})}
            {filteredMembers.length === 0 && (
              <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-20 text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800">
-                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-800/50 rounded-full mb-3 md:mb-4">
+                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-700/50 rounded-full mb-3 md:mb-4">
                    <Users className="w-8 h-8 md:w-12 md:h-12 text-slate-400/80" />
                 </div>
                 <p className="font-medium text-sm md:text-base">{t('no_data_members')}</p>
@@ -246,7 +249,7 @@ const Members: React.FC = () => {
       {/* UPGRADE MODAL */}
       {upgradingMember && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-             <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm shadow-2xl p-6">
+             <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-6">
                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Upgrade Membership</h3>
                    <button onClick={() => setUpgradingMember(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"><X size={20}/></button>
@@ -264,18 +267,18 @@ const Members: React.FC = () => {
                                 type="button"
                                 key={c.id}
                                 onClick={() => setSelectedUpgradeTier(c.id)}
-                                className={`p-3 rounded-xl border text-left transition-all ${selectedUpgradeTier === c.id ? `bg-brand-50 border-brand-500 ring-1 ring-brand-500` : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
+                                className={`p-3 rounded-xl border text-left transition-all ${selectedUpgradeTier === c.id ? `bg-brand-50 dark:bg-brand-900/10 border-brand-400 ring-1 ring-brand-400` : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
                             >
                                 <div className="flex justify-between items-center">
-                                    <span className={`font-bold ${selectedUpgradeTier === c.id ? 'text-brand-700' : 'text-slate-700 dark:text-slate-200'}`}>{c.name}</span>
-                                    <span className="text-xs font-bold bg-white dark:bg-slate-800 px-2 py-1 rounded border">Rp {c.price.toLocaleString()}</span>
+                                    <span className={`font-bold ${selectedUpgradeTier === c.id ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-200'}`}>{c.name}</span>
+                                    <span className="text-xs font-bold bg-white dark:bg-slate-800 px-2 py-1 rounded border dark:border-slate-600">Rp {c.price.toLocaleString()}</span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1">Bonus {c.bonusThreshold} jam = {c.bonusReward} jam</p>
                             </button>
                         ))}
                      </div>
                    </div>
-                   <button type="submit" className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md mt-2">
+                   <button type="submit" className="w-full py-3 bg-brand-400 text-slate-900 rounded-xl font-bold hover:bg-brand-500 shadow-md mt-2">
                        Konfirmasi & Perbarui
                    </button>
                 </form>
@@ -286,7 +289,7 @@ const Members: React.FC = () => {
       {/* CREATE MODAL */}
       {isAdding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl p-6 md:p-8">
+           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center mb-6">
                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('add_member')}</h3>
                  <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"><X size={20}/></button>
@@ -295,7 +298,7 @@ const Members: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('full_name')} <span className="text-red-500">*</span></label>
                   <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} 
-                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all" 
+                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:outline-none transition-all dark:text-white" 
                     placeholder="Nama Member"
                   />
                 </div>
@@ -304,7 +307,7 @@ const Members: React.FC = () => {
                   <select 
                      value={formData.membershipId}
                      onChange={e => setFormData({...formData, membershipId: e.target.value as MembershipTierId})}
-                     className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+                     className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:outline-none transition-all dark:text-white"
                   >
                      {membershipConfigs.filter(c => c.isActive).map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
@@ -314,25 +317,25 @@ const Members: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('phone')}</label>
                   <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} 
-                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all" 
+                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:outline-none transition-all dark:text-white" 
                     placeholder="08..."
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('address')}</label>
                   <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} 
-                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all" 
+                    className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:outline-none transition-all dark:text-white" 
                     placeholder="Alamat domisili"
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('join_date')}</label>
                    <input type="date" value={formData.joinDate} onChange={e => setFormData({...formData, joinDate: e.target.value})}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:outline-none transition-all dark:text-white"
                    />
                 </div>
                 <div className="md:col-span-2 pt-4 flex justify-end gap-3">
-                   <button type="submit" className="px-8 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md transition-transform hover:-translate-y-0.5 w-full md:w-auto">{t('save')}</button>
+                   <button type="submit" className="px-8 py-3 bg-brand-400 text-slate-900 rounded-xl font-bold hover:bg-brand-500 shadow-md transition-transform hover:-translate-y-0.5 w-full md:w-auto">{t('save')}</button>
                 </div>
               </form>
            </div>
@@ -342,7 +345,7 @@ const Members: React.FC = () => {
       {/* EDIT MODAL */}
       {editingMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl p-6 md:p-8">
+           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center mb-6">
                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('edit_member')}</h3>
                  <button onClick={() => setEditingMember(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"><X size={20}/></button>
@@ -350,7 +353,7 @@ const Members: React.FC = () => {
               <form onSubmit={handleUpdate} className="space-y-4">
                  <div>
                     <label className="text-xs font-bold text-slate-500 uppercase">{t('full_name')}</label>
-                    <input required className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
+                    <input required className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 dark:text-white" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
                  </div>
                  <div className="grid grid-cols-2 gap-4">
                      <div>
@@ -360,24 +363,24 @@ const Members: React.FC = () => {
                      </div>
                     <div>
                         <label className="text-xs font-bold text-slate-500 uppercase">{t('phone')}</label>
-                        <input className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700" value={editingMember.phone || ''} onChange={e => setEditingMember({...editingMember, phone: e.target.value})} />
+                        <input className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 dark:text-white" value={editingMember.phone || ''} onChange={e => setEditingMember({...editingMember, phone: e.target.value})} />
                     </div>
                  </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="text-xs font-bold text-slate-500 uppercase">{t('join_date')}</label>
-                        <input type="datetime-local" className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 text-sm" 
+                        <input type="datetime-local" className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 text-sm dark:text-white" 
                           value={editingMember.joinDate.slice(0, 16)} 
                           onChange={e => setEditingMember({...editingMember, joinDate: new Date(e.target.value).toISOString()})} />
                     </div>
                      <div>
                         <label className="text-xs font-bold text-slate-500 uppercase">{t('address')}</label>
-                        <input className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700" value={editingMember.address || ''} onChange={e => setEditingMember({...editingMember, address: e.target.value})} />
+                        <input className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 dark:text-white" value={editingMember.address || ''} onChange={e => setEditingMember({...editingMember, address: e.target.value})} />
                      </div>
                  </div>
                  
                  <div className="flex justify-end pt-4">
-                    <button type="submit" className="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-brand-700 w-full md:w-auto justify-center"><Save size={18}/> {t('save_changes')}</button>
+                    <button type="submit" className="px-6 py-3 bg-brand-400 text-slate-900 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-500 w-full md:w-auto justify-center"><Save size={18}/> {t('save_changes')}</button>
                  </div>
               </form>
            </div>

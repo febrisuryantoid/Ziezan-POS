@@ -135,7 +135,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               placeholder={t('search_placeholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm"
+              className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all shadow-sm text-slate-900 dark:text-white"
             />
           </div>
 
@@ -143,7 +143,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-400 shadow-sm text-slate-900 dark:text-white"
           >
             <option value="ALL">{t('filter_all')}</option>
             <option value="AVAILABLE">{t('filter_avail')}</option>
@@ -153,7 +153,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           {/* Add Button */}
           <button 
             onClick={() => setIsAdding(true)}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/20"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-brand-400 text-slate-900 hover:bg-brand-500 shadow-brand-400/20"
           >
             <Plus size={18} /> {t('add_unit')}
           </button>
@@ -164,7 +164,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       <div className="space-y-4">
         {/* Widget Header */}
         <div className="flex items-center gap-3 px-1">
-          <div className="p-2 bg-brand-100 dark:bg-brand-900/30 rounded-lg text-brand-600 dark:text-brand-400 shadow-sm">
+          <div className="p-2 bg-brand-400/20 rounded-lg text-brand-600 dark:text-brand-400 shadow-sm">
             <Gamepad2 size={20} className="md:w-6 md:h-6" />
           </div>
           <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
@@ -183,22 +183,25 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             return (
               <div key={console.id} className={`group relative rounded-2xl border transition-all duration-300 overflow-hidden ${
                 isActive 
-                  ? 'bg-white dark:bg-slate-900 border-brand-500 dark:border-brand-500 ring-1 ring-brand-500 shadow-lg shadow-brand-500/10' 
+                  ? 'bg-white dark:bg-slate-800 border-brand-400 dark:border-brand-500 ring-1 ring-brand-400 shadow-lg shadow-brand-500/10' 
                   : isMaintenance 
                     ? 'bg-orange-50 dark:bg-slate-900 border-orange-200 dark:border-orange-900/50' 
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-md hover:border-brand-200 dark:hover:border-slate-600'
               }`}>
+                {/* Active Indicator Strip */}
+                {isActive && <div className="absolute top-0 left-0 w-full h-1 bg-brand-400"></div>}
+
                 {/* Card Header */}
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800/50">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700/50">
                    <div className="flex justify-between items-start">
                      <div>
                        <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
                          {console.name}
                        </h3>
                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold mt-2 uppercase tracking-wide ${
-                         isActive ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400' :
+                         isActive ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300' :
                          isMaintenance ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400' :
-                         'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                         'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                        }`}>
                          <span className={`w-2 h-2 rounded-full ${
                             isActive ? 'bg-brand-500 animate-pulse' : isMaintenance ? 'bg-orange-500' : 'bg-emerald-500'
@@ -211,14 +214,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
                             onClick={() => setEditingConsole(console)}
-                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-brand-600 transition-colors"
+                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                             title="Edit"
                           >
                             <Edit2 size={16} />
                           </button>
                           <button 
                             onClick={() => updateConsoleStatus(console.id, isMaintenance ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE)}
-                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-orange-500 transition-colors"
+                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-orange-500 transition-colors"
                             title="Toggle Maintenance"
                           >
                             <Wrench size={16} />
@@ -239,8 +242,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                 <div className="p-6">
                   {isActive ? (
                     <div className="space-y-4">
-                      <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl flex items-center gap-4">
-                         <div className="p-3 bg-white dark:bg-slate-700 rounded-full text-brand-500 shadow-sm">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl flex items-center gap-4 border border-slate-100 dark:border-slate-700">
+                         <div className="p-3 bg-white dark:bg-slate-800 rounded-full text-brand-500 shadow-sm">
                             <Timer size={24} className="animate-pulse" />
                          </div>
                          <div>
@@ -264,7 +267,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     <div>
                       {selectedConsoleId === console.id ? (
                         /* Rental Modal / Flow within Card */
-                        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 animate-fade-in relative">
+                        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-600 animate-fade-in relative shadow-inner">
                           <button onClick={resetModal} className="absolute top-2 right-2 text-slate-400 hover:text-slate-600"><X size={16}/></button>
                           
                           {/* STEP 1: INPUT */}
@@ -273,7 +276,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                <div className="space-y-1">
                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('select_member')}</label>
                                  <select 
-                                   className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg px-2 py-2"
+                                   className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg px-2 py-2 focus:ring-2 focus:ring-brand-400 focus:outline-none"
                                    value={rentalMemberId}
                                    onChange={(e) => setRentalMemberId(e.target.value)}
                                  >
@@ -287,34 +290,34 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('duration_hrs')}</label>
                                   <input 
                                     type="number" min="1" max="12" value={rentalDuration} onChange={(e) => setRentalDuration(Number(e.target.value))}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg px-2 py-2"
+                                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg px-2 py-2 focus:ring-2 focus:ring-brand-400 focus:outline-none"
                                   />
                                </div>
                                {calculation && (
-                                 <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-700 text-xs space-y-1">
-                                    <div className="flex justify-between">
+                                 <div className="bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-600 text-xs space-y-1">
+                                    <div className="flex justify-between text-slate-700 dark:text-slate-300">
                                         <span>Durasi:</span>
                                         <span className="font-bold">{rentalDuration} Jam</span>
                                     </div>
-                                    <div className="flex justify-between text-slate-500">
+                                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
                                         <span>{t('cost')}:</span> 
                                         <span>Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
                                     </div>
                                     {calculation.freeHoursUsed > 0 && (
-                                       <div className="flex justify-between text-green-600 font-bold bg-green-50 dark:bg-green-900/10 px-1 rounded">
+                                       <div className="flex justify-between text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/10 px-1 rounded">
                                             <span className="flex items-center gap-1"><Gift size={10}/> Pakai Bonus:</span> 
                                             <span>-{calculation.freeHoursUsed} Jam</span>
                                        </div>
                                     )}
-                                    <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1 flex justify-between font-bold text-sm">
-                                       <span>Bayar:</span> <span className="text-brand-600">Rp {calculation.totalCost.toLocaleString()}</span>
+                                    <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1 flex justify-between font-bold text-sm text-slate-900 dark:text-white">
+                                       <span>Bayar:</span> <span className="text-brand-600 dark:text-brand-400">Rp {calculation.totalCost.toLocaleString()}</span>
                                     </div>
                                     {calculation.totalCost === 0 && (
                                         <div className="text-center text-[10px] text-green-600 font-bold mt-1">Gratis (Full Poin)</div>
                                     )}
                                  </div>
                                )}
-                               <button onClick={handleNextStep} disabled={!rentalMemberId} className="w-full py-2 bg-brand-600 text-white rounded-lg text-xs font-bold mt-2 disabled:opacity-50">Lanjut Bayar</button>
+                               <button onClick={handleNextStep} disabled={!rentalMemberId} className="w-full py-2 bg-brand-400 text-slate-900 rounded-lg text-xs font-bold mt-2 disabled:opacity-50 hover:bg-brand-500 transition-colors">Lanjut Bayar</button>
                             </div>
                           )}
 
@@ -325,20 +328,20 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                <div className="grid grid-cols-2 gap-2">
                                   <button 
                                     onClick={() => setSelectedPayment('CASH')}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${selectedPayment === 'CASH' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${selectedPayment === 'CASH' ? 'bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:bg-slate-50'}`}
                                   >
                                      <Wallet size={20} className="mb-1" />
                                      <span className="text-[10px] font-bold">CASH</span>
                                   </button>
                                   <button 
                                     onClick={() => setSelectedPayment('QRIS')}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${selectedPayment === 'QRIS' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${selectedPayment === 'QRIS' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:bg-slate-50'}`}
                                   >
                                      <QrCode size={20} className="mb-1" />
                                      <span className="text-[10px] font-bold">QRIS</span>
                                   </button>
                                 </div>
-                               <button onClick={handleNextStep} className="w-full py-2 bg-brand-600 text-white rounded-lg text-xs font-bold mt-2">
+                               <button onClick={handleNextStep} className="w-full py-2 bg-brand-400 text-slate-900 rounded-lg text-xs font-bold mt-2 hover:bg-brand-500">
                                  {selectedPayment === 'CASH' ? t('confirm_pay') : t('scan_qris')}
                                </button>
                             </div>
@@ -361,7 +364,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                           {/* STEP 4: CONFIRMATION */}
                           {currentStep === 'CONFIRM' && (
                              <div className="text-center space-y-3">
-                               <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                               <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto">
                                  <CheckCircle size={24} />
                                </div>
                                <div>
@@ -372,7 +375,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                    Pay: {selectedPayment} (Rp {calculation?.totalCost.toLocaleString()})
                                  </p>
                                </div>
-                               <button onClick={handleConfirmRental} className="w-full py-2 bg-brand-600 text-white rounded-lg text-xs font-bold mt-2 shadow-lg shadow-brand-500/30">
+                               <button onClick={handleConfirmRental} className="w-full py-2 bg-brand-400 text-slate-900 rounded-lg text-xs font-bold mt-2 shadow-lg shadow-brand-400/30 hover:bg-brand-500">
                                  {t('start_session')}
                                </button>
                              </div>
@@ -381,7 +384,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                       ) : (
                         <button 
                           onClick={() => setSelectedConsoleId(console.id)}
-                          className="w-full py-3 bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-slate-500 dark:text-slate-400 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/10"
+                          className="w-full py-3 bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-400 dark:hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 text-slate-500 dark:text-slate-400 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-brand-50 dark:group-hover:bg-brand-900/10"
                         >
                           <Play size={20} className="fill-current" /> {t('rent_unit')}
                         </button>
@@ -393,8 +396,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             );
           })}
            {filteredConsoles.length === 0 && (
-             <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-20 text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800">
-               <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-800/50 rounded-full mb-3 md:mb-4">
+             <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-20 text-slate-500 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+               <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-700/50 rounded-full mb-3 md:mb-4">
                  <Gamepad2 className="w-8 h-8 md:w-12 md:h-12 text-slate-400/80" />
                </div>
                <p className="font-medium text-sm md:text-base">{t('no_data_consoles')}</p>
@@ -407,7 +410,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       {/* ADD MODAL */}
       {isAdding && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6">
+           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-slate-700">
              <div className="flex justify-between items-center mb-6">
                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('add_unit')}</h3>
                  <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"><X size={20}/></button>
@@ -419,14 +422,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                   type="text" 
                   value={newConsoleName} 
                   onChange={(e) => setNewConsoleName(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all"
                   placeholder="e.g. PlayStation 5 - Unit 04"
                   required
                   autoFocus
                 />
                </div>
                <div className="flex justify-end pt-4">
-                  <button type="submit" className="px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-brand-700 transition-all w-full justify-center sm:w-auto">
+                  <button type="submit" className="px-6 py-2.5 bg-brand-400 text-slate-900 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-500 transition-all w-full justify-center sm:w-auto shadow-lg shadow-brand-400/20">
                     <Save size={18} /> {t('save')}
                   </button>
                </div>
@@ -438,7 +441,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       {/* EDIT MODAL */}
       {editingConsole && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6">
+           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center mb-6">
                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('edit_unit')}</h3>
                  <button onClick={() => setEditingConsole(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"><X size={20}/></button>
@@ -448,13 +451,13 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">{t('console_name')}</label>
                     <input 
                       required 
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all" 
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-400 transition-all" 
                       value={editingConsole.name} 
                       onChange={e => setEditingConsole({...editingConsole, name: e.target.value})} 
                     />
                  </div>
                  <div className="flex justify-end pt-4">
-                    <button type="submit" className="px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-brand-700 transition-all w-full justify-center sm:w-auto">
+                    <button type="submit" className="px-6 py-2.5 bg-brand-400 text-slate-900 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-500 transition-all w-full justify-center sm:w-auto shadow-lg shadow-brand-400/20">
                       <Save size={18}/> {t('save')}
                     </button>
                  </div>

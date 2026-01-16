@@ -84,8 +84,8 @@ const Dashboard: React.FC = () => {
           value={stats.totalMembers}
           sub={t('registered_sub')}
           icon={Users}
-          colorClass="text-orange-600 dark:text-orange-400"
-          bgClass="bg-orange-50 dark:bg-orange-900/20"
+          colorClass="text-slate-600 dark:text-slate-300"
+          bgClass="bg-slate-50 dark:bg-slate-800"
         />
       </div>
 
@@ -177,7 +177,7 @@ const Dashboard: React.FC = () => {
         {/* Charts Widget */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
           <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-            <MonitorPlay size={18} className="text-blue-500" /> {t('console_util')}
+            <MonitorPlay size={18} className="text-brand-500" /> {t('console_util')}
           </h3>
           <div className="flex-1 min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
                 />
                 <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
                    {consoleUsageData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#0ea5e9' : '#8b5cf6'} />
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#D4AF37' : '#B89225'} />
                     ))}
                 </Bar>
               </BarChart>

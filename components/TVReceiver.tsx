@@ -54,7 +54,7 @@ const TVReceiver: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-12">
         <Tv size={64} className="mb-6 text-brand-500" />
-        <h1 className="text-4xl font-bold mb-2">Ziezan POS Display</h1>
+        <h1 className="text-4xl font-bold mb-2 text-brand-400">Ziezan Station</h1>
         <p className="text-slate-400 mb-8 text-xl">Select which console unit represents this TV screen:</p>
         
         <div className="grid grid-cols-2 gap-6 w-full max-w-4xl">
@@ -88,7 +88,7 @@ const TVReceiver: React.FC = () => {
       </div>
 
       {/* Top Status Bar */}
-      <div className="absolute top-8 right-8 flex items-center gap-4 text-white/50 bg-black/30 backdrop-blur-md px-6 py-3 rounded-full">
+      <div className="absolute top-8 right-8 flex items-center gap-4 text-white/50 bg-black/30 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
          <div className="flex items-center gap-2">
            <Wifi size={20} />
            <span className="text-sm font-medium tracking-wider">ONLINE</span>
@@ -98,23 +98,23 @@ const TVReceiver: React.FC = () => {
 
       {/* Console Identity */}
       <div className="absolute top-8 left-8">
-        <h2 className="text-white/30 text-2xl font-bold tracking-widest uppercase">{activeConsole?.name}</h2>
+        <h2 className="text-brand-400/50 text-2xl font-bold tracking-widest uppercase">{activeConsole?.name}</h2>
       </div>
 
       {/* MAIN OVERLAY CONTENT */}
       {activeTransaction ? (
-        <div className={`absolute bottom-12 left-12 p-8 rounded-3xl backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-500 ${isExpired ? 'bg-red-900/40 border-red-500/50' : 'bg-black/60'}`}>
+        <div className={`absolute bottom-12 left-12 p-8 rounded-3xl backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-500 ${isExpired ? 'bg-red-900/40 border-red-500/50' : 'bg-slate-900/80 border-brand-500/30'}`}>
            <div className="flex items-start gap-6">
-              <div className={`p-4 rounded-2xl ${isExpired ? 'bg-red-500 text-white' : 'bg-brand-500 text-white'}`}>
+              <div className={`p-4 rounded-2xl ${isExpired ? 'bg-red-500 text-white' : 'bg-brand-500 text-slate-900'}`}>
                 <Clock size={48} className={!isExpired ? "animate-pulse" : ""} />
               </div>
               <div>
-                <p className="text-white/60 text-lg font-medium uppercase tracking-wider mb-1">Time Remaining</p>
-                <h1 className={`text-8xl font-black tabular-nums tracking-tight leading-none ${isExpired ? 'text-red-400' : 'text-white'}`}>
+                <p className="text-brand-200/60 text-lg font-medium uppercase tracking-wider mb-1">Time Remaining</p>
+                <h1 className={`text-8xl font-black tabular-nums tracking-tight leading-none ${isExpired ? 'text-red-400' : 'text-brand-400'}`}>
                   {remainingTime}
                 </h1>
                 <div className="mt-4 flex items-center gap-3 text-white/80">
-                   <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">
+                   <div className="w-8 h-8 rounded-full bg-brand-400/20 text-brand-400 flex items-center justify-center text-sm font-bold border border-brand-400/30">
                      {activeTransaction.memberName.charAt(0)}
                    </div>
                    <span className="text-xl font-medium">{activeTransaction.memberName}</span>
@@ -133,10 +133,10 @@ const TVReceiver: React.FC = () => {
       ) : (
         /* IDLE / AVAILABLE STATE */
         <div className="absolute bottom-12 left-12 flex items-center gap-6 animate-fade-in">
-           <div className="p-6 bg-emerald-600/20 border border-emerald-500/50 backdrop-blur-lg rounded-3xl">
-              <Gamepad2 size={64} className="text-emerald-400 mb-2" />
-              <h1 className="text-4xl font-bold text-emerald-400">AVAILABLE</h1>
-              <p className="text-emerald-200/60 mt-1 text-lg">Ready to play</p>
+           <div className="p-6 bg-slate-900/60 border border-brand-500/30 backdrop-blur-lg rounded-3xl">
+              <Gamepad2 size={64} className="text-brand-400 mb-2" />
+              <h1 className="text-4xl font-bold text-brand-400">AVAILABLE</h1>
+              <p className="text-brand-200/60 mt-1 text-lg">Ready to play</p>
            </div>
         </div>
       )}

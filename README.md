@@ -1,5 +1,9 @@
 # Ziezan POS - Sistem Manajemen Rental PlayStation
 
+<p align="center">
+  <img src="https://beeimg.com/images/q27160638941.png" alt="Ziezan POS Icon" width="128" style="border-radius: 24px" />
+</p>
+
 **Ziezan POS** adalah aplikasi Point of Sale (POS) berbasis web modern yang dirancang khusus untuk bisnis penyewaan konsol game (PlayStation Rental). Aplikasi ini mengintegrasikan manajemen member, kontrol perangkat keras via Bluetooth, dan sinkronisasi data cloud untuk efisiensi operasional yang maksimal.
 
 ## 🚀 Fitur Utama
@@ -19,7 +23,6 @@ Aplikasi ini dilengkapi dengan fitur-fitur canggih untuk memudahkan operasional 
 ### 💰 Transaksi & Laporan
 *   **Multi-Payment:** Mendukung pencatatan pembayaran Tunai (Cash) dan QRIS.
 *   **Laporan Keuangan:** Rekap pendapatan harian, riwayat transaksi, dan grafik utilitas konsol.
-*   **AI Insights:** Analisis bisnis cerdas menggunakan Google Gemini AI untuk memberikan saran operasional.
 
 ### 📡 Konektivitas & Mode
 *   **Offline-First:** Aplikasi tetap berjalan lancar tanpa internet. Data akan disinkronisasi ke Supabase saat koneksi kembali online.
@@ -33,7 +36,6 @@ Aplikasi ini dilengkapi dengan fitur-fitur canggih untuk memudahkan operasional 
 *   **Frontend:** React 18, TypeScript, Tailwind CSS
 *   **Backend / Database:** Supabase (PostgreSQL)
 *   **Hardware Interface:** Web Bluetooth API
-*   **AI:** Google Gemini API
 *   **Icons:** Lucide React
 
 ---
@@ -61,7 +63,7 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi ini di lingkungan lokal
     ```
 
 3.  **Konfigurasi Environment**
-    Pastikan konfigurasi API Key Supabase dan Google Gemini sudah terpasang di file `services/supabaseClient.ts` dan `services/geminiService.ts` atau menggunakan `.env` file jika sudah dikonfigurasi.
+    Pastikan konfigurasi API Key Supabase sudah terpasang di file `services/supabaseClient.ts` atau menggunakan `.env` file jika sudah dikonfigurasi.
 
 4.  **Jalankan Aplikasi**
     ```bash

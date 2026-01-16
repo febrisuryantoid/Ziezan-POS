@@ -42,11 +42,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     };
   }, []);
   
+  // Sidebar Item Styling
   const navItemClass = (id: string) => `
     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer mb-1.5 font-medium
     ${currentTab === id 
-      ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400 shadow-sm' 
-      : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'}
+      ? 'bg-brand-400 text-slate-900 shadow-md shadow-brand-500/20 font-bold' 
+      : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-brand-300'}
   `;
 
   const MobileNavItem = ({ id, icon: Icon, label }: { id: string; icon: any; label: string }) => {
@@ -59,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         }`}
       >
         {isActive && (
-            <span className="absolute top-0 w-8 h-0.5 bg-brand-600 dark:bg-brand-400 rounded-b-full shadow-[0_0_8px_rgba(14,165,233,0.5)]"></span>
+            <span className="absolute top-0 w-8 h-0.5 bg-brand-500 dark:bg-brand-400 rounded-b-full shadow-[0_0_8px_rgba(212,175,55,0.5)]"></span>
         )}
         <div className={`p-1 rounded-full transition-all ${isActive ? 'bg-brand-50 dark:bg-brand-900/20 translate-y-0.5' : 'group-active:scale-95'}`}>
            <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
@@ -75,12 +76,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
       <aside className="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col shadow-sm z-20 transition-colors duration-300">
         <div className="p-8">
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30">Z</div>
+             <img 
+               src="https://beeimg.com/images/q27160638941.png" 
+               alt="Ziezan POS" 
+               className="w-10 h-10 rounded-xl shadow-lg shadow-brand-500/20"
+             />
              <div>
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-                  Ziezan <span className="text-brand-600">POS</span>
+                  Ziezan <span className="text-brand-500">POS</span>
                 </h1>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mt-1">POS System</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mt-1">Station</p>
              </div>
           </div>
         </div>
@@ -115,7 +120,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 m-4 mb-6">
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700/50">
              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-slate-700 flex items-center justify-center text-brand-400 font-bold text-sm ring-2 ring-brand-400/20">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -141,52 +146,59 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50 dark:bg-slate-950">
         
-        {/* Top Status Bar (New) */}
-        <div className="bg-slate-900 text-white px-4 py-1 flex justify-end gap-4 text-[10px] font-bold tracking-wide z-20">
+        {/* Top Status Bar (Midnight Blue) */}
+        <div className="bg-slate-950 text-slate-300 px-4 py-1.5 flex justify-end gap-5 text-[10px] font-bold tracking-wide z-20 border-b border-slate-900">
             <div className={`flex items-center gap-1.5 ${isOnline ? 'text-emerald-400' : 'text-red-400'}`}>
                 {isOnline ? <Wifi size={12}/> : <WifiOff size={12}/>} 
                 {isOnline ? 'ONLINE' : 'OFFLINE'}
             </div>
-            <div className={`flex items-center gap-1.5 ${isBtConnected ? 'text-blue-400 cursor-default' : 'text-slate-400 cursor-pointer hover:text-white'}`} onClick={!isBtConnected ? connectBt : undefined}>
+            <div className={`flex items-center gap-1.5 ${isBtConnected ? 'text-brand-400 cursor-default' : 'text-slate-500 cursor-pointer hover:text-white'}`} onClick={!isBtConnected ? connectBt : undefined}>
                 {isBtConnected ? <Bluetooth size={12}/> : <BluetoothOff size={12}/>}
                 {isBtConnected ? 'TV CONNECTED' : 'TV DISCONNECTED'}
             </div>
-            <div className={`flex items-center gap-1.5 ${isSyncing ? 'text-yellow-400 animate-pulse' : 'text-slate-500'}`}>
+            <div className={`flex items-center gap-1.5 ${isSyncing ? 'text-brand-400 animate-pulse' : 'text-slate-500'}`}>
                 <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""}/>
                 {isSyncing ? 'SYNCING...' : 'SYNCED'}
             </div>
         </div>
 
-        {/* Top Header */}
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-16 flex justify-between items-center px-4 md:px-6 sticky top-0 z-10 transition-colors duration-300">
+        {/* Top Header - Premium Midnight Blue in Light Mode too, for consistency with Brand */}
+        <header className="bg-slate-900 text-white backdrop-blur-md border-b border-slate-800 h-16 flex justify-between items-center px-4 md:px-6 sticky top-0 z-10 transition-colors duration-300 shadow-md">
           <div className="flex items-center gap-3 md:hidden">
-             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-brand-500/20">Z</div>
-             <span className="font-bold text-lg text-slate-900 dark:text-white">Ziezan POS</span>
+             <img 
+               src="https://beeimg.com/images/q27160638941.png" 
+               alt="Ziezan POS" 
+               className="w-9 h-9 rounded-xl shadow-sm border border-slate-700"
+             />
+             <span className="font-bold text-lg text-white">Ziezan <span className="text-brand-400">POS</span></span>
           </div>
           
           <div className="hidden md:block">
             {/* Breadcrumb-like indicator */}
-            <h2 className="text-lg font-semibold capitalize text-slate-700 dark:text-slate-200">{t(currentTab as any)}</h2>
+            <h2 className="text-lg font-bold capitalize text-white flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400"></span>
+                {t(currentTab as any)}
+            </h2>
           </div>
 
           <div className="flex items-center gap-3">
             <button
                onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-               className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center gap-1 w-12 justify-center border border-slate-200 dark:border-slate-700"
+               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1 w-12 justify-center border border-slate-700 transition-colors"
             >
                {language.toUpperCase()}
             </button>
             <button 
               onClick={toggleTheme}
-              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-brand-400 border border-slate-700 transition-colors"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button 
               onClick={onLogout} 
-              className="md:hidden p-2 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500"
+              className="md:hidden p-2 rounded-lg bg-red-900/50 text-red-400 hover:bg-red-900 border border-red-900"
             >
               <LogOut size={20} />
             </button>
@@ -201,7 +213,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         </main>
 
         {/* Bottom Navigation - Mobile Only */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe z-50">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe z-50 shadow-lg">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />
