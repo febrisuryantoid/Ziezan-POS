@@ -13,8 +13,8 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     bonusThreshold: 5, // Play 5
     bonusReward: 1,    // Get 1
     isActive: true,
-    // Silver / Platinum Look
-    color: 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
+    // Silver Metallic
+    color: 'BASIC'
   },
   { 
     id: 'PLUS', 
@@ -24,8 +24,8 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     bonusThreshold: 4, // Play 4
     bonusReward: 1,    // Get 1
     isActive: true,
-    // Soft Gold / Champagne
-    color: 'bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-900/20 dark:text-brand-300 dark:border-brand-800'
+    // Electric Purple
+    color: 'PLUS'
   },
   { 
     id: 'VIP', 
@@ -35,8 +35,8 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     bonusThreshold: 3, // Play 3
     bonusReward: 1,    // Get 1
     isActive: true,
-    // Solid Deep Gold / Luxury
-    color: 'bg-gradient-to-r from-brand-100 to-brand-50 text-brand-800 border-brand-400 dark:from-brand-900/40 dark:to-brand-900/20 dark:text-brand-200 dark:border-brand-600'
+    // Luxury Gold
+    color: 'VIP'
   }
 ];
 

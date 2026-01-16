@@ -106,7 +106,45 @@ const dictionary = {
     bt_desc: "Hubungkan ke perangkat keras untuk mengontrol daya TV otomatis.",
     developer_info: "Tentang Pengembang",
     developed_by: "Dikembangkan oleh",
-    contact_dev: "Hubungi Developer"
+    contact_dev: "Hubungi Developer",
+    
+    // NEW KEYS TO FIX HARDCODED TEXT
+    online: "ONLINE",
+    offline: "OFFLINE",
+    tv_connected: "TV TERHUBUNG",
+    tv_disconnected: "TV TERPUTUS",
+    syncing: "SINKRONISASI...",
+    synced: "TERSINKRON",
+    new_rental_session: "Sesi Rental Baru",
+    select_member_placeholder: "-- Pilih Member --",
+    duration_label: "Durasi:",
+    jam: "Jam",
+    total_pay: "Total Bayar:",
+    use_bonus: "Pakai Bonus:",
+    pay_cash: "TUNAI (CASH)",
+    total_bill: "Total Tagihan",
+    back: "Kembali",
+    scan_to_pay: "Scan untuk Bayar",
+    unit_label: "Unit:",
+    method_label: "Metode:",
+    console_name_placeholder: "misal: PlayStation 5 - Unit 01",
+    exp_label: "Exp:",
+    upgrade_membership: "Upgrade Membership",
+    current_plan: "Saat Ini:",
+    select_new_plan: "Pilih Paket Baru",
+    confirm_update: "Konfirmasi & Perbarui",
+    days_lifetime: "Hari (0 = Seumur Hidup)",
+    rule_desc: "Aturan: Main {x} Jam dapat bonus {y} Jam.",
+    device_status: "Status Perangkat",
+    tv_select_unit: "Pilih unit console yang mewakili layar TV ini:",
+    tv_no_consoles: "Tidak ada console ditemukan. Silakan atur di Aplikasi Mobile.",
+    tv_reset_id: "Reset ID TV",
+    time_remaining: "Sisa Waktu",
+    session_ended: "SESI BERAKHIR",
+    available_status: "TERSEDIA",
+    ready_to_play: "Siap Bermain",
+    member_label: "Member:",
+    unknown_unit: "Tidak Diketahui"
   },
   en: {
     dashboard: "Dashboard",
@@ -210,14 +248,52 @@ const dictionary = {
     bt_desc: "Connect to hardware to control TV power automatically.",
     developer_info: "Developer Info",
     developed_by: "Developed by",
-    contact_dev: "Contact Developer"
+    contact_dev: "Contact Developer",
+    
+    // NEW KEYS TRANSLATED
+    online: "ONLINE",
+    offline: "OFFLINE",
+    tv_connected: "TV CONNECTED",
+    tv_disconnected: "TV DISCONNECTED",
+    syncing: "SYNCING...",
+    synced: "SYNCED",
+    new_rental_session: "New Rental Session",
+    select_member_placeholder: "-- Select Member --",
+    duration_label: "Duration:",
+    jam: "Hours",
+    total_pay: "Total Pay:",
+    use_bonus: "Use Bonus:",
+    pay_cash: "CASH",
+    total_bill: "Total Bill",
+    back: "Back",
+    scan_to_pay: "Scan to Pay",
+    unit_label: "Unit:",
+    method_label: "Method:",
+    console_name_placeholder: "e.g. PlayStation 5 - Unit 01",
+    exp_label: "Exp:",
+    upgrade_membership: "Upgrade Membership",
+    current_plan: "Current:",
+    select_new_plan: "Select New Plan",
+    confirm_update: "Confirm & Update",
+    days_lifetime: "Days (0 = Lifetime)",
+    rule_desc: "Rule: Play {x} Hours get {y} Hours bonus.",
+    device_status: "Device Status",
+    tv_select_unit: "Select which console unit represents this TV screen:",
+    tv_no_consoles: "No consoles found. Please setup in Mobile App first.",
+    tv_reset_id: "Reset TV ID",
+    time_remaining: "Time Remaining",
+    session_ended: "SESSION ENDED",
+    available_status: "AVAILABLE",
+    ready_to_play: "Ready to play",
+    member_label: "Member:",
+    unknown_unit: "Unknown"
   }
 };
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: keyof typeof dictionary['id']) => string;
+  t: (key: keyof typeof dictionary['id'], params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -235,8 +311,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('ziezan_lang', lang);
   };
 
-  const t = (key: keyof typeof dictionary['id']) => {
-    return dictionary[language][key] || key;
+  const t = (key: keyof typeof dictionary['id'], params?: Record<string, string | number>) => {
+    let text = dictionary[language][key] || key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
   };
 
   return (

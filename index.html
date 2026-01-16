@@ -3,6 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Android / Google Play Support -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Ziezan POS" />
+    
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ziezan POS" />
+    <link rel="apple-touch-icon" href="https://beeimg.com/images/q27160638941.png" />
+    
+    <!-- Theme Color for Browser Address Bar -->
+    <meta name="theme-color" content="#7c3aed" />
+
     <link rel="icon" href="https://beeimg.com/images/q27160638941.png" />
     <title>Ziezan POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,38 +38,56 @@
               ring: "hsl(var(--ring))",
               background: "hsl(var(--background))",
               foreground: "hsl(var(--foreground))",
-              // Royal Gold Palette (Premium Action Color)
-              brand: {
-                50: '#FCF9EE',
-                100: '#F7EFD4',
-                200: '#EEDDAA',
-                300: '#E4C676',
-                400: '#D4AF37', // Primary Gold (Icon Color)
-                500: '#B89225',
-                600: '#947118',
-                700: '#765615',
-                800: '#624618',
-                900: '#533B18',
-                950: '#2F1F08',
+              // REVISED PALETTE: TRENDY PURPLE 2026 (Electric Violet)
+              // Functional colors are mapped to their specific utility purposes.
+              palette: {
+                mustard: '#7c3aed', // PRIMARY BRAND (Electric Violet 600) - Used for Active States/Buttons
+                copper: '#f97316',  // WARNING/MAINTENANCE (Bright Orange 500) - Functional color for alerts
+                green: '#10b981',   // SUCCESS/AVAILABLE (Emerald 500) - High contrast against purple
+                navy: '#0f0720',    // DARK BASE (Deep Space Violet) - The main dark background
+                navyLight: '#1e1b38', // DARK SURFACE (Dark Blue-Purple) - Card backgrounds
+                purple: '#8b5cf6',  // SECONDARY PURPLE (Violet 500)
+                red: '#f43f5e',     // DANGER/ERROR (Rose 500) - Modern red
+                yellow: '#facc15',  // HIGHLIGHT (Yellow 400) - For text highlights/stars
+                brown: '#2e1065',   // TEXT BASE (Deep Violet 950) - Primary text in light mode
+                cream: '#ede9fe',   // LIGHT ACCENT (Violet 100) - Hovers/Accents
+                creamLight: '#f5f3ff', // LIGHT BASE (Violet 50) - Main light background
               },
-              // Midnight Navy Palette (Base Color)
+              // Brand scale for gradients and borders
+              brand: {
+                50: '#f5f3ff', 
+                100: '#ede9fe',
+                200: '#ddd6fe',
+                300: '#c4b5fd',
+                400: '#a78bfa',
+                500: '#8b5cf6',
+                600: '#7c3aed', // Primary
+                700: '#6d28d9',
+                800: '#5b21b6',
+                900: '#4c1d95',
+                950: '#2e1065',
+              },
               slate: {
-                50: '#F4F6F8', // Off-white for Light Mode
-                100: '#E3E8EE',
-                200: '#C6D0DC',
-                300: '#9DAFC3',
-                400: '#6E88A8',
-                500: '#4F6A8F',
-                600: '#3D5272',
-                700: '#2F3F59',
-                800: '#263246', // Card Dark
-                900: '#1A2231', // Sidebar/Header Dark
-                950: '#0B0F19', // Background Dark (Deep Midnight)
+                50: '#f8fafc', 
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                300: '#cbd5e1',
+                400: '#94a3b8',
+                500: '#64748b',
+                600: '#475569',
+                700: '#334155',
+                800: '#1e293b', 
+                900: '#0f172a',
+                950: '#020617', 
               }
             },
             animation: {
               'fade-in': 'fadeIn 0.3s ease-out',
               'slide-in': 'slideIn 0.3s ease-out',
+              'zoom-in': 'zoomIn 0.2s ease-out',
+              'spin-slow': 'spin 6s linear infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'shimmer': 'shimmer 3s infinite linear',
             },
             keyframes: {
               fadeIn: {
@@ -62,6 +97,14 @@
               slideIn: {
                 '0%': { transform: 'translateY(10px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              zoomIn: {
+                '0%': { transform: 'scale(0.95)', opacity: '0' },
+                '100%': { transform: 'scale(1)', opacity: '1' },
+              },
+              shimmer: {
+                '0%': { transform: 'translateX(-150%) skewX(-20deg)' },
+                '100%': { transform: 'translateX(200%) skewX(-20deg)' },
               }
             }
           }
@@ -77,10 +120,11 @@
       }
       
       body {
-        @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300;
+        /* Base Backgrounds using the new Palette */
+        @apply bg-palette-creamLight text-palette-brown dark:bg-palette-navy dark:text-palette-cream transition-colors duration-300;
       }
 
-      /* Custom Scrollbar */
+      /* Custom Scrollbar styled with Palette */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -89,10 +133,8 @@
         @apply bg-transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        @apply bg-slate-300 dark:bg-slate-700 rounded-full;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        @apply bg-brand-400; 
+        /* Scrollbar uses the Primary Electric Violet */
+        @apply bg-palette-mustard/50 rounded-full hover:bg-palette-mustard;
       }
       
       /* Mobile Safe Area */

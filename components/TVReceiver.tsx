@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus } from '../types';
 import { Clock, Gamepad2, Wifi, WifiOff, Tv } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const TVReceiver: React.FC = () => {
   const { consoles, transactions } = useData();
+  const { t } = useLanguage();
   const [assignedConsoleId, setAssignedConsoleId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -55,7 +57,7 @@ const TVReceiver: React.FC = () => {
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-12">
         <Tv size={64} className="mb-6 text-brand-500" />
         <h1 className="text-4xl font-bold mb-2 text-brand-400">Ziezan Station</h1>
-        <p className="text-slate-400 mb-8 text-xl">Select which console unit represents this TV screen:</p>
+        <p className="text-slate-400 mb-8 text-xl">{t('tv_select_unit')}</p>
         
         <div className="grid grid-cols-2 gap-6 w-full max-w-4xl">
           {consoles.map(c => (
@@ -69,7 +71,7 @@ const TVReceiver: React.FC = () => {
             </button>
           ))}
           {consoles.length === 0 && (
-             <p className="col-span-2 text-center text-slate-500">No consoles found. Please setup in Mobile App first.</p>
+             <p className="col-span-2 text-center text-slate-500">{t('tv_no_consoles')}</p>
           )}
         </div>
       </div>
@@ -91,14 +93,14 @@ const TVReceiver: React.FC = () => {
       <div className="absolute top-8 right-8 flex items-center gap-4 text-white/50 bg-black/30 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
          <div className="flex items-center gap-2">
            <Wifi size={20} />
-           <span className="text-sm font-medium tracking-wider">ONLINE</span>
+           <span className="text-sm font-medium tracking-wider">{t('online')}</span>
          </div>
          <span className="text-sm border-l border-white/20 pl-4">{currentTime.toLocaleTimeString()}</span>
       </div>
 
       {/* Console Identity */}
       <div className="absolute top-8 left-8">
-        <h2 className="text-brand-400/50 text-2xl font-bold tracking-widest uppercase">{activeConsole?.name}</h2>
+        <h2 className="text-brand-400/50 text-2xl font-bold tracking-widest uppercase">{activeConsole?.name || t('unknown_unit')}</h2>
       </div>
 
       {/* MAIN OVERLAY CONTENT */}
@@ -109,7 +111,7 @@ const TVReceiver: React.FC = () => {
                 <Clock size={48} className={!isExpired ? "animate-pulse" : ""} />
               </div>
               <div>
-                <p className="text-brand-200/60 text-lg font-medium uppercase tracking-wider mb-1">Time Remaining</p>
+                <p className="text-brand-200/60 text-lg font-medium uppercase tracking-wider mb-1">{t('time_remaining')}</p>
                 <h1 className={`text-8xl font-black tabular-nums tracking-tight leading-none ${isExpired ? 'text-red-400' : 'text-brand-400'}`}>
                   {remainingTime}
                 </h1>
@@ -126,7 +128,7 @@ const TVReceiver: React.FC = () => {
            
            {isExpired && (
              <div className="mt-6 bg-red-600/90 text-white py-2 px-4 rounded-lg text-center font-bold text-lg animate-bounce">
-               SESSION ENDED
+               {t('session_ended')}
              </div>
            )}
         </div>
@@ -135,8 +137,8 @@ const TVReceiver: React.FC = () => {
         <div className="absolute bottom-12 left-12 flex items-center gap-6 animate-fade-in">
            <div className="p-6 bg-slate-900/60 border border-brand-500/30 backdrop-blur-lg rounded-3xl">
               <Gamepad2 size={64} className="text-brand-400 mb-2" />
-              <h1 className="text-4xl font-bold text-brand-400">AVAILABLE</h1>
-              <p className="text-brand-200/60 mt-1 text-lg">Ready to play</p>
+              <h1 className="text-4xl font-bold text-brand-400">{t('available_status')}</h1>
+              <p className="text-brand-200/60 mt-1 text-lg">{t('ready_to_play')}</p>
            </div>
         </div>
       )}
@@ -146,7 +148,7 @@ const TVReceiver: React.FC = () => {
         onClick={() => { localStorage.removeItem('tv_assigned_console_id'); setAssignedConsoleId(null); }}
         className="absolute bottom-4 right-4 text-white/10 hover:text-white/50 text-xs p-2"
       >
-        Reset TV ID
+        {t('tv_reset_id')}
       </button>
 
     </div>

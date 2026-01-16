@@ -1,0 +1,52 @@
+{
+  "name": "Ziezan Station POS",
+  "short_name": "Ziezan POS",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#f5f3ff",
+  "theme_color": "#7c3aed",
+  "description": "Sistem Manajemen Rental PlayStation Ziezan Station. Kelola member, rental, dan keuangan.",
+  "orientation": "any",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "https://beeimg.com/images/q27160638941.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://beeimg.com/images/q27160638941.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://beeimg.com/images/q27160638941.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Ziezan Station"
+    },
+    {
+      "src": "https://beeimg.com/images/q27160638941.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tampilan Mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mulai Rental",
+      "short_name": "Rental",
+      "description": "Buka menu rental unit langsung",
+      "url": "/?action=rental",
+      "icons": [{ "src": "https://beeimg.com/images/q27160638941.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}
