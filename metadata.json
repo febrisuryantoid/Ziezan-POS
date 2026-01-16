@@ -1,0 +1,7 @@
+{
+  "name": "Ziezan POS",
+  "description": "A comprehensive Point of Sale system for PlayStation rentals with member loyalty logic and console tracking.",
+  "requestFramePermissions": [
+    "bluetooth"
+  ]
+}
