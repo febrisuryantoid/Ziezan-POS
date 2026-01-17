@@ -83,11 +83,16 @@ const App: React.FC = () => {
       return (
         <ThemeProvider>
              <LanguageProvider> 
-                 <DataProvider>
-                     <Suspense fallback={<div className="h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
-                        <PublicMemberCard nickname={publicMemberNickname} />
-                     </Suspense>
-                 </DataProvider>
+                {/* FIX: Added ToastProvider & BluetoothProvider because DataProvider depends on them */}
+                <ToastProvider>
+                  <BluetoothProvider>
+                     <DataProvider>
+                         <Suspense fallback={<div className="h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
+                            <PublicMemberCard nickname={publicMemberNickname} />
+                         </Suspense>
+                     </DataProvider>
+                  </BluetoothProvider>
+                </ToastProvider>
              </LanguageProvider>
         </ThemeProvider>
       );

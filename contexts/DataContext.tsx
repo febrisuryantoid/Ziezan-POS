@@ -24,7 +24,6 @@ interface DataContextType {
   deleteConsole: (id: string) => boolean; 
 
   // Member Actions
-  // FIX: Allow freeHoursBalance to be passed optionally
   addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
   deleteMember: (id: string) => void;
@@ -38,11 +37,12 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [consoles, setConsoles] = useState<Console[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [membershipConfigs, setMembershipConfigs] = useState<MembershipConfig[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(Storage.getSettings());
+  // FIX: Initialize with Storage data immediately to prevent undefined errors in child components
+  const [consoles, setConsoles] = useState<Console[]>(() => Storage.getConsoles());
+  const [members, setMembers] = useState<Member[]>(() => Storage.getMembers());
+  const [membershipConfigs, setMembershipConfigs] = useState<MembershipConfig[]>(() => Storage.getMemberships());
+  const [transactions, setTransactions] = useState<Transaction[]>(() => Storage.getTransactions());
+  const [settings, setSettings] = useState<AppSettings>(() => Storage.getSettings());
   
   // Access Bluetooth
   const { sendCommand, isConnected: isBtConnected } = useBluetooth();
@@ -58,19 +58,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // --- INITIALIZATION & SYNC LOGIC ---
   useEffect(() => {
     const initData = async () => {
-        // 1. Load what we have locally first (Fast Render)
+        // 1. Refresh to ensure we have latest (redundant but safe)
         refreshData();
 
         // 2. CRITICAL: Pull from Cloud (Restore Data)
         if (navigator.onLine) {
             console.log("[DataContext] Pulling latest data from Cloud...");
-            const success = await syncService.pullFromCloud();
-            if (success) {
-                refreshData(); // Refresh UI after pull
+            try {
+               const success = await syncService.pullFromCloud();
+               if (success) {
+                  refreshData(); // Refresh UI after pull
+               }
+               // 3. Then Push any pending changes
+               await syncService.syncNow();
+            } catch (e) {
+               console.error("Sync init failed:", e);
             }
-            
-            // 3. Then Push any pending changes
-            syncService.syncNow();
         }
     };
 

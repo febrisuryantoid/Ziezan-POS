@@ -120,7 +120,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
       );
   }
 
-  const membership = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
+  // FIX: Robust fallback if config is missing to prevent white screen
+  const defaultConfig: any = { name: 'Member', id: 'BASIC' };
+  const membership = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0] || defaultConfig;
   
   const getStyles = (id: string) => {
     switch(id) {
