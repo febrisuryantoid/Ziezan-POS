@@ -6,6 +6,25 @@ class SyncService {
   private isSyncing = false;
   private isCleaning = false;
 
+  // --- DELETE ACTIONS (Direct to Cloud) ---
+  public async deleteMember(id: string) {
+    if (!navigator.onLine) {
+      console.warn("Offline: Cannot delete member from cloud immediately.");
+      // In a more complex app, queue this. For now, rely on manual cleanup if offline.
+      return;
+    }
+    const { error } = await supabase.from('members').delete().eq('id', id);
+    if (error) console.error("Failed to delete member from cloud:", error);
+    else console.log("Member deleted from cloud:", id);
+  }
+
+  public async deleteConsole(id: string) {
+    if (!navigator.onLine) return;
+    const { error } = await supabase.from('consoles').delete().eq('id', id);
+    if (error) console.error("Failed to delete console from cloud:", error);
+    else console.log("Console deleted from cloud:", id);
+  }
+
   // --- MAIN SYNC FUNCTION ---
   public async syncNow() {
     if (this.isSyncing || !navigator.onLine) return;
@@ -128,8 +147,6 @@ class SyncService {
   }
 
   // Helper to merge Cloud data into Local data
-  // Logic: If Local item has 'synced: false', keep Local (it has newer edits). 
-  // Else, overwrite with Cloud (source of truth).
   private mergeDatasets<T extends { id: string, synced?: boolean }>(local: T[], cloud: T[]): T[] {
       const mergedMap = new Map<string, T>();
 
@@ -141,9 +158,9 @@ class SyncService {
           if (item.synced === false) {
               mergedMap.set(item.id, item);
           } else if (!mergedMap.has(item.id)) {
-              // If it exists locally but not in cloud (and marked synced), 
-              // it might have been deleted on cloud? 
-              // For safety in this app, we keep it locally.
+              // If it exists locally but not in cloud, it means it was deleted in cloud or created locally.
+              // Since we don't have a deleted log, we assume local creation for now.
+              // Ideally, we'd check if it was created recently.
               mergedMap.set(item.id, item);
           }
       });
@@ -186,7 +203,6 @@ class SyncService {
     const consoles = Storage.getConsoles();
     if (consoles.length === 0) return;
 
-    // Only send what has changed? Currently sending all for simplicity/integrity
     const payload = consoles.map(c => ({
         id: c.id,
         name: c.name,

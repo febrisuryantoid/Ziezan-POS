@@ -184,6 +184,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = consoles.filter(c => c.id !== id);
     safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
+    
+    // TRIGGER CLOUD DELETE
+    syncService.deleteConsole(id);
+    
     return true;
   };
 
@@ -233,6 +237,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = members.filter(m => m.id !== id);
     safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
+    
+    // TRIGGER CLOUD DELETE
+    syncService.deleteMember(id);
   };
 
   const upgradeMember = (memberId: string, newTierId: MembershipTierId) => {
