@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Crown, Star, Shield, Clock, Calendar, CheckCircle, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Crown, Star, Shield, Clock, Calendar, CheckCircle, Loader2, RefreshCw, AlertCircle, WifiOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../services/supabaseClient';
 import { Member, MembershipTierId } from '../types';
@@ -10,7 +10,7 @@ interface PublicMemberCardProps {
 }
 
 const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
-  const { membershipConfigs } = useData(); // We can still use config from context (defaults)
+  const { membershipConfigs } = useData(); 
   const { t } = useLanguage();
   
   const [member, setMember] = useState<Member | null>(null);
@@ -23,24 +23,22 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
             setIsLoading(true);
             const decodedName = decodeURIComponent(nickname).trim();
 
-            // Fetch directly from Supabase (Cloud)
-            // Note: Ensure your Supabase RLS policies allow public read access to 'members' table
-            // OR at least allow reading 'nickname', 'name', 'total_hours_played', etc.
             const { data, error } = await supabase
                 .from('members')
                 .select('*')
-                .ilike('nickname', decodedName) // Case insensitive search
+                .ilike('nickname', decodedName)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Error:", error);
+                throw error;
+            }
 
             if (data) {
-                // Map Cloud DB to App Type
                 const mappedMember: Member = {
                     id: data.id,
                     name: data.name,
                     nickname: data.nickname,
-                    // PRIVACY: Don't map phone, address, notes for public view even if fetched
                     phone: '', 
                     address: '',
                     notes: '',
@@ -48,9 +46,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                     membershipExpiryDate: data.membership_expiry_date,
                     joinDate: data.joined_at,
                     totalPlayTime: data.total_hours_played || 0,
-                    totalAmountPaid: 0, // Hide financial
-                    hoursProgressToNextBonus: 0, // Hide internal progress
-                    freeHoursBalance: 0, // Hide balance (optional)
+                    totalAmountPaid: 0, 
+                    hoursProgressToNextBonus: 0, 
+                    freeHoursBalance: 0,
                     totalBonusHoursUsed: 0,
                     status: data.status || 'ACTIVE',
                     photoUrl: data.photo_url,
@@ -83,6 +81,25 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
           </div>
       );
   }
+
+  // Error State (Network or RLS)
+  if (error) {
+      return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400">
+              <div className="w-24 h-24 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <WifiOff size={40} />
+              </div>
+              <h1 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-200">Gagal Terhubung</h1>
+              <p className="text-sm text-center max-w-xs leading-relaxed mb-6">
+                Terjadi kesalahan saat menghubungi server.<br/>
+                <span className="text-xs opacity-70 mt-2 block font-mono bg-slate-200 dark:bg-slate-800 p-2 rounded">{error.slice(0, 50)}...</span>
+              </p>
+              <button onClick={() => window.location.reload()} className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50">
+                Coba Lagi
+              </button>
+          </div>
+      );
+  }
   
   // Not Found State
   if (!member) {
@@ -93,14 +110,10 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
               </div>
               <h1 className="text-2xl font-bold mb-2 text-slate-800 dark:text-slate-200">Member Tidak Ditemukan</h1>
               <p className="text-sm text-center max-w-xs leading-relaxed mb-6">
-                Tidak ada data member dengan nickname <br/>
-                <span className="font-bold text-palette-mustard bg-palette-mustard/10 px-2 py-0.5 rounded mt-1 inline-block text-base">@{decodeURIComponent(nickname)}</span>
+                Data dengan nickname <span className="font-bold text-palette-mustard">@{decodeURIComponent(nickname)}</span> tidak ditemukan atau belum disinkronisasi ke publik.
               </p>
               
-              <button 
-                onClick={() => window.location.reload()} 
-                className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-              >
+              <button onClick={() => window.location.reload()} className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
                 <RefreshCw size={16} /> Coba Lagi
               </button>
           </div>
@@ -109,7 +122,6 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   const membership = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
   
-  // Styles based on Tier
   const getStyles = (id: string) => {
     switch(id) {
       case 'VIP':
@@ -137,16 +149,13 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   };
 
   const style = getStyles(member.membershipId);
-  // Fallback avatar if empty or error
   const avatarSrc = member.photoUrl && member.photoUrl.length > 10 ? member.photoUrl : "https://beeimg.com/images/s77882238754.png";
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 transition-colors duration-300">
        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden relative border border-slate-200 dark:border-white/5 animate-zoom-in">
            
-           {/* Header / Banner */}
            <div className={`h-48 relative ${style.bg} flex items-center justify-center overflow-hidden`}>
-               {/* Pattern Overlay */}
                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
                
@@ -159,7 +168,6 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                </div>
            </div>
 
-           {/* Avatar Overlay */}
            <div className="relative -mt-16 text-center z-20">
                <div className="inline-block p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl relative">
                    <img 
@@ -172,9 +180,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                </div>
            </div>
 
-           {/* Content */}
            <div className="px-8 pt-4 pb-10 text-center">
-               {/* PRIVACY: Showing Nickname primarily, Full name secondarily if needed, or just nickname */}
                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">{member.name}</h1>
                <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full mb-8">
                  <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wide">@{member.nickname}</p>

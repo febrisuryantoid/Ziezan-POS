@@ -21,43 +21,45 @@ const Settings = React.lazy(() => import('./components/Settings'));
 const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
 
 const App: React.FC = () => {
+  // 1. Initialize Route State IMMEDIATELY (Before Render)
+  const [publicMemberNickname, setPublicMemberNickname] = useState<string | null>(() => {
+     const path = window.location.pathname;
+     if (path.startsWith('/member/')) {
+        const segments = path.split('/');
+        // Format: /member/nickname
+        return segments[2] || null;
+     }
+     return null;
+  });
+
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isTvMode, setIsTvMode] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [publicMemberNickname, setPublicMemberNickname] = useState<string | null>(null);
+  
+  // 2. Only show splash if NOT a public page
+  const [showSplash, setShowSplash] = useState(() => !publicMemberNickname);
 
   useEffect(() => {
-    // 0. Check for Public Member Route
-    const path = window.location.pathname;
-    if (path.startsWith('/member/')) {
-        const nickname = path.split('/')[2];
-        if (nickname) {
-            setPublicMemberNickname(nickname);
-            setShowSplash(false); // Skip splash for public link for faster load
-            return;
-        }
-    }
-
-    // 1. Check Platform
+    // 3. Platform Check & Session Restore
     if (isTV()) {
       setIsTvMode(true);
     }
 
-    // 2. Load Session
     const session = localStorage.getItem('ziezan_user');
     if (session) {
       setUser(JSON.parse(session));
     }
 
-    // 3. Splash Screen Timer
-    // Set to 3000ms (3 seconds) to allow the splash animation to complete gracefully
-    const timer = setTimeout(() => {
-        setShowSplash(false);
-    }, 3000);
+    // 4. Splash Timer (Only runs if splash is active)
+    let timer: ReturnType<typeof setTimeout>;
+    if (showSplash) {
+        timer = setTimeout(() => {
+            setShowSplash(false);
+        }, 3000);
+    }
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [showSplash]);
 
   const handleLogin = (u: User) => {
     setUser(u);
@@ -70,7 +72,6 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
-  // Simple Fallback Loader for Lazy Components
   const PageLoader = () => (
     <div className="flex items-center justify-center h-[50vh] w-full">
       <Loader2 className="w-8 h-8 animate-spin text-palette-mustard" />
@@ -81,11 +82,13 @@ const App: React.FC = () => {
   if (publicMemberNickname) {
       return (
         <ThemeProvider>
-             <DataProvider>
-                 <Suspense fallback={<div className="h-screen w-full bg-slate-100 animate-pulse"/>}>
-                    <PublicMemberCard nickname={publicMemberNickname} />
-                 </Suspense>
-             </DataProvider>
+             <LanguageProvider> 
+                 <DataProvider>
+                     <Suspense fallback={<div className="h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
+                        <PublicMemberCard nickname={publicMemberNickname} />
+                     </Suspense>
+                 </DataProvider>
+             </LanguageProvider>
         </ThemeProvider>
       );
   }
@@ -98,13 +101,15 @@ const App: React.FC = () => {
   // -- TV MODE RENDER --
   if (isTvMode) {
     return (
-      <DataProvider>
-        <TVReceiver />
-      </DataProvider>
+      <LanguageProvider>
+        <DataProvider>
+          <TVReceiver />
+        </DataProvider>
+      </LanguageProvider>
     );
   }
 
-  // -- MOBILE / DESKTOP MODE RENDER --
+  // -- MAIN APP RENDER --
   return (
     <ThemeProvider>
       <LanguageProvider>
