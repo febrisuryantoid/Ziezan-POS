@@ -200,9 +200,9 @@ const Settings: React.FC = () => {
     }
   };
 
-  // --- SUB-COMPONENT RENDERS ---
+  // --- RENDER FUNCTIONS (Correctly Defined Outside or Inline) ---
 
-  const RenderBusinessSettings = () => (
+  const renderBusinessSettings = () => (
     <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm h-full flex flex-col animate-fade-in overflow-y-auto">
         <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <Building2 size={20} className="text-palette-mustard"/> {t('business_profile')}
@@ -241,7 +241,7 @@ const Settings: React.FC = () => {
                         <div className="relative w-full">
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                             <input 
-                                type="text" 
+                                type="url" 
                                 value={localSettings.businessLogo}
                                 onChange={e => handleTextChange(e.target.value, 'businessLogo')}
                                 className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs focus:ring-2 focus:ring-palette-mustard dark:text-white truncate"
@@ -288,7 +288,9 @@ const Settings: React.FC = () => {
                 <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
-                        type="text" 
+                        type="tel" 
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={localSettings.businessPhone}
                         onChange={e => handleTextChange(e.target.value, 'businessPhone')}
                         className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all dark:text-white"
@@ -300,7 +302,7 @@ const Settings: React.FC = () => {
     </div>
   );
 
-  const RenderGeneralSettings = () => (
+  const renderGeneralSettings = () => (
     <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm h-full flex flex-col animate-fade-in overflow-y-auto">
         <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <Coins size={20} className="text-palette-mustard"/> {t('general_settings')}
@@ -313,6 +315,8 @@ const Settings: React.FC = () => {
                 <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input 
                 type="text" 
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={localSettings.hourlyRate === 0 && localSettings.hourlyRate.toString() !== '0' ? '' : formatNumber(localSettings.hourlyRate)}
                 onChange={e => handleNumericChange(e.target.value, 'hourlyRate')}
                 className="w-full bg-slate-50 dark:bg-palette-navy border-0 ring-1 ring-slate-200 dark:ring-white/10 rounded-xl pl-12 pr-4 py-4 text-palette-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard font-mono text-xl font-bold transition-all"
@@ -330,7 +334,8 @@ const Settings: React.FC = () => {
             <div className="flex items-center gap-4">
                 {/* Fixed: Use flex-1 instead of w-full to allow space for the unit label */}
                 <input 
-                    type="text" 
+                    type="number" 
+                    inputMode="numeric"
                     value={localSettings.birthdayBonusHours || 0}
                     onChange={e => handleNumericChange(e.target.value, 'birthdayBonusHours')}
                     className="flex-1 bg-slate-50 dark:bg-palette-navy border-0 ring-1 ring-slate-200 dark:ring-white/10 rounded-xl px-4 py-3 text-center font-bold text-xl text-palette-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard"
@@ -342,7 +347,7 @@ const Settings: React.FC = () => {
     </div>
   );
 
-  const RenderConnectivity = () => (
+  const renderConnectivity = () => (
     <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm h-full flex flex-col animate-fade-in overflow-y-auto">
         <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <Wifi size={20} className="text-blue-500"/> {t('tv_connectivity')}
@@ -396,7 +401,7 @@ const Settings: React.FC = () => {
     </div>
   );
 
-  const RenderDataManagement = () => (
+  const renderDataManagement = () => (
     <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm h-full flex flex-col animate-fade-in overflow-y-auto">
         <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <Database size={20} className="text-emerald-500"/> {t('data_management')}
@@ -465,7 +470,7 @@ const Settings: React.FC = () => {
     </div>
   );
 
-  const RenderMembershipAndDev = () => (
+  const renderMembershipAndDev = () => (
     <div className="space-y-6 animate-fade-in">
         {/* Membership Config */}
         <div>
@@ -501,7 +506,9 @@ const Settings: React.FC = () => {
                             <div className="relative">
                                 <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold ${style.subText}`}>Rp</span>
                                 <input 
-                                    type="text" 
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*" 
                                     value={formatNumber(m.price)} 
                                     onChange={e => handleMembershipChange(m.id, 'price', e.target.value)}
                                     className={`w-full rounded-xl pl-10 pr-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 transition-all backdrop-blur-sm ${style.inputBg}`}
@@ -510,7 +517,8 @@ const Settings: React.FC = () => {
                             <div className="flex items-center gap-3 mt-1.5">
                                 <div className="relative flex-shrink-0">
                                     <input 
-                                        type="text" 
+                                        type="number"
+                                        inputMode="numeric" 
                                         value={m.durationDays} 
                                         onChange={e => handleMembershipChange(m.id, 'durationDays', e.target.value)}
                                         className={`w-20 rounded-lg px-3 py-1.5 text-xs text-center font-bold focus:outline-none focus:ring-2 transition-all ${style.inputBg}`}
@@ -525,7 +533,8 @@ const Settings: React.FC = () => {
                                 <label className={`text-xs font-bold uppercase tracking-wider ${style.subText}`}>{t('bonus_target')}</label>
                                 <div className="flex items-center gap-2">
                                     <input 
-                                        type="text" 
+                                        type="number"
+                                        inputMode="numeric" 
                                         value={m.bonusThreshold} 
                                         onChange={e => handleMembershipChange(m.id, 'bonusThreshold', e.target.value)}
                                         className={`w-full rounded-xl px-4 py-3 text-sm text-center font-bold focus:outline-none focus:ring-2 transition-all ${style.inputBg}`}
@@ -537,7 +546,8 @@ const Settings: React.FC = () => {
                                 <label className={`text-xs font-bold uppercase tracking-wider ${style.subText}`}>{t('reward')}</label>
                                 <div className="flex items-center gap-2">
                                     <input 
-                                        type="text" 
+                                        type="number" 
+                                        inputMode="numeric"
                                         value={m.bonusReward} 
                                         onChange={e => handleMembershipChange(m.id, 'bonusReward', e.target.value)}
                                         className={`w-full rounded-xl px-4 py-3 text-sm text-center font-bold focus:outline-none focus:ring-2 transition-all ${style.inputBg}`}
@@ -596,8 +606,9 @@ const Settings: React.FC = () => {
   );
 
   // --- DESKTOP SIDEBAR NAVIGATION ITEM ---
-  const DesktopNavItem = ({ section, icon: Icon, label }: { section: SettingsSection, icon: any, label: string }) => (
+  const renderDesktopNavItem = ({ section, icon: Icon, label }: { section: SettingsSection, icon: any, label: string }) => (
       <button 
+        key={section}
         onClick={() => setActiveSection(section)}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${
             activeSection === section 
@@ -679,11 +690,11 @@ const Settings: React.FC = () => {
       let title = '';
       let content = null;
       switch(activeSection) {
-          case 'BUSINESS': title = t('business_profile'); content = <RenderBusinessSettings />; break;
-          case 'GENERAL': title = t('general_settings'); content = <RenderGeneralSettings />; break;
-          case 'CONNECTIVITY': title = t('tv_connectivity'); content = <RenderConnectivity />; break;
-          case 'DATA': title = t('data_management'); content = <RenderDataManagement />; break;
-          case 'MEMBERSHIP': title = t('membership_settings'); content = <RenderMembershipAndDev />; break;
+          case 'BUSINESS': title = t('business_profile'); content = renderBusinessSettings(); break;
+          case 'GENERAL': title = t('general_settings'); content = renderGeneralSettings(); break;
+          case 'CONNECTIVITY': title = t('tv_connectivity'); content = renderConnectivity(); break;
+          case 'DATA': title = t('data_management'); content = renderDataManagement(); break;
+          case 'MEMBERSHIP': title = t('membership_settings'); content = renderMembershipAndDev(); break;
       }
 
       return (
@@ -729,11 +740,11 @@ const Settings: React.FC = () => {
           </div>
           
           <div className="bg-white dark:bg-palette-navyLight rounded-2xl p-2 shadow-sm border border-slate-200 dark:border-white/5 space-y-1">
-              <DesktopNavItem section="BUSINESS" icon={Building2} label={t('business_profile')} />
-              <DesktopNavItem section="GENERAL" icon={Coins} label={t('general_settings')} />
-              <DesktopNavItem section="CONNECTIVITY" icon={Wifi} label={t('tv_connectivity')} />
-              <DesktopNavItem section="DATA" icon={Database} label={t('data_management')} />
-              <DesktopNavItem section="MEMBERSHIP" icon={Crown} label={t('membership_settings')} />
+              {renderDesktopNavItem({ section: "BUSINESS", icon: Building2, label: t('business_profile') })}
+              {renderDesktopNavItem({ section: "GENERAL", icon: Coins, label: t('general_settings') })}
+              {renderDesktopNavItem({ section: "CONNECTIVITY", icon: Wifi, label: t('tv_connectivity') })}
+              {renderDesktopNavItem({ section: "DATA", icon: Database, label: t('data_management') })}
+              {renderDesktopNavItem({ section: "MEMBERSHIP", icon: Crown, label: t('membership_settings') })}
           </div>
 
           {/* Desktop Save Button - Positioned in sidebar for easy access */}
@@ -752,11 +763,11 @@ const Settings: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto pr-1 pb-4 custom-scrollbar">
-          {activeSection === 'BUSINESS' && <RenderBusinessSettings />}
-          {activeSection === 'GENERAL' && <RenderGeneralSettings />}
-          {activeSection === 'CONNECTIVITY' && <RenderConnectivity />}
-          {activeSection === 'DATA' && <RenderDataManagement />}
-          {activeSection === 'MEMBERSHIP' && <RenderMembershipAndDev />}
+          {activeSection === 'BUSINESS' && renderBusinessSettings()}
+          {activeSection === 'GENERAL' && renderGeneralSettings()}
+          {activeSection === 'CONNECTIVITY' && renderConnectivity()}
+          {activeSection === 'DATA' && renderDataManagement()}
+          {activeSection === 'MEMBERSHIP' && renderMembershipAndDev()}
       </main>
 
     </div>

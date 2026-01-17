@@ -15,12 +15,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Ziezan POS" />
-    <link rel="apple-touch-icon" href="https://beeimg.com/images/q27160638941.png" />
+    <link rel="apple-touch-icon" href="https://beeimg.com/images/s77882238754.png" />
     
-    <!-- Theme Color for Browser Address Bar - Initial Splash Color -->
+    <!-- Theme Color for Browser Address Bar -->
     <meta name="theme-color" content="#7c3aed" />
 
-    <link rel="icon" href="https://beeimg.com/images/q27160638941.png" />
+    <link rel="icon" href="https://beeimg.com/images/s77882238754.png" />
     <title>Ziezan Station POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -39,19 +39,18 @@
               ring: "hsl(var(--ring))",
               background: "hsl(var(--background))",
               foreground: "hsl(var(--foreground))",
-              // REVISED PALETTE: TRENDY PURPLE 2026 (Electric Violet)
               palette: {
-                mustard: '#7c3aed', // PRIMARY BRAND (Electric Violet 600)
-                copper: '#f97316',  // WARNING
-                green: '#10b981',   // SUCCESS
-                navy: '#0f0720',    // DARK BASE
-                navyLight: '#1e1b38', // DARK SURFACE
-                purple: '#8b5cf6',  // SECONDARY PURPLE
-                red: '#f43f5e',     // DANGER
-                yellow: '#facc15',  // HIGHLIGHT
-                brown: '#2e1065',   // TEXT BASE
-                cream: '#ede9fe',   // LIGHT ACCENT
-                creamLight: '#f5f3ff', // LIGHT BASE
+                mustard: '#7c3aed',
+                copper: '#f97316',
+                green: '#10b981',
+                navy: '#0f0720',
+                navyLight: '#1e1b38',
+                purple: '#8b5cf6',
+                red: '#f43f5e',
+                yellow: '#facc15',
+                brown: '#2e1065',
+                cream: '#ede9fe',
+                creamLight: '#f5f3ff',
               },
               brand: {
                 50: '#f5f3ff', 
@@ -74,86 +73,40 @@
               'spin-slow': 'spin 6s linear infinite',
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'shimmer': 'shimmer 3s infinite linear',
-              'gradient-xy': 'gradient-xy 6s ease infinite',
             },
             keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideIn: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              zoomIn: {
-                '0%': { transform: 'scale(0.95)', opacity: '0' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
-              },
-              shimmer: {
-                '0%': { transform: 'translateX(-150%) skewX(-20deg)' },
-                '100%': { transform: 'translateX(200%) skewX(-20deg)' },
-              },
-              'gradient-xy': {
-                  '0%, 100%': {
-                      'background-size': '400% 400%',
-                      'background-position': 'left center'
-                  },
-                  '50%': {
-                      'background-size': '200% 200%',
-                      'background-position': 'right center'
-                  }
-              }
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              slideIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+              zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+              shimmer: { '0%': { transform: 'translateX(-150%) skewX(-20deg)' }, '100%': { transform: 'translateX(200%) skewX(-20deg)' } },
             }
           }
         },
       }
     </script>
     <style>
-      /* Smooth scrolling & Theme Transitions */
-      html {
-        scroll-behavior: smooth;
-        transition: background-color 0.3s, color 0.3s;
-        -webkit-tap-highlight-color: transparent;
-      }
-      
-      body {
-        /* Base Backgrounds using the new Palette */
-        @apply bg-palette-creamLight text-palette-brown dark:bg-palette-navy dark:text-palette-cream transition-colors duration-300;
-      }
-
-      /* Custom Scrollbar styled with Palette */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        @apply bg-transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        /* Scrollbar uses the Primary Electric Violet */
-        @apply bg-palette-mustard/50 rounded-full hover:bg-palette-mustard;
-      }
-      
-      /* Mobile Safe Area */
-      .pb-safe {
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-      }
+      html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+      body { @apply bg-palette-creamLight text-palette-brown dark:bg-palette-navy dark:text-palette-cream transition-colors duration-300; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { @apply bg-transparent; }
+      ::-webkit-scrollbar-thumb { @apply bg-palette-mustard/50 rounded-full hover:bg-palette-mustard; }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.90.1",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
-  }
-}
-</script>
-</head>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+        "recharts": "https://esm.sh/recharts@^3.6.0",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.90.1",
+        "vite": "https://esm.sh/vite@^7.3.1",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+      }
+    }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
