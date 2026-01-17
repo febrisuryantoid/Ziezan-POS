@@ -1,76 +1,108 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Crown, Star, Shield, Clock, Calendar, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Crown, Star, Shield, Clock, Calendar, CheckCircle, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../services/supabaseClient';
+import { Member, MembershipTierId } from '../types';
 
 interface PublicMemberCardProps {
   nickname: string;
 }
 
 const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
-  const { members, membershipConfigs, refreshData } = useData();
+  const { membershipConfigs } = useData(); // We can still use config from context (defaults)
   const { t } = useLanguage();
+  
+  const [member, setMember] = useState<Member | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dots, setDots] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  // Animation for "Memuat data"
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDots(prev => prev.length < 3 ? prev + '.' : '');
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Force sync on mount
-  useEffect(() => {
-      const syncData = async () => {
-        refreshData();
-        // Give enough buffer for cloud sync to happen on slow connections
-        setTimeout(() => setIsLoading(false), 3000);
+      const fetchPublicMember = async () => {
+        try {
+            setIsLoading(true);
+            const decodedName = decodeURIComponent(nickname).trim();
+
+            // Fetch directly from Supabase (Cloud)
+            // Note: Ensure your Supabase RLS policies allow public read access to 'members' table
+            // OR at least allow reading 'nickname', 'name', 'total_hours_played', etc.
+            const { data, error } = await supabase
+                .from('members')
+                .select('*')
+                .ilike('nickname', decodedName) // Case insensitive search
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (data) {
+                // Map Cloud DB to App Type
+                const mappedMember: Member = {
+                    id: data.id,
+                    name: data.name,
+                    nickname: data.nickname,
+                    // PRIVACY: Don't map phone, address, notes for public view even if fetched
+                    phone: '', 
+                    address: '',
+                    notes: '',
+                    membershipId: data.membership_type as MembershipTierId || 'BASIC',
+                    membershipExpiryDate: data.membership_expiry_date,
+                    joinDate: data.joined_at,
+                    totalPlayTime: data.total_hours_played || 0,
+                    totalAmountPaid: 0, // Hide financial
+                    hoursProgressToNextBonus: 0, // Hide internal progress
+                    freeHoursBalance: 0, // Hide balance (optional)
+                    totalBonusHoursUsed: 0,
+                    status: data.status || 'ACTIVE',
+                    photoUrl: data.photo_url,
+                    synced: true
+                };
+                setMember(mappedMember);
+            } else {
+                setMember(null);
+            }
+        } catch (err: any) {
+            console.error("Error fetching public member:", err);
+            setError(err.message || "Gagal memuat data");
+        } finally {
+            setIsLoading(false);
+        }
       };
-      syncData();
-  }, [refreshData]);
 
-  // Find member by nickname (case-insensitive)
-  const decodedNickname = decodeURIComponent(nickname).toLowerCase();
-  const member = members.find(m => m.nickname.toLowerCase() === decodedNickname);
-  
-  if (isLoading && !member) {
+      fetchPublicMember();
+  }, [nickname]);
+
+  // Loading State
+  if (isLoading) {
       return (
           <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl flex flex-col items-center">
+              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl flex flex-col items-center animate-fade-in">
                 <Loader2 className="w-12 h-12 text-palette-mustard animate-spin mb-4" />
                 <h3 className="text-slate-900 dark:text-white font-bold text-lg">Mencari Data Member</h3>
-                <p className="text-slate-500 text-sm font-medium mt-1">Mohon tunggu{dots}</p>
-                <p className="text-xs text-slate-400 mt-4 max-w-[200px] text-center">Sedang mengambil data terbaru dari cloud...</p>
+                <p className="text-slate-500 text-sm font-medium mt-1">Mengambil data dari Cloud...</p>
               </div>
           </div>
       );
   }
   
+  // Not Found State
   if (!member) {
       return (
-          <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
+          <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400">
               <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                  <Shield size={48} className="opacity-40" />
+                  <AlertCircle size={48} className="opacity-40" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-slate-800 dark:text-slate-200">Member Tidak Ditemukan</h1>
-              <p className="text-sm text-center max-w-xs leading-relaxed">
-                Kami tidak dapat menemukan data member dengan nama panggilan <br/>
+              <p className="text-sm text-center max-w-xs leading-relaxed mb-6">
+                Tidak ada data member dengan nickname <br/>
                 <span className="font-bold text-palette-mustard bg-palette-mustard/10 px-2 py-0.5 rounded mt-1 inline-block text-base">@{decodeURIComponent(nickname)}</span>
               </p>
               
-              <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-                  >
-                    <RefreshCw size={16} /> Coba Muat Ulang
-                  </button>
-                  <a href="/" className="px-6 py-3.5 bg-palette-mustard text-white rounded-xl font-bold text-sm text-center shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 transition-transform">
-                    Masuk ke Aplikasi
-                  </a>
-              </div>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+              >
+                <RefreshCw size={16} /> Coba Lagi
+              </button>
           </div>
       );
   }
@@ -142,6 +174,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
            {/* Content */}
            <div className="px-8 pt-4 pb-10 text-center">
+               {/* PRIVACY: Showing Nickname primarily, Full name secondarily if needed, or just nickname */}
                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">{member.name}</h1>
                <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full mb-8">
                  <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wide">@{member.nickname}</p>

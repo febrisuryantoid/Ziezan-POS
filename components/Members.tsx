@@ -38,6 +38,7 @@ const Members: React.FC = () => {
   const [newJoinDate, setNewJoinDate] = useState(new Date().toISOString().split('T')[0]); // Default Today
   const [newTier, setNewTier] = useState<MembershipTierId>('BASIC'); // Default Basic
   const [newNotes, setNewNotes] = useState('');
+  const [newBonusBalance, setNewBonusBalance] = useState<number>(0); // Added for consistency
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
 
   // Refs
@@ -105,6 +106,7 @@ const Members: React.FC = () => {
     setNewJoinDate(new Date().toISOString().split('T')[0]);
     setNewTier('BASIC'); // Default Value
     setNewNotes('');
+    setNewBonusBalance(0);
     setIsAdding(false);
   };
 
@@ -121,7 +123,9 @@ const Members: React.FC = () => {
         membershipId: newTier,
         status: MemberStatus.ACTIVE,
         joinDate: newJoinDate ? new Date(newJoinDate).toISOString() : new Date().toISOString(),
-        notes: newNotes
+        notes: newNotes,
+        // Optional: initialize with bonus if needed, though usually starts at 0
+        freeHoursBalance: newBonusBalance 
       });
       addToast('success', 'Member Ditambahkan', `Selamat datang, ${newName}!`);
       resetForm();
@@ -130,10 +134,13 @@ const Members: React.FC = () => {
 
   const handleUpdateMember = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingMember) {
+    if (editingMember && editingMember.id) {
+      console.log("Updating member:", editingMember.id, editingMember.name);
       updateMember(editingMember);
       setEditingMember(null);
       addToast('success', 'Data Diperbarui', 'Perubahan data member berhasil disimpan.');
+    } else {
+      addToast('error', 'Gagal Update', 'ID Member tidak ditemukan.');
     }
   };
 
@@ -483,12 +490,18 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 4. Tanggal Lahir & Catatan (Bonus otomatis) */}
-                          <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
-                              <div className="relative">
-                                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                  <input type="date" value={newDob} onChange={e => setNewDob(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                          {/* 4. Tanggal Lahir & Bonus (Now available in Add too for consistency) */}
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
+                                  <input type="date" value={newDob} onChange={e => setNewDob(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('bonus_balance')} (Y Jam)</label>
+                                  <div className="relative">
+                                      <Gift className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                      <input type="number" inputMode="numeric" value={newBonusBalance} onChange={e => setNewBonusBalance(parseInt(e.target.value) || 0)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm font-mono focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                                  </div>
                               </div>
                           </div>
                           
