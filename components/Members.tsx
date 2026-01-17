@@ -3,20 +3,20 @@ import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Save, Users, Crown, Star, Shield, TrendingDown, ArrowUpCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Calendar, MapPin, Phone, Camera, Loader2, Link as LinkIcon, ImagePlus, Cake, AlertCircle, ExternalLink, Copy, User, Tag, StickyNote, ArrowUpDown, Filter, AlertTriangle } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
 const Members: React.FC = () => {
-  const { members, membershipConfigs, addMember, deleteMember, updateMember, upgradeMember } = useData();
-  const { t, language } = useLanguage();
+  const { members, membershipConfigs, addMember, deleteMember, updateMember } = useData();
+  const { t } = useLanguage();
   const { addToast } = useToast();
 
   // -- STATE --
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'ALL' | MemberStatus>('ALL');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
+  const [filterTier, setFilterTier] = useState<string>('ALL');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,8 +49,11 @@ const Members: React.FC = () => {
         m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         m.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (m.phone && m.phone.includes(searchTerm));
-      const matchesStatus = filterStatus === 'ALL' ? true : m.status === filterStatus;
-      return matchesSearch && matchesStatus;
+      
+      const matchesStatus = m.status === 'ACTIVE'; 
+      const matchesTier = filterTier === 'ALL' ? true : m.membershipId === filterTier;
+
+      return matchesSearch && matchesStatus && matchesTier;
     }).sort((a, b) => {
       switch (sortOption) {
         case 'NAME_ASC': return a.name.localeCompare(b.name);
@@ -60,7 +63,7 @@ const Members: React.FC = () => {
         default: return 0;
       }
     });
-  }, [members, searchTerm, filterStatus, sortOption]);
+  }, [members, searchTerm, sortOption, filterTier]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -138,44 +141,80 @@ const Members: React.FC = () => {
       });
   };
 
-  // Helper for Membership Style
-  const getTierIcon = (id: string) => {
-     switch(id) {
-         case 'VIP': return <Crown size={14} className="text-amber-500" />;
-         case 'PLUS': return <Star size={14} className="text-purple-500" />;
-         default: return <Shield size={14} className="text-slate-400" />;
-     }
+  // --- STYLE HELPERS (MATCHING SETTINGS PAGE) ---
+  const getTierStyle = (id: string) => {
+    switch(id) {
+      case 'VIP':
+        return {
+          card: 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 border-yellow-400',
+          text: 'text-amber-950',
+          subText: 'text-amber-900/80',
+          badgeBg: 'bg-white/30 text-amber-950',
+          iconColor: 'text-amber-900',
+          shineOpacity: 'opacity-30',
+          btnText: 'text-amber-900 hover:bg-white/20'
+        };
+      case 'PLUS':
+        return {
+          card: 'bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 border-purple-500',
+          text: 'text-white',
+          subText: 'text-white/80',
+          badgeBg: 'bg-white/20 text-white',
+          iconColor: 'text-white',
+          shineOpacity: 'opacity-20',
+          btnText: 'text-white hover:bg-white/20'
+        };
+      default: // BASIC
+        return {
+          card: 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 border-slate-300 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 dark:border-slate-600',
+          text: 'text-slate-800 dark:text-white',
+          subText: 'text-slate-600 dark:text-slate-300',
+          badgeBg: 'bg-slate-400/20 text-slate-700 dark:text-slate-200',
+          iconColor: 'text-slate-600 dark:text-slate-300',
+          shineOpacity: 'opacity-40',
+          btnText: 'text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'
+        };
+    }
+  };
+
+  const getIcon = (id: string, colorClass: string) => {
+    switch(id) {
+      case 'VIP': return <Crown size={20} className={colorClass} />;
+      case 'PLUS': return <Star size={20} className={colorClass} />;
+      default: return <Shield size={20} className={colorClass} />;
+    }
   };
 
   return (
     <div className="flex flex-col gap-6 pb-20">
-      {/* HEADER & FILTERS */}
+      {/* HEADER & FILTERS (MATCHING CONSOLES PAGE STYLE) */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('members')}</h2>
-          <p className="text-slate-500 text-xs">{t('manage_members_desc')}</p>
+        <div className="mb-2 xl:mb-0">
+          <h2 className="text-xl font-bold text-palette-navy dark:text-white">{t('members')}</h2>
+          <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_members_desc')}</p>
         </div>
 
+        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center">
             {/* Search */}
-            <div className="relative col-span-2 md:col-span-8 lg:w-auto lg:min-w-[240px]">
+            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
                     type="search" 
                     placeholder={t('search_placeholder')} 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
+                    className="h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
                 />
             </div>
 
             {/* Sort */}
-            <div className="relative col-span-1 md:col-span-4 lg:w-40">
+            <div className="relative col-span-1 md:col-span-6 lg:w-48">
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value as SortOption)}
-                    className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer"
+                    className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
                 >
                     <option value="NAME_ASC">{t('sort_name_asc')}</option>
                     <option value="NAME_DESC">{t('sort_name_desc')}</option>
@@ -184,64 +223,110 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
+            {/* Filter Tier (NEW) */}
+            <div className="relative col-span-1 md:col-span-6 lg:w-40">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <select 
+                    value={filterTier}
+                    onChange={(e) => setFilterTier(e.target.value)}
+                    className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
+                >
+                    <option value="ALL">{t('all')}</option>
+                    {membershipConfigs.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* Add Button */}
             <button 
                 onClick={() => setIsAdding(true)}
-                className="col-span-1 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 active:scale-95 whitespace-nowrap"
+                className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
             >
-                <UserPlus size={16} /> {t('add_member')}
+                <UserPlus size={18} /> {t('add_member')}
             </button>
         </div>
       </div>
 
-      {/* MEMBER GRID */}
+      {/* MEMBER GRID (REDESIGNED TO MATCH SETTINGS CONFIG CARDS) */}
       {filteredMembers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
               <Users size={48} className="text-slate-300 mb-4" />
               <p className="text-slate-500 font-medium">{t('no_data_members')}</p>
           </div>
       ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {currentMembers.map(member => (
-                  <div key={member.id} className="bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-all overflow-hidden group">
-                      <div className="p-4 flex items-start gap-4">
-                          <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
-                              <img 
-                                  src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
-                                  alt={member.name} 
-                                  className="w-14 h-14 rounded-2xl object-cover bg-slate-100 dark:bg-black/20 cursor-pointer"
-                              />
-                              <div className="absolute -bottom-1 -right-1 bg-white dark:bg-palette-navyLight p-1 rounded-full shadow-sm">
-                                  {getTierIcon(member.membershipId)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {currentMembers.map(member => {
+                  const style = getTierStyle(member.membershipId);
+                  return (
+                  <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card}`}>
+                      
+                      {/* Background Shimmer Effect */}
+                      <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
+
+                      {/* Header Section */}
+                      <div className="relative z-10 p-5 flex justify-between items-start">
+                          <div className="flex gap-3">
+                              <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
+                                  <img 
+                                      src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
+                                      alt={member.name} 
+                                      className="w-14 h-14 rounded-2xl object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
+                                  />
+                                  <div className={`absolute -bottom-2 -right-2 p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
+                                      {getIcon(member.membershipId, style.iconColor)}
+                                  </div>
+                              </div>
+                              <div className="min-w-0 flex flex-col justify-center">
+                                  <h3 className={`font-bold text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
+                                      {member.name}
+                                  </h3>
+                                  <p className={`text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
                               </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-slate-900 dark:text-white truncate cursor-pointer hover:text-palette-mustard" onClick={() => setViewingMember(member)}>{member.name}</h3>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">@{member.nickname}</p>
-                              <div className="flex flex-wrap gap-1">
-                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                                      <Clock size={10} /> {member.totalPlayTime}h
-                                  </span>
-                                  {member.freeHoursBalance > 0 && (
-                                      <span className="px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-[10px] font-bold flex items-center gap-1">
-                                          <Gift size={10} /> {member.freeHoursBalance}h
-                                      </span>
-                                  )}
-                              </div>
-                          </div>
+                          
+                          {/* Actions Dropdown / Buttons */}
                           <div className="flex flex-col gap-1">
-                              <button onClick={() => setEditingMember(member)} className="p-2 text-slate-400 hover:text-palette-mustard hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg transition-colors"><Edit2 size={14} /></button>
-                              <button onClick={() => setDeletingMemberId(member.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-2 rounded-xl transition-colors ${style.btnText}`}>
+                                  <Edit2 size={16} />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-2 rounded-xl transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
+                                  <Trash2 size={16} />
+                              </button>
                           </div>
                       </div>
-                      <div className="bg-slate-50 dark:bg-black/10 px-4 py-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center">
-                          <span className="text-[10px] text-slate-500 font-mono">{member.phone || '-'}</span>
-                          <button onClick={() => handleCopyLink(member.nickname)} className="text-[10px] font-bold text-palette-mustard hover:underline flex items-center gap-1">
-                              <ExternalLink size={10} /> Kartu Member
+
+                      {/* Stats Section */}
+                      <div className="relative z-10 px-5 pb-2 flex-1">
+                          <div className={`grid grid-cols-2 gap-2 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
+                              <div className="flex flex-col items-center">
+                                  <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
+                                  <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                      <Clock size={12} /> 
+                                      <span>{member.totalPlayTime}h</span>
+                                  </div>
+                              </div>
+                              <div className="flex flex-col items-center border-l border-white/10">
+                                  <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
+                                  <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                      <Gift size={12} /> 
+                                      <span>{member.freeHoursBalance}h</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* Footer Info */}
+                      <div className="relative z-10 px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
+                          <span className={`text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
+                              {member.phone || '-'}
+                          </span>
+                          <button onClick={() => handleCopyLink(member.nickname)} className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
+                              <ExternalLink size={10} /> Kartu
                           </button>
                       </div>
                   </div>
-              ))}
+              );})}
           </div>
       )}
 

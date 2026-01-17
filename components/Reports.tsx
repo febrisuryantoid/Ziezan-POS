@@ -174,15 +174,11 @@ const Reports: React.FC = () => {
           <p className="text-slate-500 text-xs">{t('overview_subtitle')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID - HYBRID LAYOUT 
-            Mobile: Grid 2 cols
-            Tablet Portrait (md): Grid 12 cols (for balanced wrapping)
-            Tablet Landscape (lg) & Desktop: Flexbox row (prevent stretching)
-        */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center">
+        {/* RESPONSIVE FILTER GRID - UPDATED FOR TABLET SAFETY */}
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
            
-           {/* Date Picker Start - 1/2 on Mobile, 1/4 on Tablet, Auto on Desktop */}
-           <div className="relative col-span-1 md:col-span-3 lg:w-auto lg:min-w-[130px]">
+           {/* Date Picker Start - 1/2 on Mobile, 4/12 on Tablet, Auto on Desktop */}
+           <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                  type="date" 
@@ -193,7 +189,7 @@ const Reports: React.FC = () => {
            </div>
            
            {/* Date Picker End */}
-           <div className="relative col-span-1 md:col-span-3 lg:w-auto lg:min-w-[130px]">
+           <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                  type="date" 
@@ -203,8 +199,8 @@ const Reports: React.FC = () => {
               />
            </div>
 
-           {/* Search - Full on Mobile, 1/2 on Tablet, Flex Grow on Desktop */}
-           <div className="relative col-span-2 md:col-span-6 lg:flex-grow lg:w-auto lg:min-w-[200px] xl:w-48">
+           {/* Search - Full on Mobile, 4/12 on Tablet, Flex Grow on Desktop */}
+           <div className="relative col-span-2 md:col-span-4 lg:flex-grow lg:w-auto lg:min-w-[200px] xl:w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
@@ -215,8 +211,8 @@ const Reports: React.FC = () => {
             />
           </div>
 
-          {/* Payment Filter - 1/2 on Mobile, 1/3 on Tablet, Fixed on Desktop */}
-          <div className="relative col-span-1 md:col-span-4 lg:w-32">
+          {/* Payment Filter - 1/2 on Mobile, 6/12 on Tablet, Fixed on Desktop */}
+          <div className="relative col-span-1 md:col-span-6 lg:w-32">
              <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={paymentFilter}
@@ -229,8 +225,8 @@ const Reports: React.FC = () => {
              </select>
           </div>
 
-          {/* Sort - 1/2 on Mobile, 1/3 on Tablet, Fixed on Desktop */}
-          <div className="relative col-span-1 md:col-span-4 lg:w-40">
+          {/* Sort - 1/2 on Mobile, 6/12 on Tablet, Fixed on Desktop */}
+          <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={sortOption}
@@ -244,10 +240,10 @@ const Reports: React.FC = () => {
              </select>
           </div>
 
-          {/* Export Button - Full on Mobile, 1/3 on Tablet, Auto on Desktop */}
+          {/* Export Button - Full on Mobile, Full on Tablet, Auto on Desktop */}
           <button 
             onClick={handleExportCSV}
-            className="col-span-2 md:col-span-4 lg:w-auto h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20 whitespace-nowrap active:scale-95"
+            className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20 whitespace-nowrap active:scale-95"
           >
             <Download size={16} /> {t('export_csv')}
           </button>
@@ -319,10 +315,10 @@ const Reports: React.FC = () => {
                            </span>
                         </div>
                         <div>
-                          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{tx.memberName}</h4>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{tx.memberName}</h4>
                           <div className="flex justify-between items-center mt-1">
-                             <span className="text-xs text-slate-600 dark:text-slate-400">{tx.consoleName}</span>
-                             <div className="flex items-center gap-2">
+                             <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{tx.consoleName}</span>
+                             <div className="flex items-center gap-2 shrink-0">
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                                   tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
                                 }`}>
@@ -371,8 +367,8 @@ const Reports: React.FC = () => {
                               <span className="text-[10px] text-slate-400">{timePart}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-3 text-slate-900 dark:text-white font-medium text-xs">{tx.memberName}</td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs">{tx.consoleName}</td>
+                          <td className="px-6 py-3 text-slate-900 dark:text-white font-medium text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
+                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs max-w-[120px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
                           <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs">{tx.durationHours} {t('hour_short')}</td>
                           <td className="px-6 py-3 text-center">
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg ${
@@ -411,7 +407,6 @@ const Reports: React.FC = () => {
           {/* Pagination Footer */}
           {totalPages > 1 && (
              <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/50">
-                 {/* ... Pagination Controls Same as Before ... */}
                 <div className="flex items-center gap-2">
                    <button 
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
@@ -420,7 +415,6 @@ const Reports: React.FC = () => {
                       <ChevronLeft size={16} />
                    </button>
                    
-                   {/* Mobile / Simple pagination just current / total */}
                    <span className="text-xs font-bold text-slate-500 mx-2">
                       {currentPage} / {totalPages}
                    </span>

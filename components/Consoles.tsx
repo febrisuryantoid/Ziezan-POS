@@ -253,8 +253,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID SYSTEM */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center">
+        {/* RESPONSIVE FILTER GRID SYSTEM - ADDED min-w-0 for safety */}
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
            
            {/* Search */}
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
@@ -337,8 +337,37 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                 {/* Image Container */}
                 <div className="relative w-full aspect-square bg-white dark:bg-transparent overflow-hidden p-8 flex items-center justify-center">
                     <img src={imageUrl} alt={console.name} className={`w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-xl ${isMaintenance ? 'grayscale opacity-50' : isActive ? 'opacity-40' : 'opacity-100'}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)}/>
-                    <div className="absolute top-4 right-4 z-10"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide backdrop-blur-md shadow-lg border border-white/10 ${isActive ? (session?.isOvertime ? 'bg-red-500 text-white animate-pulse' : 'bg-palette-mustard text-white') : isMaintenance ? 'bg-orange-500 text-white' : 'bg-emerald-500 text-white'}`}><span className={`w-1.5 h-1.5 rounded-full bg-white ${isActive ? 'animate-ping' : ''}`} />{isActive ? (session?.isOvertime ? 'OVERTIME' : 'PLAYING') : isMaintenance ? 'MAINTENANCE' : 'READY'}</span></div>
-                    {isActive && session && (<div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-0 bg-black/10 dark:bg-black/40 backdrop-blur-[2px]"><div className="relative w-24 h-24 mb-3"><svg className="w-full h-full transform -rotate-90 drop-shadow-2xl"><circle cx="48" cy="48" r="42" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="transparent" /><circle cx="48" cy="48" r="42" stroke={session.isOvertime ? '#ef4444' : '#fbbf24'} strokeWidth="8" fill="transparent" strokeDasharray={264} strokeDashoffset={264 - (264 * session.progress) / 100} strokeLinecap="round" className="transition-all duration-1000 ease-linear"/></svg><div className="absolute inset-0 flex flex-col items-center justify-center text-white"><span className="text-xl font-black font-mono shadow-black drop-shadow-md tracking-tight">{session.formattedRemaining}</span><span className="text-[9px] uppercase opacity-90 font-bold bg-black/20 px-2 rounded-full mt-1">{t('remaining')}</span></div></div><div className="bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-xl px-4 py-2 text-slate-900 dark:text-white flex items-center gap-2 border border-white/20 shadow-xl max-w-full"><User size={14} className="text-palette-mustard"/><span className="text-xs font-bold truncate max-w-[120px]">{session.tx.memberName}</span></div></div>)}
+                    
+                    <div className="absolute top-4 right-4 z-10">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide backdrop-blur-md shadow-lg border border-white/10 ${isActive ? (session?.isOvertime ? 'bg-red-500 text-white animate-pulse' : 'bg-palette-mustard text-white') : isMaintenance ? 'bg-orange-500 text-white' : 'bg-emerald-500 text-white'}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full bg-white ${isActive ? 'animate-ping' : ''}`} />
+                            {isActive ? (session?.isOvertime ? 'OVERTIME' : 'PLAYING') : isMaintenance ? 'MAINTENANCE' : 'READY'}
+                        </span>
+                    </div>
+
+                    {/* ACTIVE SESSION OVERLAY - RESPONSIVE FIX */}
+                    {isActive && session && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-0 bg-black/10 dark:bg-black/40 backdrop-blur-[2px] overflow-hidden">
+                            {/* Scalable SVG Container: shrink on small screens */}
+                            <div className="relative w-20 h-20 md:w-24 md:h-24 mb-3 shrink-0">
+                                <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl">
+                                    <circle cx="50%" cy="50%" r="45%" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="transparent" />
+                                    <circle cx="50%" cy="50%" r="45%" stroke={session.isOvertime ? '#ef4444' : '#fbbf24'} strokeWidth="8" fill="transparent" strokeDasharray={283} strokeDashoffset={283 - (283 * session.progress) / 100} strokeLinecap="round" className="transition-all duration-1000 ease-linear"/>
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                                    <span className="text-lg md:text-xl font-black font-mono shadow-black drop-shadow-md tracking-tight">{session.formattedRemaining}</span>
+                                    <span className="text-[8px] md:text-[9px] uppercase opacity-90 font-bold bg-black/20 px-2 rounded-full mt-0.5">{t('remaining')}</span>
+                                </div>
+                            </div>
+                            
+                            {/* Member Name Badge - Scale down text if long */}
+                            <div className="bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-xl px-3 py-1.5 md:px-4 md:py-2 text-slate-900 dark:text-white flex items-center gap-2 border border-white/20 shadow-xl max-w-full z-10">
+                                <User size={12} className="text-palette-mustard shrink-0"/>
+                                <span className="text-[10px] md:text-xs font-bold truncate max-w-[100px] md:max-w-[120px]">{session.tx.memberName}</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Action Buttons (Edit/Delete) - Ensure stopPropagation */}
                     <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                         <button onClick={(e) => { e.stopPropagation(); setEditingConsole(console); setNewConsoleImage(console.imageUrl || ''); }} className="p-2 bg-white/90 hover:bg-white text-slate-700 shadow-md rounded-xl backdrop-blur-md transition-colors"><Edit2 size={14}/></button>
@@ -348,6 +377,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                         )}
                     </div>
                 </div>
+                
                 {/* Body Content */}
                 <div className="p-5 flex flex-col gap-3 flex-1 justify-between bg-slate-50/50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5">
                     <div>

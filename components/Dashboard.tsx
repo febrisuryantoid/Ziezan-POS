@@ -36,15 +36,15 @@ const Dashboard: React.FC = () => {
       <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-10 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
       
       <div className="flex justify-between items-start relative z-10">
-        <div>
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">{title}</p>
-          <h3 className={`text-2xl font-black mt-2 ${colorClass}`}>{value}</h3>
+        <div className="min-w-0">
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide truncate">{title}</p>
+          <h3 className={`text-2xl font-black mt-2 ${colorClass} truncate`}>{value}</h3>
         </div>
-        <div className={`p-2.5 rounded-xl ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+        <div className={`p-2.5 rounded-xl shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
           <Icon size={20} />
         </div>
       </div>
-      <p className="text-[10px] text-slate-400 mt-2 font-medium">{sub}</p>
+      <p className="text-[10px] text-slate-400 mt-2 font-medium truncate">{sub}</p>
     </div>
   );
 
@@ -116,12 +116,12 @@ const Dashboard: React.FC = () => {
                 <div className="md:hidden">
                    {recentTransactions.map(tx => (
                      <div key={tx.id} className="p-4 border-b border-slate-100 dark:border-white/5 last:border-0">
-                       <div className="flex justify-between items-start mb-2">
-                         <div>
+                       <div className="flex justify-between items-start mb-2 gap-2">
+                         <div className="min-w-0 flex-1">
                             <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-0.5">{t('members')}</span>
-                            <span className="font-bold text-sm text-slate-900 dark:text-white">{tx.memberName}</span>
+                            <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName}</span>
                          </div>
-                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${
+                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                             tx.status === 'ACTIVE' 
                               ? 'bg-palette-green/10 text-palette-green' 
                               : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400'
@@ -130,11 +130,11 @@ const Dashboard: React.FC = () => {
                           </span>
                        </div>
                        <div className="flex justify-between items-end mt-2">
-                         <div>
+                         <div className="min-w-0 flex-1">
                            <div className="text-[10px] text-slate-500 mb-0.5">{t('consoles')}</div>
-                           <div className="text-xs text-slate-700 dark:text-slate-300">{tx.consoleName}</div>
+                           <div className="text-xs text-slate-700 dark:text-slate-300 truncate">{tx.consoleName}</div>
                          </div>
-                         <div className="text-right">
+                         <div className="text-right shrink-0 ml-2">
                            <div className="text-[10px] text-slate-500 mb-0.5">{t('duration')}</div>
                            <div className="text-xs font-semibold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
                          </div>
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
 
                 {/* Desktop View: Table */}
                 <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-sm text-left">
+                  <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 tracking-wider">
                       <tr>
                         <th className="px-6 py-3 font-semibold">{t('members')}</th>
@@ -157,8 +157,8 @@ const Dashboard: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                       {recentTransactions.map(tx => (
                         <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-3 font-medium text-slate-900 dark:text-white text-xs">{tx.memberName}</td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs">{tx.consoleName}</td>
+                          <td className="px-6 py-3 font-medium text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
+                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
                           <td className="px-6 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               tx.status === 'ACTIVE' 

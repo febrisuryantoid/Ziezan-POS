@@ -761,8 +761,8 @@ const Settings: React.FC = () => {
           </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pr-1 pb-4 custom-scrollbar">
+      {/* Main Content Area - Added min-w-0 for flex layout safety */}
+      <main className="flex-1 overflow-y-auto pr-1 pb-4 custom-scrollbar min-w-0">
           {activeSection === 'BUSINESS' && renderBusinessSettings()}
           {activeSection === 'GENERAL' && renderGeneralSettings()}
           {activeSection === 'CONNECTIVITY' && renderConnectivity()}
