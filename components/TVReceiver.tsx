@@ -161,7 +161,7 @@ const TVReceiver: React.FC = () => {
                    </div>
                    <span className="text-xl font-medium">{activeSession.memberName}</span>
                    <span className="mx-2 opacity-50">•</span>
-                   <span className="text-xl opacity-80">{durationHoursDisplay}h Session</span>
+                   <span className="text-xl opacity-80">{durationHoursDisplay} {t('hour_short')} Session</span>
                 </div>
               </div>
            </div>

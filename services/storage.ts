@@ -10,7 +10,8 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     name: 'Basic', 
     price: 0, 
     durationDays: 0, // Lifetime
-    bonusThreshold: 5, // Play 5
+    // UPDATED: Main 6 Jam Gratis 1 Jam
+    bonusThreshold: 6, // Play 6
     bonusReward: 1,    // Get 1
     isActive: true,
     // Silver Metallic
@@ -41,6 +42,13 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
+  // New Business Defaults
+  businessName: 'Ziezan Station',
+  businessAddress: 'Blok Nyomplong No.34, RT.09/RW.02, Padasuka, Baros, Kab. Serang.',
+  businessPhone: '+62 8888-9077-31',
+  businessLogo: 'https://beeimg.com/images/s77882238754.png', // Updated Default Icon
+
+  // Operational Defaults
   hourlyRate: 5000,
   cloudRetentionDays: 90, // Default: Keep cloud clean by removing data older than 3 months
   birthdayBonusHours: 2 // Default: 2 Hours free on birthday
@@ -82,9 +90,10 @@ export const getMembers = (): Member[] => {
   if (!data) return [];
   
   const members: Member[] = JSON.parse(data);
-  // Migration: Ensure new fields exist
+  // Migration: Ensure new fields exist and Nickname is generated
   return members.map(m => ({
     ...m,
+    nickname: m.nickname || m.name.split(' ')[0], // Default nickname = First word of Name
     membershipId: m.membershipId || 'BASIC',
     totalAmountPaid: m.totalAmountPaid || 0,
     membershipExpiryDate: m.membershipExpiryDate || null,
@@ -111,8 +120,16 @@ export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
   if (data) {
       const parsed = JSON.parse(data);
-      // Migration for old settings that might not have retention policy
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      // Migration for old settings
+      return { 
+        ...DEFAULT_SETTINGS, 
+        ...parsed,
+        // Ensure new fields are populated if they don't exist in saved data
+        businessName: parsed.businessName || DEFAULT_SETTINGS.businessName,
+        businessAddress: parsed.businessAddress || DEFAULT_SETTINGS.businessAddress,
+        businessPhone: parsed.businessPhone || DEFAULT_SETTINGS.businessPhone,
+        businessLogo: parsed.businessLogo || DEFAULT_SETTINGS.businessLogo,
+      };
   }
   return DEFAULT_SETTINGS;
 };

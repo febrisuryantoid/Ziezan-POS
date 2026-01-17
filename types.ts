@@ -51,6 +51,7 @@ export interface MembershipConfig {
 export interface Console {
   id: string;
   name: string;
+  imageUrl?: string; // New field for custom console image
   status: ConsoleStatus;
   totalHoursUsed: number;
   notes?: string;
@@ -62,7 +63,8 @@ export interface Member {
   id: string;
   membershipId: MembershipTierId; 
   membershipExpiryDate?: string | null; // ISO String, null for lifetime
-  name: string;
+  name: string; // FULL NAME (Nama Lengkap)
+  nickname: string; // NEW: Display Name (Nama Panggilan)
   photoUrl?: string; // Base64 or URL
   phone?: string; 
   address?: string; 
@@ -97,6 +99,13 @@ export interface Transaction {
 }
 
 export interface AppSettings {
+  // Business Profile
+  businessName: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessLogo: string;
+
+  // Operational
   hourlyRate: number;
   cloudRetentionDays: number; // 0 = Keep Forever (Risk full), 30/60/90 = Auto Prune
   birthdayBonusHours: number; // Hours given for free on birthday

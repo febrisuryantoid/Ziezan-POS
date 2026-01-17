@@ -3,6 +3,7 @@ import { LayoutDashboard, Gamepad2, Users, Settings, LogOut, FileBarChart, Moon,
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
+import { useData } from '../contexts/DataContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,13 +17,11 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   const { theme, toggleTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
   const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
+  const { settings } = useData();
   
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Dynamic Year
-  const currentYear = new Date().getFullYear();
-
   // DYNAMIC ADDRESS BAR COLOR LOGIC
   useEffect(() => {
     const metaThemeColor = document.querySelector("meta[name=theme-color]");
@@ -57,12 +56,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     return (
       <div 
         onClick={() => setTab(id)} 
-        className={`group relative flex items-center justify-center w-12 h-12 mx-auto rounded-xl cursor-pointer transition-all duration-300 mb-3
+        className={`group relative flex items-center justify-center w-10 h-10 mx-auto rounded-xl cursor-pointer transition-all duration-300 mb-3
         ${isActive 
-          ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/40' 
-          : 'text-palette-brown/60 dark:text-palette-cream/50 hover:bg-palette-cream dark:hover:bg-palette-navyLight hover:text-palette-mustard dark:hover:text-palette-yellow'}`}
+          ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/40 scale-105' 
+          : 'text-palette-brown/60 dark:text-palette-cream/50 hover:bg-white dark:hover:bg-white/10 hover:text-palette-mustard dark:hover:text-palette-yellow hover:scale-105'}`}
       >
-        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
         
         {/* Tooltip */}
         <div className="absolute left-full ml-4 px-3 py-1.5 bg-palette-navyLight text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-200 pointer-events-none whitespace-nowrap z-[100] shadow-xl border border-palette-mustard/20">
@@ -75,26 +74,32 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
 
   const MobileNavItem = ({ id, icon: Icon, label }: { id: string; icon: any; label: string }) => {
     const isActive = currentTab === id;
+    const handleClick = () => {
+        // Haptic feedback simulation for mobile feel
+        if (navigator.vibrate) navigator.vibrate(10); 
+        setTab(id);
+    };
+
     return (
       <button 
-        onClick={() => setTab(id)}
-        className="flex-1 flex flex-col items-center justify-end pb-1 pt-1 relative group h-[50px]"
+        onClick={handleClick}
+        className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-90 transition-transform duration-100"
       >
         <div className={`
-           absolute transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) flex items-center justify-center z-20
+           transition-all duration-300 ease-out flex items-center justify-center rounded-2xl mb-1
            ${isActive 
-             ? 'w-12 h-12 bg-palette-mustard dark:bg-palette-purple text-white rounded-full shadow-md shadow-palette-mustard/20 dark:shadow-palette-purple/20 -top-5' 
-             : 'w-auto h-auto text-palette-brown/40 dark:text-palette-cream/40 top-1'
+             ? 'w-12 h-8 bg-palette-mustard/10 text-palette-mustard dark:bg-palette-purple/20 dark:text-palette-purple' 
+             : 'w-auto h-auto text-slate-400 dark:text-slate-500'
            }
         `}>
-           <Icon size={isActive ? 24 : 22} strokeWidth={isActive ? 2.5 : 2} />
+           <Icon size={isActive ? 22 : 24} strokeWidth={isActive ? 2.5 : 2} />
         </div>
         
         <span className={`
-            text-[10px] font-bold leading-none tracking-tight transition-all duration-300 absolute bottom-1 z-10
+            text-[10px] font-bold leading-none tracking-tight transition-all duration-300
             ${isActive 
-                ? 'text-palette-mustard dark:text-palette-purple opacity-100 translate-y-0' 
-                : 'text-palette-brown/40 dark:text-palette-cream/40 opacity-100'
+                ? 'text-palette-mustard dark:text-palette-purple scale-100' 
+                : 'text-slate-400 dark:text-slate-500 scale-90'
             }
         `}>
             {label}
@@ -103,22 +108,25 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     );
   };
 
+  const appLogo = settings.businessLogo || "https://beeimg.com/images/t47564105964.png";
+  const appName = settings.businessName || "Ziezan Station";
+
   return (
     // UPDATED: Added w-full, fixed inset-0, and dynamic viewport height support
     <div className="flex h-screen w-full bg-palette-creamLight dark:bg-palette-navy text-palette-brown dark:text-palette-cream overflow-hidden font-sans transition-colors duration-300 fixed inset-0 supports-[height:100dvh]:h-[100dvh]">
       
       {/* Sidebar - Desktop */}
-      {/* UPDATED: Sidebar width increased slightly to accommodate larger logo */}
-      <aside className="hidden md:flex w-24 bg-white dark:bg-palette-navyLight border-r border-slate-200 dark:border-white/5 flex-col items-center py-6 z-50 shadow-xl rounded-r-[32px] transition-colors duration-300 overflow-visible shrink-0">
+      <aside className="hidden md:flex w-20 bg-white/80 dark:bg-palette-navyLight/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-white/5 flex-col items-center py-6 z-50 shadow-2xl transition-colors duration-300 overflow-visible shrink-0">
         
         {/* App Logo */}
-        <div className="mb-8">
+        <div className="mb-8 w-10 h-10">
            <img 
-             src="https://beeimg.com/images/t47564105964.png" 
-             alt="Ziezan POS" 
-             className="w-16 h-16 object-contain cursor-pointer hover:scale-105 transition-transform"
-             title="Ziezan POS"
+             src={appLogo} 
+             alt={appName} 
+             className="w-full h-full object-cover cursor-pointer hover:rotate-12 transition-transform rounded-xl shadow-md bg-white"
+             title={appName}
              onClick={() => setTab('dashboard')}
+             onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
            />
         </div>
 
@@ -128,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
             <NavItemDesktop id="consoles" icon={Gamepad2} label={t('consoles')} />
             <NavItemDesktop id="members" icon={Users} label={t('members')} />
             
-            <div className="w-8 h-[1px] bg-slate-200 dark:bg-white/10 my-2"></div>
+            <div className="w-8 h-[1px] bg-slate-200 dark:bg-white/10 my-3"></div>
             
             <NavItemDesktop id="reports" icon={FileBarChart} label={t('reports')} />
             {user.role === 'ADMIN' && (
@@ -139,58 +147,62 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         {/* Footer Actions */}
         <div className="mt-auto flex flex-col items-center gap-4">
            {/* User Avatar */}
-           <div className="group relative">
-              <div className="w-10 h-10 rounded-full bg-palette-cream dark:bg-white/10 flex items-center justify-center text-palette-mustard font-bold text-sm ring-2 ring-transparent group-hover:ring-palette-mustard transition-all cursor-help">
-                {user.username.charAt(0).toUpperCase()}
+           <div className="group relative cursor-pointer">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-purple p-[2px]">
+                <div className="w-full h-full rounded-full bg-white dark:bg-palette-navyLight flex items-center justify-center text-palette-mustard font-black text-xs">
+                    {user.username.charAt(0).toUpperCase()}
+                </div>
               </div>
            </div>
 
            <button 
             onClick={onLogout}
-            className="group relative flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-palette-red hover:bg-palette-red/10 dark:hover:bg-palette-red/20 transition-colors"
+            className="group relative flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-white hover:bg-palette-red transition-all shadow-sm hover:shadow-palette-red/30"
+            title={t('logout')}
           >
-            <LogOut size={20} />
+            <LogOut size={18} />
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      {/* UPDATED: Added md:pl-6 to create a proportional gap between Sidebar and Header/Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full md:pl-6">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
         
         {/* Top Status Bar (Harmonized) */}
-        <div className="bg-white/50 dark:bg-palette-navy/50 backdrop-blur-sm text-slate-600 dark:text-slate-400 px-4 py-2 flex justify-end gap-5 text-xs font-bold tracking-wide z-20 border-b border-slate-200/50 dark:border-white/5 shrink-0">
+        <div className="bg-white/80 dark:bg-palette-navy/80 backdrop-blur-md text-slate-600 dark:text-slate-400 px-4 py-1.5 flex justify-end gap-4 text-[10px] font-bold tracking-wide z-20 border-b border-slate-200/50 dark:border-white/5 shrink-0 uppercase shadow-sm">
             <div className={`flex items-center gap-1.5 ${isOnline ? 'text-palette-green' : 'text-palette-red'}`}>
-                {isOnline ? <Wifi size={14}/> : <WifiOff size={14}/>} 
-                {isOnline ? t('online') : t('offline')}
+                {isOnline ? <Wifi size={12}/> : <WifiOff size={12}/>} 
+                <span className="hidden sm:inline">{isOnline ? t('online') : t('offline')}</span>
             </div>
             <div className={`flex items-center gap-1.5 ${isBtConnected ? 'text-blue-500 cursor-default' : 'text-slate-400 cursor-pointer hover:text-palette-mustard'}`} onClick={!isBtConnected ? connectBt : undefined}>
-                {isBtConnected ? <Bluetooth size={14}/> : <BluetoothOff size={14}/>}
-                {isBtConnected ? t('tv_connected') : t('tv_disconnected')}
+                {isBtConnected ? <Bluetooth size={12}/> : <BluetoothOff size={12}/>}
+                <span className="hidden sm:inline">{isBtConnected ? t('tv_connected') : t('tv_disconnected')}</span>
             </div>
             <div className={`flex items-center gap-1.5 ${isSyncing ? 'text-palette-mustard animate-pulse' : 'text-slate-400'}`}>
-                <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""}/>
-                {isSyncing ? t('syncing') : t('synced')}
+                <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""}/>
+                <span className="hidden sm:inline">{isSyncing ? t('syncing') : t('synced')}</span>
             </div>
         </div>
 
         {/* Top Header */}
-        {/* UPDATED: Added rounded-b-[32px] for curved bottom corners */}
-        <header className="bg-white/80 dark:bg-palette-navyLight/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 h-16 flex justify-between items-center px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300 shrink-0 rounded-b-[32px] shadow-sm">
+        <header className="bg-white/60 dark:bg-palette-navyLight/60 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 h-16 flex justify-between items-center px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300 shrink-0">
           <div className="flex items-center gap-3 md:hidden">
-             <img 
-               src="https://beeimg.com/images/t47564105964.png" 
-               alt="Ziezan POS" 
-               className="w-8 h-8 rounded-lg shadow-sm"
-             />
-             <span className="font-bold text-lg text-palette-navy dark:text-white">Ziezan <span className="text-palette-mustard">POS</span></span>
+             <div className="w-9 h-9 rounded-xl shadow-md border border-white/20 overflow-hidden">
+                <img 
+                  src={appLogo} 
+                  alt={appName} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
+                />
+             </div>
+             <span className="font-extrabold text-lg text-palette-navy dark:text-white tracking-tight truncate max-w-[150px]">{appName}<span className="text-palette-mustard">.</span></span>
           </div>
           
           <div className="hidden md:block">
-            <h2 className="text-xl font-bold capitalize text-palette-navy dark:text-white flex items-center gap-2">
-                <span className="flex h-2 w-2 relative">
+            <h2 className="text-xl font-bold capitalize text-palette-navy dark:text-white flex items-center gap-3">
+                <span className="flex h-2.5 w-2.5 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-palette-mustard opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-palette-mustard"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-palette-mustard"></span>
                 </span>
                 {t(currentTab as any)}
             </h2>
@@ -199,37 +211,35 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
           <div className="flex items-center gap-3">
             <button
                onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-               className="h-10 px-4 rounded-xl bg-palette-cream/50 hover:bg-palette-cream dark:bg-white/5 dark:hover:bg-white/10 text-palette-brown dark:text-palette-cream font-bold text-xs flex items-center gap-2 border border-transparent transition-all"
+               className="h-10 px-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-cream font-bold text-[10px] flex items-center gap-2 hover:border-palette-mustard transition-all active:scale-95"
             >
-               <Languages size={18} />
+               <Languages size={16} />
                <span className="mt-0.5">{language.toUpperCase()}</span>
             </button>
             <button 
               onClick={toggleTheme}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-palette-cream/50 hover:bg-palette-cream dark:bg-white/5 dark:hover:bg-white/10 text-palette-brown dark:text-palette-yellow transition-all"
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95"
             >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button 
               onClick={onLogout} 
-              className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-red-50 text-palette-red hover:bg-red-100 dark:bg-red-900/20 dark:text-palette-red dark:hover:bg-red-900/30 transition-all"
+              className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-red-50 text-palette-red border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 active:scale-95 transition-all"
             >
-              <LogOut size={20} />
+              <LogOut size={18} />
             </button>
           </div>
         </header>
 
-        {/* Content Scroll Area */}
-        {/* UPDATED: Changed padding bottom to pb-24 (96px) which is better for bottom nav spacing */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-24 md:pb-8 overscroll-contain">
-          <div className="max-w-7xl mx-auto animate-fade-in">
+        {/* Content Scroll Area - Improved Padding for Tablet */}
+        <main className="flex-1 overflow-y-auto scroll-smooth pb-24 md:pb-6 overscroll-contain bg-slate-50/50 dark:bg-black/20">
+          <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl animate-fade-in">
             {children}
           </div>
         </main>
 
-        {/* Bottom Navigation - Mobile */}
-        {/* UPDATED: Height reduced to h-[60px], items-end with padding adjustment for tighter layout */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-palette-navyLight border-t border-slate-200 dark:border-white/5 flex justify-around items-end px-2 pb-safe z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] rounded-t-[32px] h-[60px]">
+        {/* Bottom Navigation - Mobile (Premium Glassmorphism) */}
+        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-palette-navyLight/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex justify-between items-center px-2 pb-safe z-50 shadow-2xl shadow-palette-navy/20 rounded-3xl h-[70px]">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />

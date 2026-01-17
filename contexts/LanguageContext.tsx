@@ -145,6 +145,7 @@ const dictionary = {
     ready_to_play: "Siap Bermain",
     member_label: "Member:",
     unknown_unit: "Tidak Diketahui",
+    hour_short: "Jam",
 
     // Login Placeholders
     enter_username: "Masukkan username...",
@@ -191,7 +192,29 @@ const dictionary = {
     // Reports
     export_csv: "Export CSV",
     search_reports_placeholder: "Cari member / unit...",
-    total_data_count: "Total: {count} Data"
+    total_data_count: "Total: {count} Data",
+
+    // --- NEWLY ADDED FOR AUDIT ---
+    since: "Terdaftar",
+    joined: "Bergabung",
+    verified_member: "Member Terverifikasi",
+    member_card_footer: "Kartu Member",
+    business_profile: "Profil Bisnis",
+    logo_label: "Logo Struk & Aplikasi",
+    or_use_url: "Atau gunakan URL gambar:",
+    business_name: "Nama Bisnis",
+    full_address: "Alamat Lengkap",
+    phone_number: "Nomor Telepon",
+    print_wifi: "Browser Print / Wi-Fi",
+    print_bt: "Bluetooth Thermal",
+    select_print_method: "Pilih Metode Cetak",
+    receipt_for_tx: "Struk untuk transaksi {name}",
+    preview_image: "Preview Gambar",
+    sort_usage_desc: "Terbanyak Dipakai",
+    sort_date_new: "Tanggal (Baru)",
+    sort_date_old: "Tanggal (Lama)",
+    sort_cost_hi: "Nominal (Tertinggi)",
+    sort_cost_lo: "Nominal (Terendah)",
   },
   en: {
     dashboard: "Dashboard",
@@ -334,6 +357,7 @@ const dictionary = {
     ready_to_play: "Ready to play",
     member_label: "Member:",
     unknown_unit: "Unknown",
+    hour_short: "H",
 
     // Login Placeholders
     enter_username: "Enter username...",
@@ -380,7 +404,29 @@ const dictionary = {
     // Reports
     export_csv: "Export CSV",
     search_reports_placeholder: "Search member / unit...",
-    total_data_count: "Total: {count} Records"
+    total_data_count: "Total: {count} Records",
+
+    // --- NEWLY ADDED FOR AUDIT ---
+    since: "Member Since",
+    joined: "Joined",
+    verified_member: "Verified Member",
+    member_card_footer: "Member Card",
+    business_profile: "Business Profile",
+    logo_label: "Receipt & App Logo",
+    or_use_url: "Or use image URL:",
+    business_name: "Business Name",
+    full_address: "Full Address",
+    phone_number: "Phone Number",
+    print_wifi: "Browser Print / Wi-Fi",
+    print_bt: "Bluetooth Thermal",
+    select_print_method: "Select Print Method",
+    receipt_for_tx: "Receipt for transaction {name}",
+    preview_image: "Image Preview",
+    sort_usage_desc: "Most Used",
+    sort_date_new: "Date (Newest)",
+    sort_date_old: "Date (Oldest)",
+    sort_cost_hi: "Cost (Highest)",
+    sort_cost_lo: "Cost (Lowest)",
   }
 };
 

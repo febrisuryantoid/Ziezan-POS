@@ -19,12 +19,12 @@ interface DataContextType {
   
   // Console Actions
   addConsole: (c: Omit<Console, 'id' | 'status' | 'totalHoursUsed'>) => void;
-  updateConsole: (id: string, name: string) => void; 
+  updateConsole: (id: string, name: string, imageUrl?: string) => void; 
   updateConsoleStatus: (id: string, status: ConsoleStatus) => void;
   deleteConsole: (id: string) => boolean; 
 
   // Member Actions
-  addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>) => void;
+  addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>) => string;
   updateMember: (m: Member) => void;
   deleteMember: (id: string) => void;
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
@@ -54,12 +54,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSettings(Storage.getSettings());
   }, []);
 
+  // --- INITIALIZATION & SYNC LOGIC ---
   useEffect(() => {
-    refreshData();
-    // Try to sync on load if online
-    if (navigator.onLine) {
-        syncService.syncNow();
-    }
+    const initData = async () => {
+        // 1. Load what we have locally first (Fast Render)
+        refreshData();
+
+        // 2. CRITICAL: Pull from Cloud (Restore Data)
+        if (navigator.onLine) {
+            console.log("[DataContext] Pulling latest data from Cloud...");
+            const success = await syncService.pullFromCloud();
+            if (success) {
+                refreshData(); // Refresh UI after pull
+            }
+            
+            // 3. Then Push any pending changes
+            syncService.syncNow();
+        }
+    };
+
+    initData();
     
     // Cross-tab synchronization
     const handleStorageChange = (e: StorageEvent) => {
@@ -72,7 +86,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [refreshData]);
 
-  // --- CHECK BIRTHDAYS AUTOMATICALLY ---
+  // --- AUTOMATIC BIRTHDAY CHECKER ---
   useEffect(() => {
     if (members.length === 0) return;
 
@@ -105,14 +119,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (hasUpdates) {
-        console.log("Birthday bonuses applied!");
+        console.log("[System] Birthday bonuses applied to members.");
         Storage.saveMembers(updatedMembers);
         setMembers(updatedMembers);
         syncService.syncNow();
     }
-  }, [members.length, settings.birthdayBonusHours]); // Run when member count changes or settings change, but also implicitly on mount via refreshData
+  }, [members.length, settings.birthdayBonusHours]); 
 
-  // --- SAFE STORAGE HELPER ---
+  // --- SAFE STORAGE HELPER (Quota Handler) ---
   const safeSave = (fn: () => void) => {
     try {
         fn();
@@ -125,7 +139,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // --- Actions ---
+  // --- ACTIONS ---
 
   const updateSettings = (newSettings: AppSettings) => {
     safeSave(() => Storage.saveSettings(newSettings));
@@ -150,8 +164,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConsoles(updated);
   };
 
-  const updateConsole = (id: string, name: string) => {
-    const updated = consoles.map(c => c.id === id ? { ...c, name } : c);
+  const updateConsole = (id: string, name: string, imageUrl?: string) => {
+    const updated = consoles.map(c => c.id === id ? { ...c, name, imageUrl } : c);
     safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
   };
@@ -173,11 +187,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
-  const addMember = (data: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>) => {
+  const addMember = (data: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>): string => {
+    const newId = Math.random().toString(36).substr(2, 9);
     const newMember: Member = {
       ...data,
+      // Default nickname to first word if not provided
+      nickname: data.nickname || data.name.split(' ')[0], 
       membershipId: data.membershipId || 'BASIC',
-      id: Math.random().toString(36).substr(2, 9),
+      id: newId,
       totalPlayTime: 0,
       totalAmountPaid: 0,
       hoursProgressToNextBonus: 0,
@@ -202,6 +219,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Trigger sync
     syncService.syncNow();
+    return newId;
   };
 
   const updateMember = (member: Member) => {
@@ -215,81 +233,61 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = members.filter(m => m.id !== id);
     safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
-    // Note: Deletes also need sync logic (soft delete) ideally
   };
 
   const upgradeMember = (memberId: string, newTierId: MembershipTierId) => {
+    const member = members.find(m => m.id === memberId);
     const config = membershipConfigs.find(c => c.id === newTierId);
-    if (!config) return;
+    if (!member || !config) return;
 
     let newExpiry: string | null = null;
     if (config.durationDays > 0) {
-      const d = new Date();
-      d.setDate(d.getDate() + config.durationDays);
-      newExpiry = d.toISOString();
+        const d = new Date();
+        d.setDate(d.getDate() + config.durationDays);
+        newExpiry = d.toISOString();
     }
 
-    const updatedMembers = members.map(m => 
-      m.id === memberId ? { 
-        ...m, 
-        membershipId: newTierId, 
+    updateMember({
+        ...member,
+        membershipId: newTierId,
         membershipExpiryDate: newExpiry,
-        synced: false 
-      } : m
-    );
+        // Reset progress on tier change
+        hoursProgressToNextBonus: 0 
+    });
+  };
 
-    safeSave(() => Storage.saveMembers(updatedMembers));
-    setMembers(updatedMembers);
-    syncService.syncNow();
-  }
+  // --- RENTAL LOGIC ---
 
   const startRental = (memberId: string, consoleId: string, duration: number, operator: string, paymentMethod: PaymentMethod) => {
-    const durationSeconds = duration * 3600;
-    const memberName = members.find(m => m.id === memberId)?.name || 'Unknown';
+    const consoleUnit = consoles.find(c => c.id === consoleId);
+    const member = members.find(m => m.id === memberId);
+    if (!consoleUnit || !member) return;
 
-    // PRIORITY 1: REMOTE CONTROL (BLUETOOTH + WIFI/CLOUD)
-    // Send to Bluetooth
-    if (isBtConnected) {
-        sendCommand({ type: 'START', durationSeconds });
-    }
-    // Send to Wi-Fi / Cloud
-    wifiService.sendCommand(consoleId, 'START', durationSeconds, memberName);
-
-    let member = members.find(m => m.id === memberId);
-    if (!member) return;
-    
-    // 1. Check Membership Expiry
-    let updatedMembers = [...members];
-    if (member.membershipId !== 'BASIC' && member.membershipExpiryDate) {
-      if (new Date() > new Date(member.membershipExpiryDate)) {
-        member = { ...member, membershipId: 'BASIC', membershipExpiryDate: null, synced: false };
-        updatedMembers = members.map(m => m.id === memberId ? member! : m);
-      }
-    }
-
-    // 2. Calculate Cost
-    let hoursToPay = duration;
+    // 1. Calculate Cost & Bonus
+    let cost = duration * settings.hourlyRate;
+    let discount = 0;
     let freeHoursUsed = 0;
 
+    // Apply Free Hours Logic (Redeem)
     if (member.freeHoursBalance > 0) {
-      if (member.freeHoursBalance >= duration) {
-        freeHoursUsed = duration;
-        hoursToPay = 0;
-      } else {
-        freeHoursUsed = member.freeHoursBalance;
-        hoursToPay = duration - member.freeHoursBalance;
-      }
+        if (member.freeHoursBalance >= duration) {
+            freeHoursUsed = duration;
+            discount = cost;
+            cost = 0;
+        } else {
+            freeHoursUsed = member.freeHoursBalance;
+            discount = freeHoursUsed * settings.hourlyRate;
+            cost = cost - discount;
+        }
     }
 
-    const cost = hoursToPay * settings.hourlyRate;
-    const discount = freeHoursUsed * settings.hourlyRate;
-
-    const newTx: Transaction = {
+    // 2. Create Transaction
+    const transaction: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       consoleId,
-      consoleName: consoles.find(c => c.id === consoleId)?.name || 'Unknown',
+      consoleName: consoleUnit.name,
       memberId,
-      memberName: member.name,
+      memberName: member.name, // Record Full Name in history
       startTime: new Date().toISOString(),
       durationHours: duration,
       cost,
@@ -297,114 +295,136 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       paymentMethod,
       status: 'ACTIVE',
       operatorName: operator,
-      synced: false // Pending Sync
+      synced: false
     };
 
-    const updatedConsoles = consoles.map(c => 
-      c.id === consoleId ? { ...c, status: ConsoleStatus.IN_USE, currentSessionId: newTx.id } : c
-    );
-    
-    updatedMembers = updatedMembers.map(m => 
-      m.id === memberId ? { ...m, freeHoursBalance: m.freeHoursBalance - freeHoursUsed, synced: false } : m
-    );
+    // 3. Update Member (Deduct Bonus Balance immediately)
+    // Note: Playtime accumulation happens on STOP, but bonus deduction happens on START
+    const updatedMember = {
+        ...member,
+        freeHoursBalance: member.freeHoursBalance - freeHoursUsed,
+        totalBonusHoursUsed: member.totalBonusHoursUsed + freeHoursUsed,
+        synced: false
+    };
+    const newMembers = members.map(m => m.id === member.id ? updatedMember : m);
+    setMembers(newMembers);
+    safeSave(() => Storage.saveMembers(newMembers));
 
-    // PRIORITY 2: LOCAL STORAGE
-    safeSave(() => {
-        Storage.saveTransactions([newTx, ...transactions]);
-        Storage.saveConsoles(updatedConsoles);
-        Storage.saveMembers(updatedMembers);
-    });
-    
-    refreshData();
+    // 4. Update Console
+    const updatedConsole = { 
+        ...consoleUnit, 
+        status: ConsoleStatus.IN_USE, 
+        currentSessionId: transaction.id 
+    };
+    const newConsoles = consoles.map(c => c.id === consoleId ? updatedConsole : c);
+    setConsoles(newConsoles);
+    safeSave(() => Storage.saveConsoles(newConsoles));
 
-    // PRIORITY 3: BACKGROUND SYNC
+    // 5. Save Transaction
+    const newTransactions = [transaction, ...transactions];
+    setTransactions(newTransactions);
+    safeSave(() => Storage.saveTransactions(newTransactions));
+
+    // 6. Trigger Hardware (Bluetooth/Wi-Fi)
+    if (isBtConnected) {
+        sendCommand({ type: 'START', durationSeconds: duration * 3600 });
+    }
+    // Send Cloud Command for TV Receiver
+    wifiService.sendCommand(consoleId, 'START', duration * 3600, member.nickname || member.name);
+
     syncService.syncNow();
   };
 
   const stopRental = (transactionId: string) => {
-    // PRIORITY 1: REMOTE CONTROL
     const tx = transactions.find(t => t.id === transactionId);
-    
-    // Bluetooth
+    if (!tx || tx.status === 'COMPLETED') return;
+
+    // 1. Close Transaction
+    const updatedTx: Transaction = { 
+        ...tx, 
+        status: 'COMPLETED', 
+        endTime: new Date().toISOString(),
+        synced: false 
+    };
+    const newTransactions = transactions.map(t => t.id === transactionId ? updatedTx : t);
+    setTransactions(newTransactions);
+    safeSave(() => Storage.saveTransactions(newTransactions));
+
+    // 2. Free Console & Add Usage Stats
+    const consoleUnit = consoles.find(c => c.id === tx.consoleId);
+    if (consoleUnit) {
+        const updatedConsole = { 
+            ...consoleUnit, 
+            status: ConsoleStatus.AVAILABLE, 
+            currentSessionId: undefined,
+            totalHoursUsed: consoleUnit.totalHoursUsed + tx.durationHours 
+        };
+        const newConsoles = consoles.map(c => c.id === consoleUnit.id ? updatedConsole : c);
+        setConsoles(newConsoles);
+        safeSave(() => Storage.saveConsoles(newConsoles));
+    }
+
+    // 3. Update Member Loyalty (Add Playtime, Progress, & Revenue)
+    const member = members.find(m => m.id === tx.memberId);
+    if (member) {
+        const config = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
+        
+        // Calculate new progress
+        let newProgress = member.hoursProgressToNextBonus + tx.durationHours;
+        let newFreeBalance = member.freeHoursBalance;
+
+        // Loyalty Rule Check
+        if (newProgress >= config.bonusThreshold && config.bonusThreshold > 0) {
+            const multipliers = Math.floor(newProgress / config.bonusThreshold);
+            newFreeBalance += (multipliers * config.bonusReward);
+            newProgress = newProgress % config.bonusThreshold;
+        }
+
+        const updatedMember = {
+            ...member,
+            totalPlayTime: member.totalPlayTime + tx.durationHours,
+            totalAmountPaid: member.totalAmountPaid + tx.cost,
+            hoursProgressToNextBonus: newProgress,
+            freeHoursBalance: newFreeBalance,
+            synced: false
+        };
+        const newMembers = members.map(m => m.id === member.id ? updatedMember : m);
+        setMembers(newMembers);
+        safeSave(() => Storage.saveMembers(newMembers));
+    }
+
+    // 4. Trigger Hardware Off
     if (isBtConnected) {
         sendCommand({ type: 'STOP' });
     }
-    
-    // Wi-Fi / Cloud
-    if (tx) {
+    // Send Cloud Command
+    if(tx.consoleId) {
         wifiService.sendCommand(tx.consoleId, 'STOP');
     }
 
-    if (!tx || tx.status === 'COMPLETED') return;
-
-    const updatedTx = transactions.map(t => 
-      t.id === transactionId ? { 
-          ...t, 
-          status: 'COMPLETED' as const, 
-          endTime: new Date().toISOString(),
-          synced: false // Mark as unsynced so updated status goes to DB
-      } : t
-    );
-
-    const updatedConsoles = consoles.map(c => 
-      c.id === tx.consoleId ? { 
-        ...c, 
-        status: ConsoleStatus.AVAILABLE, 
-        currentSessionId: undefined,
-        totalHoursUsed: c.totalHoursUsed + tx.durationHours 
-      } : c
-    );
-
-    const member = members.find(m => m.id === tx.memberId);
-    let updatedMembers = members;
-
-    if (member) {
-      const tierConfig = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0]; 
-      const bonusThreshold = tierConfig.bonusThreshold;
-      const bonusReward = tierConfig.bonusReward;
-
-      const newTotalPlayTime = member.totalPlayTime + tx.durationHours;
-      const newProgress = member.hoursProgressToNextBonus + tx.durationHours;
-      const newTotalAmountPaid = (member.totalAmountPaid || 0) + tx.cost;
-      
-      const newFreeHoursEarned = Math.floor(newProgress / bonusThreshold) * bonusReward;
-      const remainingProgress = newProgress % bonusThreshold;
-      
-      const freeUsedInThisTx = tx.durationHours - (tx.cost / settings.hourlyRate);
-
-      updatedMembers = members.map(m => 
-        m.id === tx.memberId ? {
-          ...m,
-          totalPlayTime: newTotalPlayTime,
-          totalAmountPaid: newTotalAmountPaid,
-          hoursProgressToNextBonus: remainingProgress,
-          freeHoursBalance: m.freeHoursBalance + newFreeHoursEarned,
-          totalBonusHoursUsed: (m.totalBonusHoursUsed || 0) + freeUsedInThisTx,
-          synced: false
-        } : m
-      );
-    }
-
-    // PRIORITY 2: LOCAL STORAGE
-    safeSave(() => {
-        Storage.saveTransactions(updatedTx);
-        Storage.saveConsoles(updatedConsoles);
-        Storage.saveMembers(updatedMembers);
-    });
-    
-    refreshData();
-
-    // PRIORITY 3: BACKGROUND SYNC
     syncService.syncNow();
   };
 
   return (
     <DataContext.Provider value={{
-      consoles, members, transactions, settings, membershipConfigs, refreshData,
-      updateSettings, updateMembershipConfig, 
-      addConsole, updateConsole, updateConsoleStatus, deleteConsole,
-      addMember, updateMember, deleteMember, upgradeMember,
-      startRental, stopRental
+      consoles,
+      members,
+      membershipConfigs,
+      transactions,
+      settings,
+      refreshData,
+      updateSettings,
+      updateMembershipConfig,
+      addConsole,
+      updateConsole,
+      updateConsoleStatus,
+      deleteConsole,
+      addMember,
+      updateMember,
+      deleteMember,
+      upgradeMember,
+      startRental,
+      stopRental
     }}>
       {children}
     </DataContext.Provider>

@@ -1,34 +1,154 @@
 import { supabase } from './supabaseClient';
 import * as Storage from './storage';
+import { Member, Console, Transaction } from '../types';
 
 class SyncService {
   private isSyncing = false;
   private isCleaning = false;
 
+  // --- MAIN SYNC FUNCTION ---
   public async syncNow() {
     if (this.isSyncing || !navigator.onLine) return;
     this.isSyncing = true;
     window.dispatchEvent(new Event('sync-start'));
 
     try {
-      // 1. Core Sync (Upsert Logic)
+      // 1. PUSH: Send local changes to Cloud
       await Promise.all([
-        this.syncConsoles(),
-        this.syncMembers()
+        this.syncConsolesToCloud(),
+        this.syncMembersToCloud()
       ]);
-      await this.syncTransactions();
+      await this.syncTransactionsToCloud();
       
-      // 2. Smart Cloud Optimization (The "Lifetime" Feature)
-      // This runs after sync to clean up the cloud without affecting local storage
+      // 2. OPTIMIZE: Clean old data
       this.runSmartCloudOptimizer();
 
-      console.log('Cloud Sync completed successfully');
+      console.log('Cloud Sync (Push) completed');
     } catch (error) {
       console.error('Cloud Sync failed:', error);
     } finally {
       this.isSyncing = false;
       window.dispatchEvent(new Event('sync-end'));
     }
+  }
+
+  // --- PULL FUNCTION (RESTORE DATA) ---
+  // Call this on app mount to get data from Cloud if Local is missing/stale
+  public async pullFromCloud() {
+      if (!navigator.onLine) return false;
+      console.log('[Sync] Starting Pull from Cloud...');
+      window.dispatchEvent(new Event('sync-start'));
+
+      try {
+          // 1. Pull Members
+          const { data: cloudMembers, error: memErr } = await supabase.from('members').select('*');
+          if (!memErr && cloudMembers) {
+              const currentLocal = Storage.getMembers();
+              const mappedMembers: Member[] = cloudMembers.map((m: any) => ({
+                  id: m.id,
+                  name: m.name,
+                  nickname: m.nickname || m.name.split(' ')[0],
+                  phone: m.phone,
+                  address: m.address,
+                  membershipId: m.membership_type || 'BASIC',
+                  membershipExpiryDate: m.membership_expiry_date,
+                  joinDate: m.joined_at,
+                  totalPlayTime: m.total_hours_played || 0,
+                  totalAmountPaid: m.total_amount_paid || 0,
+                  hoursProgressToNextBonus: m.hours_progress_bonus || 0,
+                  freeHoursBalance: m.bonus_balance || 0,
+                  totalBonusHoursUsed: m.bonus_total_used || 0,
+                  dateOfBirth: m.date_of_birth,
+                  lastBirthdayBonusYear: m.last_birthday_bonus_year,
+                  status: m.status || 'ACTIVE',
+                  notes: m.notes,
+                  photoUrl: m.photo_url,
+                  synced: true
+              }));
+              // Merge: Prefer Local if it has unsynced changes, otherwise Cloud
+              const merged = this.mergeDatasets(currentLocal, mappedMembers);
+              Storage.saveMembers(merged);
+          }
+
+          // 2. Pull Consoles
+          const { data: cloudConsoles, error: conErr } = await supabase.from('consoles').select('*');
+          if (!conErr && cloudConsoles) {
+              const currentLocal = Storage.getConsoles();
+              const mappedConsoles: Console[] = cloudConsoles.map((c: any) => ({
+                  id: c.id,
+                  name: c.name,
+                  status: c.status,
+                  totalHoursUsed: c.total_hours_used || 0,
+                  currentSessionId: c.current_session_id,
+                  synced: true
+              }));
+              const merged = this.mergeDatasets(currentLocal, mappedConsoles);
+              Storage.saveConsoles(merged);
+          }
+
+          // 3. Pull Transactions (Limit to recent 500 to save bandwidth)
+          const { data: cloudTx, error: txErr } = await supabase
+            .from('transactions')
+            .select('*')
+            .order('start_time', { ascending: false })
+            .limit(500);
+
+          if (!txErr && cloudTx) {
+              const currentLocal = Storage.getTransactions();
+              const mappedTx: Transaction[] = cloudTx.map((t: any) => ({
+                  id: t.id,
+                  consoleId: t.console_id,
+                  memberId: t.member_id,
+                  consoleName: t.console_name,
+                  memberName: t.member_name,
+                  startTime: t.start_time,
+                  endTime: t.end_time,
+                  durationHours: t.duration_hours,
+                  cost: t.cost,
+                  discountApplied: t.discount_applied,
+                  paymentMethod: t.payment_method,
+                  status: t.status,
+                  operatorName: t.operator_name,
+                  synced: true
+              }));
+              // For transactions, we usually just want to fill gaps
+              const merged = this.mergeDatasets(currentLocal, mappedTx);
+              Storage.saveTransactions(merged);
+          }
+
+          console.log('[Sync] Pull complete. Data restored from Cloud.');
+          return true;
+
+      } catch (e) {
+          console.error('[Sync] Pull failed:', e);
+          return false;
+      } finally {
+          window.dispatchEvent(new Event('sync-end'));
+      }
+  }
+
+  // Helper to merge Cloud data into Local data
+  // Logic: If Local item has 'synced: false', keep Local (it has newer edits). 
+  // Else, overwrite with Cloud (source of truth).
+  private mergeDatasets<T extends { id: string, synced?: boolean }>(local: T[], cloud: T[]): T[] {
+      const mergedMap = new Map<string, T>();
+
+      // 1. Put Cloud data first
+      cloud.forEach(item => mergedMap.set(item.id, item));
+
+      // 2. Overlay Local data ONLY if it hasn't been synced yet (pending changes)
+      local.forEach(item => {
+          if (item.synced === false) {
+              mergedMap.set(item.id, item);
+          } else if (!mergedMap.has(item.id)) {
+              // If it exists locally but not in cloud (and marked synced), 
+              // it might have been deleted on cloud? 
+              // For safety in this app, we keep it locally.
+              mergedMap.set(item.id, item);
+          }
+      });
+
+      return Array.from(mergedMap.values());
   }
 
   // --- SMART OPTIMIZER LOGIC ---
@@ -38,37 +158,22 @@ class SyncService {
 
       try {
           const settings = Storage.getSettings();
-          const retentionDays = settings.cloudRetentionDays || 90; // Default 90 days
+          const retentionDays = settings.cloudRetentionDays || 90;
 
-          // If retention is 0, it means "Keep Forever" (Not recommended for Free Tier)
           if (retentionDays <= 0) {
               this.isCleaning = false;
               return;
           }
 
-          // Calculate Cutoff Date
           const cutoffDate = new Date();
           cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
           const cutoffISO = cutoffDate.toISOString();
 
-          console.log(`[Smart Optimizer] Pruning cloud transactions older than: ${cutoffISO}`);
-
-          // Delete OLD COMPLETED transactions from Supabase
-          // Note: This does NOT delete them from LocalStorage, ensuring historical data remains on device
-          // but frees up Cloud Database quota.
-          const { error, count } = await supabase
+          await supabase
             .from('transactions')
             .delete({ count: 'exact' })
             .lt('start_time', cutoffISO)
-            .eq('status', 'COMPLETED'); // Only delete completed ones
-
-          if (error) {
-              console.warn('[Smart Optimizer] Failed to prune:', error.message);
-          } else {
-              if (count && count > 0) {
-                  console.log(`[Smart Optimizer] Successfully freed space! Deleted ${count} old transactions from cloud.`);
-              }
-          }
+            .eq('status', 'COMPLETED');
 
       } catch (err) {
           console.error('[Smart Optimizer] Error:', err);
@@ -77,10 +182,11 @@ class SyncService {
       }
   }
 
-  private async syncConsoles() {
+  private async syncConsolesToCloud() {
     const consoles = Storage.getConsoles();
     if (consoles.length === 0) return;
 
+    // Only send what has changed? Currently sending all for simplicity/integrity
     const payload = consoles.map(c => ({
         id: c.id,
         name: c.name,
@@ -94,18 +200,16 @@ class SyncService {
     if (error) console.error('Error syncing consoles:', error);
   }
 
-  private async syncMembers() {
+  private async syncMembersToCloud() {
     const members = Storage.getMembers();
+    // Only upsert unsynced members to save bandwidth
     const unsyncedMembers = members.filter(m => !m.synced);
     if (unsyncedMembers.length === 0) return;
 
-    // Use a reduced payload for checking duplicates if needed, but upsert handles it.
-    // OPTIMIZATION: Ensure photos (Base64) are not too huge. 
-    // In Members.tsx we already compress them. Here we just send them.
-    
     const payload = unsyncedMembers.map(m => ({
       id: m.id,
       name: m.name,
+      nickname: m.nickname,
       phone: m.phone,
       address: m.address,
       membership_type: m.membershipId,
@@ -120,10 +224,6 @@ class SyncService {
       last_birthday_bonus_year: m.lastBirthdayBonusYear || null,
       status: m.status,
       notes: m.notes,
-      // We assume the DB has a 'photo_url' text column. 
-      // Compressing at UI level is key here.
-      // If photo is too large, Supabase might reject payload (Request Entity Too Large).
-      // Future improvement: Strip photo if length > 1MB.
       photo_url: m.photoUrl && m.photoUrl.length < 1000000 ? m.photoUrl : null, 
       updated_at: new Date().toISOString()
     }));
@@ -140,7 +240,7 @@ class SyncService {
     }
   }
 
-  private async syncTransactions() {
+  private async syncTransactionsToCloud() {
     const transactions = Storage.getTransactions();
     const unsyncedTx = transactions.filter(t => !t.synced);
     if (unsyncedTx.length === 0) return;

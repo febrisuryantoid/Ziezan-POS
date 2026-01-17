@@ -18,14 +18,27 @@ const Consoles = React.lazy(() => import('./components/Consoles'));
 const Members = React.lazy(() => import('./components/Members'));
 const Reports = React.lazy(() => import('./components/Reports'));
 const Settings = React.lazy(() => import('./components/Settings'));
+const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isTvMode, setIsTvMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [publicMemberNickname, setPublicMemberNickname] = useState<string | null>(null);
 
   useEffect(() => {
+    // 0. Check for Public Member Route
+    const path = window.location.pathname;
+    if (path.startsWith('/member/')) {
+        const nickname = path.split('/')[2];
+        if (nickname) {
+            setPublicMemberNickname(nickname);
+            setShowSplash(false); // Skip splash for public link for faster load
+            return;
+        }
+    }
+
     // 1. Check Platform
     if (isTV()) {
       setIsTvMode(true);
@@ -57,6 +70,26 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
+  // Simple Fallback Loader for Lazy Components
+  const PageLoader = () => (
+    <div className="flex items-center justify-center h-[50vh] w-full">
+      <Loader2 className="w-8 h-8 animate-spin text-palette-mustard" />
+    </div>
+  );
+
+  // -- PUBLIC MEMBER CARD RENDER --
+  if (publicMemberNickname) {
+      return (
+        <ThemeProvider>
+             <DataProvider>
+                 <Suspense fallback={<div className="h-screen w-full bg-slate-100 animate-pulse"/>}>
+                    <PublicMemberCard nickname={publicMemberNickname} />
+                 </Suspense>
+             </DataProvider>
+        </ThemeProvider>
+      );
+  }
+
   // -- SPLASH SCREEN RENDER --
   if (showSplash) {
       return <SplashScreen />;
@@ -70,13 +103,6 @@ const App: React.FC = () => {
       </DataProvider>
     );
   }
-
-  // Simple Fallback Loader for Lazy Components
-  const PageLoader = () => (
-    <div className="flex items-center justify-center h-[50vh] w-full">
-      <Loader2 className="w-8 h-8 animate-spin text-palette-mustard" />
-    </div>
-  );
 
   // -- MOBILE / DESKTOP MODE RENDER --
   return (

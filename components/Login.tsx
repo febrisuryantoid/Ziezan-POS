@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { User } from '../types';
+import { User, Lock, LogIn, Globe } from 'lucide-react';
+import { User as UserType } from '../types';
 import * as Storage from '../services/storage';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface LoginProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: UserType) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -49,8 +50,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Lang Switcher */}
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1 bg-slate-100 dark:bg-white/5 rounded-md"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
           >
+            <Globe size={12} />
             {language.toUpperCase()}
           </button>
 
@@ -70,44 +72,50 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 w-full">
-            <div className="space-y-1">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+            <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
-              <input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
-                placeholder={t('enter_username')}
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                    type="text" 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    placeholder={t('enter_username')}
+                />
+              </div>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
-                placeholder={t('enter_password')}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    placeholder={t('enter_password')}
+                />
+              </div>
             </div>
 
             {error && (
-              <div className="bg-palette-red/10 border border-palette-red/20 text-palette-red p-2 rounded-lg text-xs text-center font-bold animate-pulse">
-                {error}
+              <div className="bg-palette-red/10 border border-palette-red/20 text-palette-red p-3 rounded-xl text-xs text-center font-bold animate-pulse flex items-center justify-center gap-2">
+                <Lock size={14} /> {error}
               </div>
             )}
 
             <button 
               type="submit" 
-              className="w-full bg-palette-mustard hover:bg-palette-purple text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base"
+              className="w-full bg-palette-mustard hover:bg-palette-purple text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
             >
-              {t('sign_in')}
+              <LogIn size={18} /> {t('sign_in')}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-4 sm:mt-6 text-center shrink-0">
+          <div className="mt-6 text-center shrink-0">
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
               &copy; {currentYear} Ziezan Station
             </p>

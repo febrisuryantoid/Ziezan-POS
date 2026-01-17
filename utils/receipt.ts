@@ -23,7 +23,7 @@ export const printReceiptBrowser = (transaction: Transaction, settings: AppSetti
           @page { margin: 0; size: 58mm auto; }
           body { font-family: 'Courier New', monospace; margin: 0; padding: 5px; font-size: 12px; color: #000; width: 58mm; }
           .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-          .title { font-size: 16px; font-weight: bold; display: block; margin-bottom: 5px; }
+          .title { font-size: 16px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase; }
           .meta { font-size: 10px; }
           .item { display: flex; justify-content: space-between; margin: 5px 0; }
           .divider { border-top: 1px dashed #000; margin: 10px 0; }
@@ -39,9 +39,9 @@ export const printReceiptBrowser = (transaction: Transaction, settings: AppSetti
       </head>
       <body>
         <div class="header">
-          <span class="title">Ziezan Station</span>
-          <span class="meta">PlayStation Rental & Cafe</span><br/>
-          <span class="meta">Jl. Nyomplong No. 12, Sukabumi</span>
+          <span class="title">${settings.businessName || 'ZIEZAN STATION'}</span>
+          <span class="meta">${settings.businessAddress}</span><br/>
+          <span class="meta">${settings.businessPhone}</span>
         </div>
 
         <div class="meta">
@@ -140,10 +140,11 @@ export const generateEscPosCommand = (tx: Transaction, settings: AppSettings): U
     // 2. Header
     addCmd(CENTER);
     addCmd(BOLD_ON);
-    addLine("ZIEZAN STATION");
+    addLine(settings.businessName.toUpperCase());
     addCmd(BOLD_OFF);
     addLine("PlayStation Rental & Cafe");
-    addLine("Jl. Nyomplong No. 12, Sukabumi");
+    addLine(settings.businessAddress);
+    addLine(settings.businessPhone);
     addLine("--------------------------------");
     
     // 3. Meta
