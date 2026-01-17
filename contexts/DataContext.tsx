@@ -24,7 +24,8 @@ interface DataContextType {
   deleteConsole: (id: string) => boolean; 
 
   // Member Actions
-  addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>) => string;
+  // FIX: Allow freeHoursBalance to be passed optionally
+  addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
   deleteMember: (id: string) => void;
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
@@ -191,7 +192,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
-  const addMember = (data: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'>): string => {
+  const addMember = (data: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }): string => {
     const newId = Math.random().toString(36).substr(2, 9);
     const newMember: Member = {
       ...data,
@@ -202,7 +203,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalPlayTime: 0,
       totalAmountPaid: 0,
       hoursProgressToNextBonus: 0,
-      freeHoursBalance: 0,
+      freeHoursBalance: data.freeHoursBalance || 0, // Allow manual init
       totalBonusHoursUsed: 0,
       membershipExpiryDate: null,
       joinDate: data.joinDate || new Date().toISOString(), // Allow custom join date or default to now
