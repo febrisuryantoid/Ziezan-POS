@@ -1,12 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { ConsoleStatus, PaymentMethod, Console } from '../types';
+import { ConsoleStatus, PaymentMethod, Console, Transaction } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass } from 'lucide-react';
+import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass, Printer, Bluetooth } from 'lucide-react';
+import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
+import { useBluetooth } from '../contexts/BluetoothContext';
+import { bluetoothService } from '../services/bluetooth';
+import { useToast } from '../contexts/ToastContext';
 
 const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const { consoles, members, startRental, stopRental, updateConsoleStatus, addConsole, updateConsole, deleteConsole, settings, transactions } = useData();
   const { t } = useLanguage();
+  const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
+  const { addToast } = useToast();
   
   // Header State
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,16 +30,18 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const [editingConsole, setEditingConsole] = useState<Console | null>(null);
   const [newConsoleName, setNewConsoleName] = useState('');
   
+  // Print Selection
+  const [printTx, setPrintTx] = useState<Transaction | null>(null);
+  
   // Real-time ticker for progress bars
   const [now, setNow] = useState(new Date());
 
-  // HIGH ACCURACY TIMER: Update every 1 second
+  // ... (Effects and Helpers remain unchanged) ...
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000); 
     return () => clearInterval(timer);
   }, []);
 
-  // Filtering Logic
   const filteredConsoles = consoles.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'ALL' ? true : 
@@ -43,7 +51,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     return matchesSearch && matchesFilter;
   });
 
-  // Derived Values for Calculation
   const calculation = useMemo(() => {
     if (!rentalMemberId || !rentalDuration) return null;
     const member = members.find(m => m.id === rentalMemberId);
@@ -124,7 +131,38 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   }
 
-  // Helper to format Seconds into HH:MM:SS
+  // Print Handlers
+  const handlePrintWifi = () => {
+    if (printTx) {
+        printReceiptBrowser(printTx, settings);
+        setPrintTx(null);
+    }
+  };
+
+  const handlePrintBluetooth = async () => {
+    if (!printTx) return;
+
+    if (!isBtConnected) {
+        try {
+            await connectBt();
+        } catch (e) {
+            addToast('error', 'Koneksi Gagal', 'Gagal terhubung ke printer Bluetooth.');
+            return;
+        }
+    }
+
+    const rawData = generateEscPosCommand(printTx, settings);
+    const success = await bluetoothService.sendRawData(rawData);
+    
+    if (success) {
+        addToast('success', 'Print Berhasil', 'Data dikirim ke printer Bluetooth.');
+        setPrintTx(null);
+    } else {
+        addToast('error', 'Print Gagal', 'Gagal mengirim data. Cek koneksi printer.');
+    }
+  };
+
+
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(Math.abs(ms) / 1000);
     const h = Math.floor(totalSeconds / 3600);
@@ -138,7 +176,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     return `${mStr}:${sStr}`;
   };
 
-  // UX Helper: Get active session details
   const getSessionDetails = (consoleId: string, sessionId?: string) => {
      if(!sessionId) return null;
      const tx = transactions.find(t => t.id === sessionId);
@@ -152,11 +189,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
      const timeRemainingMs = endTime - currentTimeMs;
      const elapsedMs = currentTimeMs - startTime;
      
-     // Progress Calculation (0 to 100)
      const progress = Math.min(100, Math.max(0, (elapsedMs / durationMs) * 100));
      
      const isOvertime = timeRemainingMs < 0;
-     const isWarning = timeRemainingMs > 0 && timeRemainingMs <= (15 * 60 * 1000); // 15 mins
+     const isWarning = timeRemainingMs > 0 && timeRemainingMs <= (15 * 60 * 1000); 
 
      return { 
         tx, 
@@ -172,15 +208,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     <div className="flex flex-col gap-6">
       {/* 1. Header & Toolbar */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        {/* Title Section */}
         <div>
           <h2 className="text-2xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-sm">{t('manage_units_desc')}</p>
         </div>
         
-        {/* Actions Section */}
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-           {/* Search */}
            <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
@@ -192,7 +225,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             />
           </div>
 
-          {/* Filter */}
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -203,7 +235,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             <option value="IN_USE">{t('filter_in_use')}</option>
           </select>
 
-          {/* Add Button */}
           <button 
             onClick={() => setIsAdding(true)}
             className="h-11 px-5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30"
@@ -215,7 +246,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
       {/* 2. Main Content Grid */}
       <div className="space-y-4">
-        {/* Widget Header */}
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-lg text-palette-mustard dark:text-palette-yellow shadow-sm">
             <Gamepad2 size={20} className="md:w-6 md:h-6" />
@@ -242,7 +272,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     ? 'bg-white dark:bg-palette-navyLight border-palette-copper/30' 
                     : 'bg-white dark:bg-palette-navyLight border-slate-200 dark:border-white/5 hover:border-palette-green/50 dark:hover:border-palette-green/50 hover:shadow-lg'
               }`}>
-                {/* Active Indicator Strip */}
                 {isActive && (
                    <div className={`absolute top-0 left-0 w-full h-1.5 ${
                        session?.isOvertime ? 'bg-palette-red animate-pulse' : 
@@ -250,7 +279,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                    }`}></div>
                 )}
 
-                {/* Card Header */}
                 <div className="p-5 pb-2">
                    <div className="flex justify-between items-start">
                      <div className="flex-1 mr-2 min-w-0">
@@ -269,7 +297,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 {isActive && session?.isOvertime ? 'OVERTIME' : console.status.replace('_', ' ')}
                             </div>
                             
-                            {/* Member Name Badge if Active */}
                             {isActive && session && (
                                 <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold truncate max-w-[120px]">
                                     <User size={10} /> {session.tx.memberName}
@@ -278,23 +305,26 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                        </div>
                      </div>
                      
-                     {!isActive && (
+                     {!isActive ? (
                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <button onClick={() => setEditingConsole(console)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-palette-mustard transition-colors"><Edit2 size={16} /></button>
                           <button onClick={() => updateConsoleStatus(console.id, isMaintenance ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-palette-copper transition-colors"><Wrench size={16} /></button>
                           <button onClick={() => handleDelete(console.id)} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                        </div>
+                     ) : (
+                       // Print Active Session
+                       <button onClick={() => session && setPrintTx(session.tx)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-palette-mustard transition-colors" title="Cetak Struk">
+                          <Printer size={16} />
+                       </button>
                      )}
                    </div>
                 </div>
 
-                {/* Card Body & UX Visuals */}
                 <div className="p-5 pt-2 flex-1 flex flex-col justify-end">
                   {isActive && session ? (
                     <div className="space-y-4">
                       {/* VISUAL TIMER & PROGRESS */}
                       <div className="flex items-center gap-4 py-3">
-                         {/* Circular Progress - Fixed size & Shrink prevention */}
                          <div className="relative w-14 h-14 flex-shrink-0">
                              <svg className="w-full h-full transform -rotate-90">
                                 <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-100 dark:text-white/10" />
@@ -310,16 +340,15 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                              </div>
                          </div>
                          
-                         {/* Text Details - High Precision */}
                          <div className="flex-1 grid grid-cols-2 gap-x-2 gap-y-1">
                              <div className="flex flex-col">
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Jalan</span>
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">{t('elapsed')}</span>
                                 <span className="text-lg font-black font-mono leading-none text-palette-navy dark:text-white">
                                     {session.formattedElapsed}
                                 </span>
                              </div>
                              <div className="flex flex-col items-end">
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Sisa</span>
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">{t('remaining')}</span>
                                 <span className={`text-lg font-black font-mono leading-none ${session.isOvertime ? 'text-palette-red animate-pulse' : session.isWarning ? 'text-palette-copper' : 'text-palette-green'}`}>
                                     {session.isOvertime ? '-' : ''}{session.formattedRemaining}
                                 </span>
@@ -332,10 +361,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                          </div>
                       </div>
 
-                      {/* QUICK ACTIONS ROW */}
                       <div className="grid grid-cols-4 gap-2">
                           <button className="col-span-1 py-2 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/20 flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors" title="Extend 1 Hour">
-                              <PlusCircle size={14}/> +1 Jam
+                              <PlusCircle size={14}/> {t('add_1_hour')}
                           </button>
                           <button 
                             onClick={() => console.currentSessionId && stopRental(console.currentSessionId)}
@@ -376,11 +404,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
       {/* --- MODALS --- */}
       
-      {/* 1. RENTAL MODAL (Center Overlay) */}
+      {/* 1. RENTAL MODAL */}
       {selectedConsoleId && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
+         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
               <div className="px-6 py-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
                  <div>
                     <h3 className="text-xl font-bold text-palette-navy dark:text-white flex items-center gap-2">
@@ -394,9 +421,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                  </button>
               </div>
 
-              {/* Modal Content */}
               <div className="p-6 overflow-y-auto">
-                 {/* STEP 1: INPUT */}
                   {currentStep === 'INPUT' && (
                     <div className="space-y-5">
                        <div className="space-y-2">
@@ -458,7 +483,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                           disabled={!rentalMemberId} 
                           className="w-full py-4 bg-palette-mustard hover:bg-palette-mustard/90 text-white rounded-xl font-bold text-base mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-palette-mustard/30 hover:-translate-y-1"
                         >
-                          Lanjut Pembayaran
+                          {t('next_payment')}
                         </button>
                     </div>
                   )}
@@ -555,7 +580,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
       {/* 2. ADD MODAL */}
       {isAdding && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
+         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-white/10">
              <div className="flex justify-between items-center mb-6">
                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('add_unit')}</h3>
@@ -586,7 +611,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
       {/* 3. EDIT MODAL */}
       {editingConsole && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-white/10">
               <div className="flex justify-between items-center mb-6">
                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('edit_unit')}</h3>
@@ -611,6 +636,39 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
            </div>
         </div>
       )}
+
+      {/* 4. PRINT SELECTION MODAL */}
+      {printTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
+           <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Pilih Metode Cetak</h3>
+              <p className="text-sm text-slate-500 mb-6">Struk untuk transaksi {printTx.memberName}</p>
+              
+              <div className="grid grid-cols-1 gap-3">
+                 <button 
+                    onClick={handlePrintWifi}
+                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                 >
+                    <Printer size={24} className="text-palette-mustard"/>
+                    <span>Browser Print / Wi-Fi</span>
+                 </button>
+
+                 <button 
+                    onClick={handlePrintBluetooth}
+                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                 >
+                    <Bluetooth size={24} className="text-blue-500"/>
+                    <span>Bluetooth Thermal</span>
+                 </button>
+              </div>
+
+              <button onClick={() => setPrintTx(null)} className="mt-6 text-sm text-slate-400 hover:text-slate-600 underline">
+                 Batal
+              </button>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 };

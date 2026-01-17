@@ -13,7 +13,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const { t, language, setLanguage } = useLanguage();
   
-  // Dynamic Year
   const currentYear = new Date().getFullYear();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,92 +21,93 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     if (user) {
       onLogin(user);
     } else {
-      setError('Invalid username or password.');
+      setError(t('invalid_login'));
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-palette-navy flex items-center justify-center p-6 transition-colors duration-300 relative overflow-hidden">
+    // h-[100dvh] forces full viewport height, overflow-hidden prevents scrolling
+    <div className="h-[100dvh] w-full bg-slate-50 dark:bg-palette-navy flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
+      
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full opacity-30 dark:opacity-20 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-palette-mustard dark:bg-palette-purple rounded-full blur-[120px]"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-palette-green dark:bg-blue-600 rounded-full blur-[120px]"></div>
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-palette-mustard dark:bg-palette-purple rounded-full blur-[100px]"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-palette-green dark:bg-blue-600 rounded-full blur-[100px]"></div>
       </div>
 
-      {/* Wrapper for the Animated Border */}
-      <div className="relative max-w-sm w-full z-10 group">
+      {/* Main Container - Scalable */}
+      <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full">
         
-        {/* ANIMATED BORDER LAYER: 
-            Conic Gradient rotating Clockwise (animate-spin-slow).
-            Colors: Electric Violet (#7c3aed), Cyan (#06b6d4), Rose (#f43f5e)
-        */}
+        {/* Animated Border */}
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#06b6d4,#f43f5e,#7c3aed,#06b6d4,#f43f5e,#7c3aed)] animate-spin-slow"></div>
         </div>
 
-        {/* CONTENT CARD: 
-            Background matches theme to cover the center, leaving only the 2px border visible.
-        */}
-        <div className="relative z-10 bg-white/95 dark:bg-palette-navyLight/95 backdrop-blur-xl rounded-[22px] p-8 shadow-xl dark:shadow-2xl h-full">
+        {/* Card Content - Flex column with scaling gaps */}
+        <div className="relative z-10 bg-white/95 dark:bg-palette-navyLight/95 backdrop-blur-xl rounded-[22px] px-6 py-6 sm:py-8 shadow-xl dark:shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden">
           
+          {/* Lang Switcher */}
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-6 right-6 text-xs font-bold text-slate-400 hover:text-palette-mustard transition-colors"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1 bg-slate-100 dark:bg-white/5 rounded-md"
           >
             {language.toUpperCase()}
           </button>
 
-          <div className="text-center mb-10">
+          {/* Header Section: Logo & Titles */}
+          <div className="text-center mb-4 sm:mb-6 shrink-0">
             <div className="relative inline-block">
-              {/* Subtle inner glow for the logo */}
               <div className="absolute inset-0 bg-palette-mustard blur-xl opacity-20 rounded-full"></div>
+              {/* Responsive Logo Size */}
               <img 
-                  src="https://beeimg.com/images/q27160638941.png" 
+                  src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
-                  className="w-24 h-24 rounded-[2rem] mx-auto mb-6 shadow-xl relative z-10"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-3 sm:mb-4 shadow-lg relative z-10 object-cover"
               />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{t('welcome')}</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">{t('login_title')}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('welcome')}</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">{t('login_title')}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
+          {/* Form Section */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 w-full">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
               <input 
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
-                placeholder="Enter username"
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                placeholder={t('enter_username')}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
-                placeholder="••••••••"
+                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                placeholder={t('enter_password')}
               />
             </div>
 
             {error && (
-              <div className="bg-palette-red/10 border border-palette-red/20 text-palette-red p-3 rounded-lg text-sm text-center font-bold">
+              <div className="bg-palette-red/10 border border-palette-red/20 text-palette-red p-2 rounded-lg text-xs text-center font-bold animate-pulse">
                 {error}
               </div>
             )}
 
             <button 
               type="submit" 
-              className="w-full bg-palette-mustard hover:bg-palette-purple text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-4"
+              className="w-full bg-palette-mustard hover:bg-palette-purple text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base"
             >
               {t('sign_in')}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
+          {/* Footer */}
+          <div className="mt-4 sm:mt-6 text-center shrink-0">
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
               &copy; {currentYear} Ziezan Station
             </p>

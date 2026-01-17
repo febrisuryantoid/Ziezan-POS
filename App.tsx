@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import Consoles from './components/Consoles';
-import Members from './components/Members';
-import Reports from './components/Reports';
-import Settings from './components/Settings';
 import Login from './components/Login';
 import TVReceiver from './components/TVReceiver';
+import SplashScreen from './components/SplashScreen';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { BluetoothProvider } from './contexts/BluetoothContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { User } from './types';
 import { isTV } from './utils/platform';
+import { Loader2 } from 'lucide-react';
+
+// LAZY LOAD HEAVY COMPONENTS
+const Consoles = React.lazy(() => import('./components/Consoles'));
+const Members = React.lazy(() => import('./components/Members'));
+const Reports = React.lazy(() => import('./components/Reports'));
+const Settings = React.lazy(() => import('./components/Settings'));
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isTvMode, setIsTvMode] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // 1. Check Platform
@@ -30,6 +36,14 @@ const App: React.FC = () => {
     if (session) {
       setUser(JSON.parse(session));
     }
+
+    // 3. Splash Screen Timer
+    // Set to 3000ms (3 seconds) to allow the splash animation to complete gracefully
+    const timer = setTimeout(() => {
+        setShowSplash(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLogin = (u: User) => {
@@ -43,6 +57,11 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
+  // -- SPLASH SCREEN RENDER --
+  if (showSplash) {
+      return <SplashScreen />;
+  }
+
   // -- TV MODE RENDER --
   if (isTvMode) {
     return (
@@ -52,33 +71,44 @@ const App: React.FC = () => {
     );
   }
 
+  // Simple Fallback Loader for Lazy Components
+  const PageLoader = () => (
+    <div className="flex items-center justify-center h-[50vh] w-full">
+      <Loader2 className="w-8 h-8 animate-spin text-palette-mustard" />
+    </div>
+  );
+
   // -- MOBILE / DESKTOP MODE RENDER --
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <BluetoothProvider>
-          {!user ? (
-            <Login onLogin={handleLogin} />
-          ) : (
-            <DataProvider>
-              <Layout 
-                currentTab={activeTab} 
-                setTab={setActiveTab} 
-                user={user} 
-                onLogout={handleLogout}
-              >
-                {activeTab === 'dashboard' && <Dashboard />}
-                {activeTab === 'consoles' && <Consoles operatorName={user.username} />}
-                {activeTab === 'members' && <Members />}
-                {activeTab === 'reports' && <Reports />}
-                {activeTab === 'settings' && user.role === 'ADMIN' && <Settings />}
-                {activeTab === 'settings' && user.role !== 'ADMIN' && (
-                  <div className="p-8 text-center text-slate-500">Access Denied: Admin only.</div>
-                )}
-              </Layout>
-            </DataProvider>
-          )}
-        </BluetoothProvider>
+        <ToastProvider>
+          <BluetoothProvider>
+            {!user ? (
+              <Login onLogin={handleLogin} />
+            ) : (
+              <DataProvider>
+                <Layout 
+                  currentTab={activeTab} 
+                  setTab={setActiveTab} 
+                  user={user} 
+                  onLogout={handleLogout}
+                >
+                  <Suspense fallback={<PageLoader />}>
+                    {activeTab === 'dashboard' && <Dashboard />}
+                    {activeTab === 'consoles' && <Consoles operatorName={user.username} />}
+                    {activeTab === 'members' && <Members />}
+                    {activeTab === 'reports' && <Reports />}
+                    {activeTab === 'settings' && user.role === 'ADMIN' && <Settings />}
+                    {activeTab === 'settings' && user.role !== 'ADMIN' && (
+                      <div className="p-8 text-center text-slate-500">Access Denied: Admin only.</div>
+                    )}
+                  </Suspense>
+                </Layout>
+              </DataProvider>
+            )}
+          </BluetoothProvider>
+        </ToastProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

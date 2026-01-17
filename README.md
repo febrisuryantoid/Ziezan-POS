@@ -1,10 +1,10 @@
 # Ziezan POS - Sistem Manajemen Rental PlayStation
 
 <p align="center">
-  <img src="https://beeimg.com/images/q27160638941.png" alt="Ziezan POS Icon" width="128" style="border-radius: 24px" />
+  <img src="https://beeimg.com/images/t47564105964.png" alt="Ziezan POS Icon" width="128" style="border-radius: 24px" />
 </p>
 
-**Ziezan POS** adalah aplikasi Point of Sale (POS) berbasis web modern yang dirancang khusus untuk bisnis penyewaan konsol game (PlayStation Rental). Aplikasi ini mengintegrasikan manajemen member, kontrol perangkat keras via Bluetooth, dan sinkronisasi data cloud untuk efisiensi operasional yang maksimal.
+**Ziezan POS v1.0.0** adalah aplikasi Point of Sale (POS) berbasis web modern yang dirancang khusus untuk bisnis penyewaan konsol game (PlayStation Rental). Aplikasi ini mengintegrasikan manajemen member, kontrol perangkat keras via Bluetooth, dan sinkronisasi data cloud untuk efisiensi operasional yang maksimal.
 
 ## 🚀 Fitur Utama
 
@@ -16,27 +16,49 @@ Aplikasi ini dilengkapi dengan fitur-fitur canggih untuk memudahkan operasional 
 *   **Bluetooth Control:** Mematikan/menghidupkan TV secara otomatis saat sesi dimulai atau berakhir (memerlukan hardware receiver Bluetooth pada TV).
 
 ### 👥 Sistem Membership & Loyalitas
-*   **Tier Membership:** Mendukung tingkatan member (Basic, Plus, VIP) dengan harga dan aturan berbeda.
+*   **Tier Membership:** Mendukung tingkatan member dengan warna dan logika berbeda.
+*   **Foto Profil Member:** Admin dapat mengambil foto member langsung dari kamera atau upload dari galeri.
 *   **Bonus Playtime:** Logika otomatis "Main X Jam, Gratis Y Jam" berdasarkan akumulasi waktu bermain.
 *   **Riwayat Member:** Mencatat total pengeluaran dan jam bermain setiap pelanggan.
 
 ### 💰 Transaksi & Laporan
 *   **Multi-Payment:** Mendukung pencatatan pembayaran Tunai (Cash) dan QRIS.
 *   **Laporan Keuangan:** Rekap pendapatan harian, riwayat transaksi, dan grafik utilitas konsol.
+*   **Export Data:** Fitur untuk mengunduh laporan ke file CSV.
 
 ### 📡 Konektivitas & Mode
 *   **Offline-First:** Aplikasi tetap berjalan lancar tanpa internet. Data akan disinkronisasi ke Supabase saat koneksi kembali online.
 *   **TV Receiver Mode:** Mode tampilan khusus untuk layar TV yang menampilkan sisa waktu bermain kepada pelanggan.
-*   **Multi-Platform:** Responsif untuk Desktop, Tablet, dan Mobile.
+*   **Multi-Platform:** Responsif untuk Desktop, Tablet, dan Mobile (PWA Support).
+
+---
+
+## 🏆 Membership Demo
+
+Aplikasi ini memiliki 3 tingkatan membership default yang dapat dikonfigurasi:
+
+| Tier Name | Warna Tema | Ikon | Deskripsi Default |
+| :--- | :--- | :---: | :--- |
+| **Basic** | Silver / Grey | 🛡️ | Membership standar. Tidak ada biaya bulanan. Bonus Playtime standar. |
+| **Plus** | Purple / Violet | ⭐ | Membership menengah. Tampilan kartu eksklusif berwarna ungu. Bonus lebih cepat didapat. |
+| **VIP** | Gold / Amber | 👑 | Membership tertinggi. Tampilan kartu emas mewah. Prioritas bonus tertinggi. |
+
+*Tampilan kartu member di aplikasi akan menyesuaikan warna tema di atas secara otomatis.*
 
 ---
 
 ## 🛠️ Teknologi yang Digunakan
 
-*   **Frontend:** React 18, TypeScript, Tailwind CSS
-*   **Backend / Database:** Supabase (PostgreSQL)
-*   **Hardware Interface:** Web Bluetooth API
+Aplikasi ini dibangun menggunakan tumpukan teknologi modern untuk performa dan skalabilitas:
+
+*   **Frontend Framework:** React 18 (Vite)
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS (Custom Color Palette: Trendy Purple 2026)
 *   **Icons:** Lucide React
+*   **Charts:** Recharts
+*   **Database & Sync:** Supabase (PostgreSQL)
+*   **Hardware Interface:** Web Bluetooth API
+*   **Local Storage:** Browser LocalStorage (dengan manajemen kuota gambar Base64)
 
 ---
 
@@ -70,37 +92,6 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi ini di lingkungan lokal
     npm run dev
     ```
     Buka browser dan akses `http://localhost:5173`.
-
----
-
-## 📖 Panduan Penggunaan
-
-### 1. Masuk Sistem (Login)
-*   Untuk alasan keamanan dan privasi, kredensial login tidak ditampilkan secara publik.
-*   **Silakan hubungi pengembang (Febri Suryanto) melalui WhatsApp atau Email untuk mendapatkan akses login.**
-
-### 2. Menambah Unit Console
-*   Masuk ke menu **Unit**.
-*   Klik tombol **Tambah**.
-*   Masukkan nama unit (misal: "PS5 - Unit 01") dan simpan.
-
-### 3. Memulai Rental (Operator)
-*   Di menu **Unit**, pilih konsol yang berstatus *Available*.
-*   Klik tombol **Sewa Unit**.
-*   Pilih **Member** dari daftar (atau tambah member baru di menu Member).
-*   Masukkan **Durasi** main (jam). Sistem akan menghitung biaya dan potongan bonus jika ada.
-*   Pilih metode pembayaran (Cash/QRIS) dan klik **Mulai Sesi**.
-*   *Jika Bluetooth terhubung, TV akan menyala otomatis.*
-
-### 4. Mode TV Display
-*   Buka aplikasi di browser Smart TV.
-*   Aplikasi akan mendeteksi device TV dan meminta pemilihan Unit ID.
-*   Pilih Unit yang sesuai dengan TV tersebut.
-*   Layar akan menampilkan status "AVAILABLE" atau Timer Mundur saat ada sesi aktif.
-
-### 5. Sinkronisasi Data
-*   Aplikasi menyimpan data di Local Storage browser secara otomatis.
-*   Saat perangkat terhubung ke internet, indikator di pojok kanan atas akan berubah menjadi **SYNCING...** dan data akan diunggah ke cloud (Supabase).
 
 ---
 

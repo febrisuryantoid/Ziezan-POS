@@ -1,3 +1,4 @@
+
 export enum Role {
   ADMIN = 'ADMIN',
   OPERATOR = 'OPERATOR'
@@ -16,6 +17,18 @@ export enum MemberStatus {
 
 export type PaymentMethod = 'CASH' | 'QRIS';
 export type MembershipTierId = 'BASIC' | 'PLUS' | 'VIP';
+
+// --- NEW: TOAST TYPES ---
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
+  title: string;
+  message?: string;
+  duration?: number;
+}
+// ------------------------
 
 export interface User {
   id: string;
@@ -50,8 +63,11 @@ export interface Member {
   membershipId: MembershipTierId; 
   membershipExpiryDate?: string | null; // ISO String, null for lifetime
   name: string;
+  photoUrl?: string; // Base64 or URL
   phone?: string; 
   address?: string; 
+  dateOfBirth?: string; // ISO String YYYY-MM-DD
+  lastBirthdayBonusYear?: number; // Year when bonus was last applied
   joinDate: string; // ISO String
   totalPlayTime: number; // in hours
   totalAmountPaid: number; // To calculate effective rate (Total Paid / Total Play)
@@ -82,6 +98,8 @@ export interface Transaction {
 
 export interface AppSettings {
   hourlyRate: number;
+  cloudRetentionDays: number; // 0 = Keep Forever (Risk full), 30/60/90 = Auto Prune
+  birthdayBonusHours: number; // Hours given for free on birthday
 }
 
 export interface DashboardStats {

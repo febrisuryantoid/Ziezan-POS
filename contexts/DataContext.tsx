@@ -5,6 +5,7 @@ import {
 import * as Storage from '../services/storage';
 import { useBluetooth } from './BluetoothContext';
 import { syncService } from '../services/sync';
+import { wifiService } from '../services/wifi';
 
 interface DataContextType {
   consoles: Console[];
@@ -71,16 +72,69 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [refreshData]);
 
+  // --- CHECK BIRTHDAYS AUTOMATICALLY ---
+  useEffect(() => {
+    if (members.length === 0) return;
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentDate = today.getDate();
+
+    let hasUpdates = false;
+    const updatedMembers = members.map(member => {
+        if (!member.dateOfBirth) return member;
+
+        const dob = new Date(member.dateOfBirth);
+        // Check if today matches Birthday Month & Day
+        if (dob.getMonth() === currentMonth && dob.getDate() === currentDate) {
+            // Check if bonus already given this year
+            if (member.lastBirthdayBonusYear !== currentYear) {
+                hasUpdates = true;
+                const bonus = settings.birthdayBonusHours || 2;
+                return {
+                    ...member,
+                    freeHoursBalance: member.freeHoursBalance + bonus,
+                    lastBirthdayBonusYear: currentYear,
+                    notes: (member.notes || '') + `\n[System] Birthday Gift ${currentYear}: +${bonus} Hours`,
+                    synced: false
+                };
+            }
+        }
+        return member;
+    });
+
+    if (hasUpdates) {
+        console.log("Birthday bonuses applied!");
+        Storage.saveMembers(updatedMembers);
+        setMembers(updatedMembers);
+        syncService.syncNow();
+    }
+  }, [members.length, settings.birthdayBonusHours]); // Run when member count changes or settings change, but also implicitly on mount via refreshData
+
+  // --- SAFE STORAGE HELPER ---
+  const safeSave = (fn: () => void) => {
+    try {
+        fn();
+    } catch (e) {
+        if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22)) {
+            alert("Penyimpanan penuh! Hapus beberapa data member atau foto untuk melanjutkan.");
+        } else {
+            console.error("Storage Error:", e);
+        }
+    }
+  };
+
   // --- Actions ---
 
   const updateSettings = (newSettings: AppSettings) => {
-    Storage.saveSettings(newSettings);
+    safeSave(() => Storage.saveSettings(newSettings));
     setSettings(newSettings);
   };
 
   const updateMembershipConfig = (config: MembershipConfig) => {
     const updated = membershipConfigs.map(c => c.id === config.id ? config : c);
-    Storage.saveMemberships(updated);
+    safeSave(() => Storage.saveMemberships(updated));
     setMembershipConfigs(updated);
   };
 
@@ -92,19 +146,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalHoursUsed: 0
     };
     const updated = [...consoles, newConsole];
-    Storage.saveConsoles(updated);
+    safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
   };
 
   const updateConsole = (id: string, name: string) => {
     const updated = consoles.map(c => c.id === id ? { ...c, name } : c);
-    Storage.saveConsoles(updated);
+    safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
   };
 
   const updateConsoleStatus = (id: string, status: ConsoleStatus) => {
     const updated = consoles.map(c => c.id === id ? { ...c, status } : c);
-    Storage.saveConsoles(updated);
+    safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
   };
 
@@ -114,7 +168,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false; // Cannot delete active console
     }
     const updated = consoles.filter(c => c.id !== id);
-    Storage.saveConsoles(updated);
+    safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
     return true;
   };
@@ -143,7 +197,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const updated = [...members, newMember];
-    Storage.saveMembers(updated);
+    safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
     
     // Trigger sync
@@ -152,14 +206,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateMember = (member: Member) => {
     const updated = members.map(m => m.id === member.id ? { ...member, synced: false } : m);
-    Storage.saveMembers(updated);
+    safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
     syncService.syncNow();
   };
 
   const deleteMember = (id: string) => {
     const updated = members.filter(m => m.id !== id);
-    Storage.saveMembers(updated);
+    safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
     // Note: Deletes also need sync logic (soft delete) ideally
   };
@@ -184,17 +238,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } : m
     );
 
-    Storage.saveMembers(updatedMembers);
+    safeSave(() => Storage.saveMembers(updatedMembers));
     setMembers(updatedMembers);
     syncService.syncNow();
   }
 
   const startRental = (memberId: string, consoleId: string, duration: number, operator: string, paymentMethod: PaymentMethod) => {
-    // PRIORITY 1: BLUETOOTH CONTROL
-    // Send command blindly, don't wait for success to block UI, but log it.
+    const durationSeconds = duration * 3600;
+    const memberName = members.find(m => m.id === memberId)?.name || 'Unknown';
+
+    // PRIORITY 1: REMOTE CONTROL (BLUETOOTH + WIFI/CLOUD)
+    // Send to Bluetooth
     if (isBtConnected) {
-        sendCommand({ type: 'START', durationSeconds: duration * 3600 });
+        sendCommand({ type: 'START', durationSeconds });
     }
+    // Send to Wi-Fi / Cloud
+    wifiService.sendCommand(consoleId, 'START', durationSeconds, memberName);
 
     let member = members.find(m => m.id === memberId);
     if (!member) return;
@@ -250,9 +309,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // PRIORITY 2: LOCAL STORAGE
-    Storage.saveTransactions([newTx, ...transactions]);
-    Storage.saveConsoles(updatedConsoles);
-    Storage.saveMembers(updatedMembers);
+    safeSave(() => {
+        Storage.saveTransactions([newTx, ...transactions]);
+        Storage.saveConsoles(updatedConsoles);
+        Storage.saveMembers(updatedMembers);
+    });
     
     refreshData();
 
@@ -261,12 +322,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const stopRental = (transactionId: string) => {
-    // PRIORITY 1: BLUETOOTH CONTROL
+    // PRIORITY 1: REMOTE CONTROL
+    const tx = transactions.find(t => t.id === transactionId);
+    
+    // Bluetooth
     if (isBtConnected) {
         sendCommand({ type: 'STOP' });
     }
+    
+    // Wi-Fi / Cloud
+    if (tx) {
+        wifiService.sendCommand(tx.consoleId, 'STOP');
+    }
 
-    const tx = transactions.find(t => t.id === transactionId);
     if (!tx || tx.status === 'COMPLETED') return;
 
     const updatedTx = transactions.map(t => 
@@ -318,9 +386,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // PRIORITY 2: LOCAL STORAGE
-    Storage.saveTransactions(updatedTx);
-    Storage.saveConsoles(updatedConsoles);
-    Storage.saveMembers(updatedMembers);
+    safeSave(() => {
+        Storage.saveTransactions(updatedTx);
+        Storage.saveConsoles(updatedConsoles);
+        Storage.saveMembers(updatedMembers);
+    });
     
     refreshData();
 

@@ -17,10 +17,12 @@ interface BluetoothRemoteGATTCharacteristic {
   writeValue(value: BufferSource): Promise<void>;
   writeValueWithResponse?(value: BufferSource): Promise<void>;
   writeValueWithoutResponse?(value: BufferSource): Promise<void>;
+  uuid: string;
 }
 
 interface BluetoothRemoteGATTService {
   getCharacteristic(characteristic: string | number): Promise<BluetoothRemoteGATTCharacteristic>;
+  getCharacteristics(): Promise<BluetoothRemoteGATTCharacteristic[]>;
 }
 
 interface BluetoothRemoteGATTServer {
@@ -29,6 +31,7 @@ interface BluetoothRemoteGATTServer {
   connect(): Promise<BluetoothRemoteGATTServer>;
   disconnect(): void;
   getPrimaryService(service: string | number): Promise<BluetoothRemoteGATTService>;
+  getPrimaryServices(): Promise<BluetoothRemoteGATTService[]>;
 }
 
 interface BluetoothDevice extends EventTarget {
@@ -49,10 +52,13 @@ declare global {
 }
 // ----------------------------------------
 
-// Standard Serial Port Service UUID (Commonly used for generic modules like HC-05/HM-10 or custom apps)
-// In a real scenario, the TV App must advertise this specific UUID.
-const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
-const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
+// COMMON UUIDS
+// 1. Custom TV Control (HM-10/HC-05 default)
+const SERIAL_SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
+const SERIAL_CHAR_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
+
+// 2. Standard Printer UUIDs (Generic)
+const PRINTER_SERVICE_UUID = '000018f0-0000-1000-8000-00805f9b34fb'; 
 
 class BluetoothService {
   private device: BluetoothDevice | null = null;
@@ -66,14 +72,19 @@ class BluetoothService {
   public async connect(): Promise<boolean> {
     try {
       if (!navigator.bluetooth) {
-        console.warn('Web Bluetooth API is not available in this browser.');
+        alert('Bluetooth tidak didukung di browser ini. Gunakan Chrome di Android.');
         return false;
       }
 
       console.log('Requesting Bluetooth Device...');
+      // Request device with broad filters to find both custom hardware and printers
       this.device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [SERVICE_UUID] }],
-        // optionalServices: ['battery_service'] // Add other services if needed
+        acceptAllDevices: true,
+        optionalServices: [
+            SERIAL_SERVICE_UUID, 
+            PRINTER_SERVICE_UUID,
+            '00001800-0000-1000-8000-00805f9b34fb' // Generic Access
+        ] 
       });
 
       if (!this.device) return false;
@@ -86,14 +97,43 @@ class BluetoothService {
       }
       this.server = await this.device.gatt.connect();
 
-      console.log('Getting Service...');
-      const service = await this.server.getPrimaryService(SERVICE_UUID);
+      console.log('Discovering Services...');
+      // Try to find the correct service and characteristic dynamically
+      // Priority 1: Serial (TV Control)
+      try {
+        const service = await this.server.getPrimaryService(SERIAL_SERVICE_UUID);
+        this.characteristic = await service.getCharacteristic(SERIAL_CHAR_UUID);
+        console.log('Connected to Serial/TV Control Service');
+      } catch (e) {
+        console.log('Serial service not found, trying generic printer...');
+        // Priority 2: Generic Printer or First Available Writable Characteristic
+        try {
+            // Get all services
+            const services = await this.server.getPrimaryServices();
+            for (const service of services) {
+                const characteristics = await service.getCharacteristics();
+                for (const char of characteristics) {
+                    // Check if writable (naive check, usually fine for simple thermal printers)
+                    this.characteristic = char;
+                    console.log('Connected to Generic Service:', service, 'Char:', char.uuid);
+                    break;
+                }
+                if (this.characteristic) break;
+            }
+        } catch (err) {
+            console.error("Could not find suitable service", err);
+        }
+      }
 
-      console.log('Getting Characteristic...');
-      this.characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-
-      console.log('Bluetooth Connected!');
-      return true;
+      if (this.characteristic) {
+          console.log('Bluetooth Connected Ready!');
+          return true;
+      } else {
+          alert("Gagal menemukan layanan tulis pada perangkat ini.");
+          this.disconnect();
+          return false;
+      }
+      
     } catch (error) {
       console.error('Bluetooth Connection Failed:', error);
       return false;
@@ -110,7 +150,6 @@ class BluetoothService {
   private onDisconnected = () => {
     console.log('Bluetooth Device Disconnected');
     this.cleanup();
-    // Dispatch event for UI update
     window.dispatchEvent(new Event('bluetooth-disconnected'));
   };
 
@@ -120,29 +159,50 @@ class BluetoothService {
     this.characteristic = null;
   }
 
+  /**
+   * Send text command (TV Control)
+   */
   public async sendCommand(command: BluetoothCommand): Promise<boolean> {
     if (!this.characteristic) {
-      console.warn('Bluetooth not connected. Command ignored:', command);
+      console.warn('Bluetooth not connected.');
       return false;
     }
 
     try {
-      // Protocol: COMMAND|VALUE
-      // Example: START|3600  (Start for 1 hour)
-      // Example: STOP
       let message = command.type;
       if (command.durationSeconds !== undefined) {
         message += `|${command.durationSeconds}`;
       }
-
       const encoder = new TextEncoder();
       await this.characteristic.writeValue(encoder.encode(message));
-      console.log('Sent BT Command:', message);
       return true;
     } catch (error) {
       console.error('Failed to send Bluetooth command:', error);
       return false;
     }
+  }
+
+  /**
+   * Send Raw Bytes (For Thermal Printer ESC/POS)
+   */
+  public async sendRawData(data: Uint8Array): Promise<boolean> {
+      if (!this.characteristic) {
+          console.warn('Bluetooth not connected for printing.');
+          return false;
+      }
+      try {
+          // Send in chunks of 512 bytes to prevent overflow
+          const chunkSize = 512;
+          for (let i = 0; i < data.length; i += chunkSize) {
+              const chunk = data.slice(i, i + chunkSize);
+              await this.characteristic.writeValue(chunk);
+          }
+          return true;
+      } catch (error) {
+          console.error('Failed to print via Bluetooth:', error);
+          alert('Gagal mengirim data ke printer. Pastikan printer nyala dan terhubung.');
+          return false;
+      }
   }
 }
 

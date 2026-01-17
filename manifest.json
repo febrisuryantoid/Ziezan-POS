@@ -7,17 +7,17 @@
   "background_color": "#f5f3ff",
   "theme_color": "#7c3aed",
   "description": "Sistem Manajemen Rental PlayStation Ziezan Station. Kelola member, rental, dan keuangan.",
-  "orientation": "any",
+  "orientation": "portrait",
   "categories": ["business", "productivity", "finance"],
   "icons": [
     {
-      "src": "https://beeimg.com/images/q27160638941.png",
+      "src": "https://beeimg.com/images/s77882238754.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://beeimg.com/images/q27160638941.png",
+      "src": "https://beeimg.com/images/s77882238754.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -25,28 +25,23 @@
   ],
   "screenshots": [
     {
-      "src": "https://beeimg.com/images/q27160638941.png",
+      "src": "https://beeimg.com/images/t47564105964.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Dashboard Ziezan Station"
     },
     {
-      "src": "https://beeimg.com/images/q27160638941.png",
+      "src": "https://beeimg.com/images/t47564105964.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Tampilan Mobile"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Mulai Rental",
-      "short_name": "Rental",
-      "description": "Buka menu rental unit langsung",
-      "url": "/?action=rental",
-      "icons": [{ "src": "https://beeimg.com/images/q27160638941.png", "sizes": "192x192" }]
-    }
+  "features": [
+    "bluetooth",
+    "Cross-Platform"
   ],
   "prefer_related_applications": false
 }

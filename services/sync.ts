@@ -3,6 +3,7 @@ import * as Storage from './storage';
 
 class SyncService {
   private isSyncing = false;
+  private isCleaning = false;
 
   public async syncNow() {
     if (this.isSyncing || !navigator.onLine) return;
@@ -10,15 +11,17 @@ class SyncService {
     window.dispatchEvent(new Event('sync-start'));
 
     try {
-      // Parallel sync for independent tables
+      // 1. Core Sync (Upsert Logic)
       await Promise.all([
         this.syncConsoles(),
         this.syncMembers()
       ]);
-      // Transactions usually depend on members/consoles being present (foreign keys), 
-      // but upsert handles basic consistency. We sync transactions last to be safe.
       await this.syncTransactions();
       
+      // 2. Smart Cloud Optimization (The "Lifetime" Feature)
+      // This runs after sync to clean up the cloud without affecting local storage
+      this.runSmartCloudOptimizer();
+
       console.log('Cloud Sync completed successfully');
     } catch (error) {
       console.error('Cloud Sync failed:', error);
@@ -28,11 +31,54 @@ class SyncService {
     }
   }
 
+  // --- SMART OPTIMIZER LOGIC ---
+  private async runSmartCloudOptimizer() {
+      if (this.isCleaning) return;
+      this.isCleaning = true;
+
+      try {
+          const settings = Storage.getSettings();
+          const retentionDays = settings.cloudRetentionDays || 90; // Default 90 days
+
+          // If retention is 0, it means "Keep Forever" (Not recommended for Free Tier)
+          if (retentionDays <= 0) {
+              this.isCleaning = false;
+              return;
+          }
+
+          // Calculate Cutoff Date
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+          const cutoffISO = cutoffDate.toISOString();
+
+          console.log(`[Smart Optimizer] Pruning cloud transactions older than: ${cutoffISO}`);
+
+          // Delete OLD COMPLETED transactions from Supabase
+          // Note: This does NOT delete them from LocalStorage, ensuring historical data remains on device
+          // but frees up Cloud Database quota.
+          const { error, count } = await supabase
+            .from('transactions')
+            .delete({ count: 'exact' })
+            .lt('start_time', cutoffISO)
+            .eq('status', 'COMPLETED'); // Only delete completed ones
+
+          if (error) {
+              console.warn('[Smart Optimizer] Failed to prune:', error.message);
+          } else {
+              if (count && count > 0) {
+                  console.log(`[Smart Optimizer] Successfully freed space! Deleted ${count} old transactions from cloud.`);
+              }
+          }
+
+      } catch (err) {
+          console.error('[Smart Optimizer] Error:', err);
+      } finally {
+          this.isCleaning = false;
+      }
+  }
+
   private async syncConsoles() {
     const consoles = Storage.getConsoles();
-    // We sync all consoles to ensure status (AVAILABLE/IN_USE) is up to date across devices
-    // Optimization: In a real app, only sync those with `synced: false` or `updated_at` check.
-    
     if (consoles.length === 0) return;
 
     const payload = consoles.map(c => ({
@@ -45,19 +91,18 @@ class SyncService {
     }));
 
     const { error } = await supabase.from('consoles').upsert(payload);
-
-    if (error) {
-        console.error('Error syncing consoles:', error);
-    }
+    if (error) console.error('Error syncing consoles:', error);
   }
 
   private async syncMembers() {
     const members = Storage.getMembers();
     const unsyncedMembers = members.filter(m => !m.synced);
-
     if (unsyncedMembers.length === 0) return;
 
-    // Map to DB structure (camelCase to snake_case)
+    // Use a reduced payload for checking duplicates if needed, but upsert handles it.
+    // OPTIMIZATION: Ensure photos (Base64) are not too huge. 
+    // In Members.tsx we already compress them. Here we just send them.
+    
     const payload = unsyncedMembers.map(m => ({
       id: m.id,
       name: m.name,
@@ -71,15 +116,21 @@ class SyncService {
       hours_progress_bonus: m.hoursProgressToNextBonus,
       bonus_balance: m.freeHoursBalance,
       bonus_total_used: m.totalBonusHoursUsed,
+      date_of_birth: m.dateOfBirth || null,
+      last_birthday_bonus_year: m.lastBirthdayBonusYear || null,
       status: m.status,
       notes: m.notes,
+      // We assume the DB has a 'photo_url' text column. 
+      // Compressing at UI level is key here.
+      // If photo is too large, Supabase might reject payload (Request Entity Too Large).
+      // Future improvement: Strip photo if length > 1MB.
+      photo_url: m.photoUrl && m.photoUrl.length < 1000000 ? m.photoUrl : null, 
       updated_at: new Date().toISOString()
     }));
 
     const { error } = await supabase.from('members').upsert(payload);
 
     if (!error) {
-      // Mark as synced locally
       const updatedMembers = members.map(m => 
         unsyncedMembers.find(um => um.id === m.id) ? { ...m, synced: true } : m
       );
@@ -92,7 +143,6 @@ class SyncService {
   private async syncTransactions() {
     const transactions = Storage.getTransactions();
     const unsyncedTx = transactions.filter(t => !t.synced);
-
     if (unsyncedTx.length === 0) return;
 
     const payload = unsyncedTx.map(t => ({

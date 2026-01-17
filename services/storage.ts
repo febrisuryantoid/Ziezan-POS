@@ -7,7 +7,7 @@ const DEFAULT_CONSOLES: Console[] = [];
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'BASIC', 
-    name: 'Ziezan Basic', 
+    name: 'Basic', 
     price: 0, 
     durationDays: 0, // Lifetime
     bonusThreshold: 5, // Play 5
@@ -18,7 +18,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   },
   { 
     id: 'PLUS', 
-    name: 'Ziezan Plus', 
+    name: 'Plus', 
     price: 25000, 
     durationDays: 30, // 1 Month
     bonusThreshold: 4, // Play 4
@@ -29,7 +29,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   },
   { 
     id: 'VIP', 
-    name: 'Ziezan VIP', 
+    name: 'VIP', 
     price: 50000, 
     durationDays: 30, // 1 Month
     bonusThreshold: 3, // Play 3
@@ -42,6 +42,8 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
 
 const DEFAULT_SETTINGS: AppSettings = {
   hourlyRate: 5000,
+  cloudRetentionDays: 90, // Default: Keep cloud clean by removing data older than 3 months
+  birthdayBonusHours: 2 // Default: 2 Hours free on birthday
 };
 
 // Default Admin Account
@@ -85,7 +87,10 @@ export const getMembers = (): Member[] => {
     ...m,
     membershipId: m.membershipId || 'BASIC',
     totalAmountPaid: m.totalAmountPaid || 0,
-    membershipExpiryDate: m.membershipExpiryDate || null
+    membershipExpiryDate: m.membershipExpiryDate || null,
+    photoUrl: m.photoUrl || undefined,
+    dateOfBirth: m.dateOfBirth || undefined,
+    lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined
   }));
 };
 
@@ -104,7 +109,12 @@ export const saveTransactions = (txs: Transaction[]) => {
 
 export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
-  return data ? JSON.parse(data) : DEFAULT_SETTINGS;
+  if (data) {
+      const parsed = JSON.parse(data);
+      // Migration for old settings that might not have retention policy
+      return { ...DEFAULT_SETTINGS, ...parsed };
+  }
+  return DEFAULT_SETTINGS;
 };
 
 export const saveSettings = (s: AppSettings) => {

@@ -3,18 +3,52 @@ import { useData } from '../contexts/DataContext';
 import { ConsoleStatus } from '../types';
 import { Clock, Gamepad2, Wifi, WifiOff, Tv } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { wifiService, RemoteCommandPayload } from '../services/wifi';
 
 const TVReceiver: React.FC = () => {
-  const { consoles, transactions } = useData();
+  const { consoles, transactions, refreshData } = useData();
   const { t } = useLanguage();
   const [assignedConsoleId, setAssignedConsoleId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Real-time Override State (For instant feedback from Wi-Fi command)
+  const [instantSession, setInstantSession] = useState<{
+    startTime: number;
+    durationSeconds: number;
+    memberName: string;
+  } | null>(null);
 
   // Load assigned console from local storage (simulate TV settings)
   useEffect(() => {
     const savedId = localStorage.getItem('tv_assigned_console_id');
     if (savedId) setAssignedConsoleId(savedId);
   }, []);
+
+  // Initialize Wi-Fi / Cloud Listener
+  useEffect(() => {
+    if (!assignedConsoleId) return;
+
+    // Listen for Cloud commands
+    const unsubscribe = wifiService.listenForCommands(assignedConsoleId, (cmd: RemoteCommandPayload) => {
+        if (cmd.type === 'START') {
+            // Immediately show the session without waiting for DB sync
+            setInstantSession({
+                startTime: Date.now(), // approximation, close enough for display
+                durationSeconds: cmd.durationSeconds || 3600,
+                memberName: cmd.memberName || 'Member'
+            });
+            // Also trigger a data refresh to get the actual record eventually
+            refreshData();
+        } else if (cmd.type === 'STOP') {
+            setInstantSession(null);
+            refreshData();
+        }
+    });
+
+    return () => {
+        unsubscribe();
+    };
+  }, [assignedConsoleId, refreshData]);
 
   // Clock tick
   useEffect(() => {
@@ -27,16 +61,23 @@ const TVReceiver: React.FC = () => {
     setAssignedConsoleId(id);
   };
 
-  // Find active data
+  // Find active data from Database/LocalStorage (Slower source)
   const activeConsole = consoles.find(c => c.id === assignedConsoleId);
-  const activeTransaction = transactions.find(t => t.id === activeConsole?.currentSessionId && t.status === 'ACTIVE');
+  const dbTransaction = transactions.find(t => t.id === activeConsole?.currentSessionId && t.status === 'ACTIVE');
+
+  // Determine which data to show: Instant (Wi-Fi) or Persistent (DB)
+  // Instant session takes precedence for immediate feedback, clears when stopped or when DB syncs matching data
+  const activeSession = instantSession || (dbTransaction ? {
+      startTime: new Date(dbTransaction.startTime).getTime(),
+      durationSeconds: dbTransaction.durationHours * 3600,
+      memberName: dbTransaction.memberName
+  } : null);
   
   // Calculate remaining time
   const getRemainingTime = () => {
-    if (!activeTransaction) return null;
-    const start = new Date(activeTransaction.startTime).getTime();
-    const durationMs = activeTransaction.durationHours * 60 * 60 * 1000;
-    const end = start + durationMs;
+    if (!activeSession) return null;
+    
+    const end = activeSession.startTime + (activeSession.durationSeconds * 1000);
     const now = currentTime.getTime();
     const diff = end - now;
 
@@ -50,6 +91,7 @@ const TVReceiver: React.FC = () => {
 
   const remainingTime = getRemainingTime();
   const isExpired = remainingTime === "00:00:00";
+  const durationHoursDisplay = activeSession ? (activeSession.durationSeconds / 3600).toFixed(1) : 0;
 
   // -- SETUP VIEW (If no console assigned) --
   if (!assignedConsoleId) {
@@ -79,8 +121,6 @@ const TVReceiver: React.FC = () => {
   }
 
   // -- OVERLAY VIEW (Active) --
-  // Note: In a real Android TV app, this would be a SYSTEM_ALERT_WINDOW.
-  // Here we simulate the receiver screen.
   return (
     <div className="min-h-screen bg-black relative overflow-hidden font-sans cursor-none">
       
@@ -92,8 +132,8 @@ const TVReceiver: React.FC = () => {
       {/* Top Status Bar */}
       <div className="absolute top-8 right-8 flex items-center gap-4 text-white/50 bg-black/30 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
          <div className="flex items-center gap-2">
-           <Wifi size={20} />
-           <span className="text-sm font-medium tracking-wider">{t('online')}</span>
+           <Wifi size={20} className="text-brand-400" />
+           <span className="text-sm font-medium tracking-wider">Wi-Fi / Cloud Ready</span>
          </div>
          <span className="text-sm border-l border-white/20 pl-4">{currentTime.toLocaleTimeString()}</span>
       </div>
@@ -104,7 +144,7 @@ const TVReceiver: React.FC = () => {
       </div>
 
       {/* MAIN OVERLAY CONTENT */}
-      {activeTransaction ? (
+      {activeSession ? (
         <div className={`absolute bottom-12 left-12 p-8 rounded-3xl backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-500 ${isExpired ? 'bg-red-900/40 border-red-500/50' : 'bg-slate-900/80 border-brand-500/30'}`}>
            <div className="flex items-start gap-6">
               <div className={`p-4 rounded-2xl ${isExpired ? 'bg-red-500 text-white' : 'bg-brand-500 text-slate-900'}`}>
@@ -117,11 +157,11 @@ const TVReceiver: React.FC = () => {
                 </h1>
                 <div className="mt-4 flex items-center gap-3 text-white/80">
                    <div className="w-8 h-8 rounded-full bg-brand-400/20 text-brand-400 flex items-center justify-center text-sm font-bold border border-brand-400/30">
-                     {activeTransaction.memberName.charAt(0)}
+                     {activeSession.memberName.charAt(0)}
                    </div>
-                   <span className="text-xl font-medium">{activeTransaction.memberName}</span>
+                   <span className="text-xl font-medium">{activeSession.memberName}</span>
                    <span className="mx-2 opacity-50">•</span>
-                   <span className="text-xl opacity-80">{activeTransaction.durationHours}h Session</span>
+                   <span className="text-xl opacity-80">{durationHoursDisplay}h Session</span>
                 </div>
               </div>
            </div>

@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
 
   return (
     // UPDATED: Removed h-full to allow content to grow naturally without colliding with parent height constraints
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 pb-8">
       {/* 1. Header Section */}
       <div className="flex flex-col gap-1">
         <h2 className="text-2xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
@@ -185,41 +185,50 @@ const Dashboard: React.FC = () => {
           <h3 className="font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <MonitorPlay size={18} className="text-palette-mustard" /> {t('console_util')}
           </h3>
-          <div className="flex-1 min-h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={consoleUsageData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                  fontSize={11} 
-                  tickLine={false} 
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis 
-                  stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                  fontSize={11} 
-                  tickLine={false} 
-                  axisLine={false} 
-                />
-                <Tooltip 
-                  cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.4 }}
-                  contentStyle={{ 
-                    backgroundColor: theme === 'dark' ? '#181825' : '#ffffff', 
-                    borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
-                    color: theme === 'dark' ? '#f8fafc' : '#0f172a',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                  }}
-                />
-                <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
-                   {consoleUsageData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#D98D28' : '#F4CD46'} /> // Mustard & Yellow from Palette
-                    ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          
+          {/* FIX: Explicit Inline Style Height to prevent Recharts warning */}
+          <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+             {consoleUsageData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={consoleUsageData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
+                      fontSize={11} 
+                      tickLine={false} 
+                      axisLine={false}
+                      dy={10}
+                    />
+                    <YAxis 
+                      stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
+                      fontSize={11} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <Tooltip 
+                      cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.4 }}
+                      contentStyle={{ 
+                        backgroundColor: theme === 'dark' ? '#181825' : '#ffffff', 
+                        borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
+                        color: theme === 'dark' ? '#f8fafc' : '#0f172a',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                    />
+                    <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
+                       {consoleUsageData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#D98D28' : '#F4CD46'} /> // Mustard & Yellow from Palette
+                        ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+             ) : (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                    <MonitorPlay size={40} className="mb-2 opacity-50"/>
+                    <span className="text-sm">{t('no_data_consoles')}</span>
+                </div>
+             )}
           </div>
         </div>
       </div>

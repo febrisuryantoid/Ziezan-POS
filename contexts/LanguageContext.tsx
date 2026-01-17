@@ -108,7 +108,7 @@ const dictionary = {
     developed_by: "Dikembangkan oleh",
     contact_dev: "Hubungi Developer",
     
-    // NEW KEYS TO FIX HARDCODED TEXT
+    // NEW KEYS TRANSLATED
     online: "ONLINE",
     offline: "OFFLINE",
     tv_connected: "TV TERHUBUNG",
@@ -144,7 +144,54 @@ const dictionary = {
     available_status: "TERSEDIA",
     ready_to_play: "Siap Bermain",
     member_label: "Member:",
-    unknown_unit: "Tidak Diketahui"
+    unknown_unit: "Tidak Diketahui",
+
+    // Login Placeholders
+    enter_username: "Masukkan username...",
+    enter_password: "Masukkan password...",
+    invalid_login: "Username atau password salah.",
+    
+    // Settings & Backup
+    tv_connectivity: "Konektivitas TV",
+    cloud_link_desc: "Otomatis Aktif. Kontrol TV via Internet/Wi-Fi.",
+    bluetooth_connected: "Bluetooth Terhubung",
+    bluetooth_disconnected: "Bluetooth Putus",
+    data_management: "Manajemen Data",
+    smart_cloud_opt: "Smart Cloud Optimizer",
+    keep_data_duration: "Simpan Data Cloud Selama:",
+    days_30_save: "30 Hari (Hemat)",
+    days_90: "90 Hari (3 Bulan)",
+    days_365: "1 Tahun",
+    forever: "Selamanya",
+    backup_restore_desc: "Gunakan fitur ini untuk memindahkan data antar perangkat.\n1. Backup data di perangkat lama.\n2. Kirim file .json ke perangkat baru.\n3. Restore di perangkat baru.",
+    backup_btn: "Backup",
+    download_data: "Download Data",
+    restore_btn: "Restore",
+    upload_data: "Upload Data",
+    restore_confirm: "Ditemukan backup dari tanggal {date}.\n\nRestore akan MENIMPA semua data yang ada saat ini di perangkat ini.\nApakah Anda yakin ingin melanjutkan?",
+    restore_success: "Sukses! Data aplikasi berhasil dipulihkan.",
+    restore_error: "Gagal Restore: {msg}",
+    invalid_file: "Format file tidak valid atau rusak.",
+
+    // Members & Forms
+    upload_or_url: "Upload Foto atau Gunakan URL",
+    paste_link_hint: "Paste link gambar langsung (jpg/png)",
+    notes_placeholder: "Catatan tambahan...",
+    address_placeholder: "Alamat lengkap...",
+    dob: "Tanggal Lahir",
+    birthday_bonus: "Bonus Ulang Tahun",
+    birthday_bonus_desc: "Jam main gratis yang diberikan otomatis saat member berulang tahun.",
+
+    // Consoles
+    elapsed: "Jalan",
+    remaining: "Sisa",
+    add_1_hour: "+1 Jam",
+    next_payment: "Lanjut Pembayaran",
+    
+    // Reports
+    export_csv: "Export CSV",
+    search_reports_placeholder: "Cari member / unit...",
+    total_data_count: "Total: {count} Data"
   },
   en: {
     dashboard: "Dashboard",
@@ -286,7 +333,54 @@ const dictionary = {
     available_status: "AVAILABLE",
     ready_to_play: "Ready to play",
     member_label: "Member:",
-    unknown_unit: "Unknown"
+    unknown_unit: "Unknown",
+
+    // Login Placeholders
+    enter_username: "Enter username...",
+    enter_password: "Enter password...",
+    invalid_login: "Invalid username or password.",
+
+    // Settings & Backup
+    tv_connectivity: "TV Connectivity",
+    cloud_link_desc: "Automatically Active. Control TV via Internet/Wi-Fi.",
+    bluetooth_connected: "Bluetooth Connected",
+    bluetooth_disconnected: "Bluetooth Disconnected",
+    data_management: "Data Management",
+    smart_cloud_opt: "Smart Cloud Optimizer",
+    keep_data_duration: "Keep Cloud Data For:",
+    days_30_save: "30 Days (Save Space)",
+    days_90: "90 Days (3 Months)",
+    days_365: "1 Year",
+    forever: "Forever",
+    backup_restore_desc: "Use this to move data between devices.\n1. Backup on old device.\n2. Send .json file to new device.\n3. Restore on new device.",
+    backup_btn: "Backup",
+    download_data: "Download Data",
+    restore_btn: "Restore",
+    upload_data: "Upload Data",
+    restore_confirm: "Found backup from {date}.\n\nRestore will OVERWRITE all current data on this device.\nAre you sure you want to proceed?",
+    restore_success: "Success! Application data restored.",
+    restore_error: "Restore Failed: {msg}",
+    invalid_file: "File format invalid or corrupted.",
+
+    // Members & Forms
+    upload_or_url: "Upload Photo or Use URL",
+    paste_link_hint: "Paste image link directly (jpg/png)",
+    notes_placeholder: "Additional notes...",
+    address_placeholder: "Full address...",
+    dob: "Date of Birth",
+    birthday_bonus: "Birthday Bonus",
+    birthday_bonus_desc: "Free hours automatically given on member's birthday.",
+
+    // Consoles
+    elapsed: "Elapsed",
+    remaining: "Left",
+    add_1_hour: "+1 Hour",
+    next_payment: "Proceed to Payment",
+
+    // Reports
+    export_csv: "Export CSV",
+    search_reports_placeholder: "Search member / unit...",
+    total_data_count: "Total: {count} Records"
   }
 };
 
