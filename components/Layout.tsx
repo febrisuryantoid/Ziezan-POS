@@ -233,7 +233,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
 
         {/* Content Scroll Area - Improved Padding for Tablet */}
         <main className="flex-1 overflow-y-auto scroll-smooth pb-24 md:pb-6 overscroll-contain bg-slate-50/50 dark:bg-black/20">
-          <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl animate-fade-in">
+          <div className="w-full h-full p-4 sm:p-6 lg:p-8 animate-fade-in">
             {children}
           </div>
         </main>
