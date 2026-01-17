@@ -65,7 +65,7 @@ const SplashScreen: React.FC = () => {
 
            {/* Footer Info */}
            <div className="shrink-0 flex flex-col items-center gap-1 text-white/30 text-[10px] font-medium tracking-wide">
-              <span>v1.0.0 (Stable)</span>
+              <span>v1.1.0 (Stable)</span>
               <span>&copy; 2026 Febri Suryanto</span>
            </div>
        </div>

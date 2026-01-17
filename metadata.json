@@ -1,6 +1,6 @@
 {
   "name": "Ziezan Station POS",
-  "description": "Sistem POS profesional untuk Rental PlayStation. Fitur lengkap: Manajemen Member Loyalty, Kontrol TV via Bluetooth/Cloud, Laporan Keuangan Real-time, dan Sinkronisasi Data Multi-Device.",
+  "description": "Sistem POS v1.1.0 untuk Rental PlayStation. Mendukung Smart Cloud Sync, Bluetooth Thermal Print, Kontrol TV Otomatis, dan Manajemen Loyalitas Member.",
   "requestFramePermissions": [
     "bluetooth"
   ]

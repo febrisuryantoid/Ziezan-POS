@@ -495,7 +495,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         {renderPagination()}
       </div>
 
-      {/* RENTAL MODAL (UNCHANGED) */}
+      {/* RENTAL MODAL */}
       {selectedConsoleId && (
          <div className="fixed inset-0 z-[100] flex items-center sm:items-center justify-center sm:bg-palette-navy/80 bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="absolute inset-0 sm:hidden" onClick={resetModal}></div>
@@ -504,7 +504,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               {/* Modal Body */}
               <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5"><div><h3 className="text-lg font-bold text-palette-navy dark:text-white flex items-center gap-2"><Gamepad2 className="text-palette-mustard" size={20} />{consoles.find(c => c.id === selectedConsoleId)?.name}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{t('new_rental_session')}</p></div><button onClick={resetModal} className="p-2 bg-white dark:bg-white/5 rounded-full hover:bg-slate-200 transition-colors border border-slate-200 dark:border-white/10 text-slate-500"><X size={18}/></button></div>
               <div className="p-6 overflow-y-auto">
-                  {/* ... Steps (INPUT, PAYMENT, QRIS, CONFIRM) Same as before ... */}
+                  {/* ... Steps (INPUT, PAYMENT, QRIS, CONFIRM) ... */}
                   {currentStep === 'INPUT' && (
                     <div className="space-y-5">
                        <div className="space-y-2 relative" ref={dropdownRef}><label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><User size={12}/> {t('select_member')}</label><div className="relative"><User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />{rentalMemberId ? (<div className="w-full bg-palette-mustard/10 border border-palette-mustard text-palette-navy dark:text-white text-sm rounded-xl pl-10 pr-10 py-3 font-bold flex items-center justify-between"><span>{members.find(m => m.id === rentalMemberId)?.name}</span><button onClick={() => { setRentalMemberId(''); setMemberSearchTerm(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-white/50 hover:bg-white text-palette-mustard"><X size={14} /></button></div>) : (<input type="search" className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-sm rounded-xl pl-10 pr-10 py-3 focus:ring-2 focus:ring-palette-mustard focus:outline-none font-medium h-12 placeholder-slate-400" placeholder="Ketik nama member..." value={memberSearchTerm} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} onFocus={() => setIsMemberDropdownOpen(true)}/>)}{!rentalMemberId && (<div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><ChevronDown size={16} /></div>)}</div>{isMemberDropdownOpen && !rentalMemberId && (<div className="absolute z-50 w-full mt-1 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-x-hidden animate-fade-in custom-scrollbar">{sortedAndFilteredMembers.length > 0 ? (sortedAndFilteredMembers.map(m => (<button key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.name); setIsMemberDropdownOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center justify-between group border-b border-slate-100 dark:border-white/5 last:border-0"><div><p className="text-sm font-bold text-slate-900 dark:text-white">{m.name}</p>{m.nickname && <p className="text-xs text-slate-500">@{m.nickname}</p>}</div>{m.freeHoursBalance > 0 && (<span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><Gift size={10} /> {m.freeHoursBalance}h</span>)}</button>))) : (<div className="p-3 text-center"><p className="text-xs text-slate-500 mb-2">Member tidak ditemukan.</p>{memberSearchTerm.length > 2 && (<button onClick={handleQuickAddMember} className="w-full py-2 bg-palette-mustard text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-palette-mustard/90"><UserPlus size={14} /> Tambah "{memberSearchTerm}"</button>)}</div>)}</div>)}</div>
@@ -534,6 +534,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 // Standard Payment Selection
                                 <>
                                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{t('pay_method')}</p>
+                                    
+                                    {/* INFO PARTIAL BONUS */}
+                                    {calculation && calculation.freeHoursUsed > 0 && (
+                                       <div className="mb-4 bg-blue-50 dark:bg-blue-900/10 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-2">
+                                         <Gift size={14} /> Bonus terpakai: {calculation.freeHoursUsed} Jam
+                                       </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <button onClick={() => setSelectedPayment('CASH')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'CASH' ? 'bg-palette-green/10 border-palette-green text-palette-green ring-2 ring-palette-green/20' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}>
                                             <Wallet size={32} className="mb-2" />

@@ -88,7 +88,6 @@ export const getMembers = (): Member[] => {
   // --- DATA CLEANUP & DEDUPLICATION LOGIC ---
   // Fix data integrity issues automatically on load
   const nameMap = new Map<string, Member>();
-  const uniqueMembers: Member[] = [];
   let hasChanges = false;
 
   members.forEach(m => {
@@ -98,7 +97,7 @@ export const getMembers = (): Member[] => {
           return;
       }
 
-      // 2. Normalize and Fix structure
+      // 2. Normalize and Fix structure (Migration Logic v1.1.0)
       const cleaned: Member = {
         ...m,
         name: m.name.trim(),
@@ -114,21 +113,18 @@ export const getMembers = (): Member[] => {
       };
 
       // 3. Smart Deduplication by Name (Case Insensitive)
-      // If "Asep" exists twice, keep the one with the most playtime or higher tier
       const key = cleaned.name.toLowerCase();
       
       if (nameMap.has(key)) {
           const existing = nameMap.get(key)!;
-          // Criteria to keep current 'cleaned' over 'existing':
-          // 1. Higher Playtime OR
-          // 2. Same Playtime but Higher Tier (VIP > BASIC)
+          // Keep the one with better stats (Higher Playtime OR Higher Tier)
           const isBetter = cleaned.totalPlayTime > existing.totalPlayTime || 
                            (cleaned.totalPlayTime === existing.totalPlayTime && cleaned.membershipId !== 'BASIC');
           
           if (isBetter) {
               nameMap.set(key, cleaned);
           }
-          hasChanges = true; // We found a duplicate, so we are modifying the list
+          hasChanges = true; 
       } else {
           nameMap.set(key, cleaned);
       }
@@ -137,7 +133,7 @@ export const getMembers = (): Member[] => {
   // Convert Map back to Array
   if (hasChanges || nameMap.size !== members.length) {
       const cleanList = Array.from(nameMap.values());
-      console.log(`[Storage] Cleaned members: Reduced from ${members.length} to ${cleanList.length}`);
+      console.log(`[Storage] Cleaned members v1.1: Reduced from ${members.length} to ${cleanList.length}`);
       saveMembers(cleanList);
       return cleanList;
   }
@@ -162,13 +158,14 @@ export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
   if (data) {
       const parsed = JSON.parse(data);
+      // Ensure all fields from DEFAULT_SETTINGS exist (Migration for new fields like birthdayBonusHours)
       return { 
         ...DEFAULT_SETTINGS, 
         ...parsed,
+        // Enforce defaults if undefined in storage
+        birthdayBonusHours: parsed.birthdayBonusHours ?? DEFAULT_SETTINGS.birthdayBonusHours,
+        cloudRetentionDays: parsed.cloudRetentionDays ?? DEFAULT_SETTINGS.cloudRetentionDays,
         businessName: parsed.businessName || DEFAULT_SETTINGS.businessName,
-        businessAddress: parsed.businessAddress || DEFAULT_SETTINGS.businessAddress,
-        businessPhone: parsed.businessPhone || DEFAULT_SETTINGS.businessPhone,
-        businessLogo: parsed.businessLogo || DEFAULT_SETTINGS.businessLogo,
       };
   }
   return DEFAULT_SETTINGS;
