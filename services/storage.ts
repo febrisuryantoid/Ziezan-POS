@@ -8,11 +8,11 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'BASIC', 
     name: 'Basic', 
-    price: 0, 
-    durationDays: 0, // Lifetime
-    // UPDATED: Main 6 Jam Gratis 1 Jam
-    bonusThreshold: 6, // Play 6
-    bonusReward: 1,    // Get 1
+    price: 5000, // UPDATED: Harga 5.000
+    durationDays: 30, // UPDATED: Masa aktif 30 Hari
+    // Skema bonus tetap: Main 6 Jam Gratis 1 Jam
+    bonusThreshold: 6, 
+    bonusReward: 1,    
     isActive: true,
     // Silver Metallic
     color: 'BASIC'
@@ -78,7 +78,13 @@ export const saveConsoles = (consoles: Console[]) => {
 
 export const getMemberships = (): MembershipConfig[] => {
   const data = localStorage.getItem(K_MEMBERSHIPS);
-  return data ? JSON.parse(data) : DEFAULT_MEMBERSHIPS;
+  // If data exists, merge with defaults to ensure BASIC updates apply if ID matches but structure changed
+  if (data) {
+      const parsed = JSON.parse(data);
+      // Optional: Logic to force update defaults if needed, for now return parsed or default if empty
+      return parsed.length > 0 ? parsed : DEFAULT_MEMBERSHIPS; 
+  }
+  return DEFAULT_MEMBERSHIPS;
 };
 
 export const saveMemberships = (configs: MembershipConfig[]) => {
@@ -90,16 +96,20 @@ export const getMembers = (): Member[] => {
   if (!data) return [];
   
   const members: Member[] = JSON.parse(data);
-  // Migration: Ensure new fields exist and Nickname is generated
+  
+  // --- MIGRATION / "SQL EDITOR" LOGIC ---
+  // Ensures all existing members have the new schema defaults
   return members.map(m => ({
     ...m,
-    nickname: m.nickname || m.name.split(' ')[0], // Default nickname = First word of Name
+    nickname: m.nickname || m.name.split(' ')[0], // Generate nickname if missing
     membershipId: m.membershipId || 'BASIC',
+    address: m.address || 'Nyomplong', // Default Address Migration
     totalAmountPaid: m.totalAmountPaid || 0,
     membershipExpiryDate: m.membershipExpiryDate || null,
     photoUrl: m.photoUrl || undefined,
     dateOfBirth: m.dateOfBirth || undefined,
-    lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined
+    lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
+    notes: m.notes || ''
   }));
 };
 

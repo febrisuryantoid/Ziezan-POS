@@ -15,7 +15,7 @@ export enum MemberStatus {
   INACTIVE = 'INACTIVE'
 }
 
-export type PaymentMethod = 'CASH' | 'QRIS';
+export type PaymentMethod = 'CASH' | 'QRIS' | 'BONUS';
 export type MembershipTierId = 'BASIC' | 'PLUS' | 'VIP';
 
 // --- NEW: TOAST TYPES ---

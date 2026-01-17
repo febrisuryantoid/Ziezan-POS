@@ -129,11 +129,11 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
            {/* Avatar Overlay */}
            <div className="relative -mt-16 text-center z-20">
-               <div className="inline-block p-1.5 rounded-[2rem] bg-white dark:bg-slate-900 shadow-xl relative">
+               <div className="inline-block p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl relative">
                    <img 
                     src={avatarSrc} 
                     alt={member.name}
-                    className="w-32 h-32 rounded-[1.7rem] object-cover bg-slate-50 border border-slate-100 dark:border-slate-800"
+                    className="w-32 h-32 rounded-full object-cover bg-slate-50 border border-slate-100 dark:border-slate-800"
                     onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/s77882238754.png")}
                    />
                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-white dark:border-slate-900 rounded-full" title="Active"></div>
@@ -148,12 +148,12 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                </div>
 
                <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                   <div className="p-4 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                        <Clock size={24} className="text-palette-mustard mb-2" />
                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wide">{t('total_play')}</span>
                        <span className="text-2xl font-black text-slate-900 dark:text-white">{member.totalPlayTime} <span className="text-sm font-bold text-slate-400">{t('hour_short')}</span></span>
                    </div>
-                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                   <div className="p-4 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex flex-col items-center hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                        <Calendar size={24} className="text-palette-purple mb-2" />
                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wide">{t('joined')}</span>
                        <span className="text-2xl font-black text-slate-900 dark:text-white">{new Date(member.joinDate).getFullYear()}</span>
@@ -161,7 +161,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                </div>
 
                <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/5">
-                    <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm bg-emerald-50 dark:bg-emerald-900/20 py-2.5 px-5 rounded-xl w-fit mx-auto border border-emerald-100 dark:border-emerald-900/30">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm bg-emerald-50 dark:bg-emerald-900/20 py-2.5 px-5 rounded-full w-fit mx-auto border border-emerald-100 dark:border-emerald-900/30">
                         <CheckCircle size={18} className="fill-current" />
                         <span>{t('verified_member')}</span>
                     </div>

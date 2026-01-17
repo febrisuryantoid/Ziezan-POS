@@ -88,7 +88,7 @@ export const printReceiptBrowser = (transaction: Transaction, settings: AppSetti
         
         <div class="item">
           <span>Metode:</span>
-          <span>${transaction.paymentMethod}</span>
+          <span>${transaction.paymentMethod === 'BONUS' ? 'BONUS (FREE)' : transaction.paymentMethod}</span>
         </div>
 
         <div class="footer">
@@ -178,7 +178,9 @@ export const generateEscPosCommand = (tx: Transaction, settings: AppSettings): U
     addLine(formatRow("TOTAL", `Rp ${tx.cost.toLocaleString()}`));
     addCmd(BOLD_OFF);
     
-    addLine(formatRow("Metode", tx.paymentMethod));
+    // Explicitly show BONUS if method is BONUS
+    const methodDisplay = tx.paymentMethod === 'BONUS' ? 'BONUS (FREE)' : tx.paymentMethod;
+    addLine(formatRow("Metode", methodDisplay));
     
     addLine("--------------------------------");
     

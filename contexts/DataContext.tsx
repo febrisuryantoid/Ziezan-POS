@@ -110,7 +110,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     ...member,
                     freeHoursBalance: member.freeHoursBalance + bonus,
                     lastBirthdayBonusYear: currentYear,
-                    notes: (member.notes || '') + `\n[System] Birthday Gift ${currentYear}: +${bonus} Hours`,
+                    notes: (member.notes ? member.notes + '\n' : '') + `[System] Ulang Tahun ${currentYear}: Bonus +${bonus} Jam`,
                     synced: false
                 };
             }
@@ -205,13 +205,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       freeHoursBalance: 0,
       totalBonusHoursUsed: 0,
       membershipExpiryDate: null,
+      joinDate: data.joinDate || new Date().toISOString(), // Allow custom join date or default to now
       synced: false // Pending sync
     };
     
     if (newMember.membershipId !== 'BASIC') {
       const config = membershipConfigs.find(c => c.id === newMember.membershipId);
       if (config && config.durationDays > 0) {
-        const d = new Date();
+        const d = new Date(newMember.joinDate);
         d.setDate(d.getDate() + config.durationDays);
         newMember.membershipExpiryDate = d.toISOString();
       }
@@ -274,14 +275,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let cost = duration * settings.hourlyRate;
     let discount = 0;
     let freeHoursUsed = 0;
+    let finalPaymentMethod = paymentMethod;
 
     // Apply Free Hours Logic (Redeem)
     if (member.freeHoursBalance > 0) {
         if (member.freeHoursBalance >= duration) {
+            // Case A: Full coverage (e.g. 3h balance, 1h request -> freeHoursUsed = 1, Cost = 0)
             freeHoursUsed = duration;
             discount = cost;
             cost = 0;
+            // FORCE PAYMENT METHOD TO 'BONUS' IF COST IS 0 DUE TO BONUS
+            finalPaymentMethod = 'BONUS';
         } else {
+            // Case B: Partial coverage (e.g. 1h balance, 3h request -> freeHoursUsed = 1, Cost = 2h price)
             freeHoursUsed = member.freeHoursBalance;
             discount = freeHoursUsed * settings.hourlyRate;
             cost = cost - discount;
@@ -299,7 +305,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       durationHours: duration,
       cost,
       discountApplied: discount,
-      paymentMethod,
+      paymentMethod: finalPaymentMethod,
       status: 'ACTIVE',
       operatorName: operator,
       synced: false

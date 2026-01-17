@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus, PaymentMethod, Console, Transaction, MemberStatus } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass, Printer, Bluetooth, Filter, ArrowUpDown, ChevronDown, Check, UserPlus, GripHorizontal, Image as ImageIcon, Link as LinkIcon, AlertTriangle } from 'lucide-react';
+import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass, Printer, Bluetooth, Filter, ArrowUpDown, ChevronDown, Check, UserPlus, GripHorizontal, Image as ImageIcon, Link as LinkIcon, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { bluetoothService } from '../services/bluetooth';
@@ -23,6 +23,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
   // Modal State (Rental)
   const [selectedConsoleId, setSelectedConsoleId] = useState<string | null>(null);
   const [rentalMemberId, setRentalMemberId] = useState('');
@@ -64,6 +68,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, sortOption]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,22 +84,28 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredConsoles = consoles.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'ALL' ? true : 
-                          filterStatus === 'AVAILABLE' ? c.status === ConsoleStatus.AVAILABLE :
-                          filterStatus === 'IN_USE' ? c.status === ConsoleStatus.IN_USE :
-                          c.status === ConsoleStatus.MAINTENANCE;
-    return matchesSearch && matchesFilter;
-  }).sort((a, b) => {
-    switch (sortOption) {
-      case 'NAME_ASC': return a.name.localeCompare(b.name);
-      case 'NAME_DESC': return b.name.localeCompare(a.name);
-      case 'USAGE_DESC': return b.totalHoursUsed - a.totalHoursUsed;
-      case 'STATUS': return a.status.localeCompare(b.status);
-      default: return 0;
-    }
-  });
+  const filteredConsoles = useMemo(() => {
+    return consoles.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'ALL' ? true : 
+                            filterStatus === 'AVAILABLE' ? c.status === ConsoleStatus.AVAILABLE :
+                            filterStatus === 'IN_USE' ? c.status === ConsoleStatus.IN_USE :
+                            c.status === ConsoleStatus.MAINTENANCE;
+      return matchesSearch && matchesFilter;
+    }).sort((a, b) => {
+      switch (sortOption) {
+        case 'NAME_ASC': return a.name.localeCompare(b.name);
+        case 'NAME_DESC': return b.name.localeCompare(a.name);
+        case 'USAGE_DESC': return b.totalHoursUsed - a.totalHoursUsed;
+        case 'STATUS': return a.status.localeCompare(b.status);
+        default: return 0;
+      }
+    });
+  }, [consoles, searchTerm, filterStatus, sortOption]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredConsoles.length / itemsPerPage);
+  const currentConsoles = filteredConsoles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Sort Members A-Z and filter for dropdown
   const sortedAndFilteredMembers = useMemo(() => {
@@ -111,12 +126,15 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     let discount = 0;
     let totalBaseCost = rentalDuration * settings.hourlyRate;
 
+    // AUTOMATIC BONUS CALCULATION
     if (member.freeHoursBalance > 0) {
       if (member.freeHoursBalance >= rentalDuration) {
+        // Case 1: Bonus covers EVERYTHING
         freeHoursUsed = rentalDuration;
         discount = totalBaseCost;
-        totalBaseCost = 0;
+        totalBaseCost = 0; // Cost is 0
       } else {
+        // Case 2: Partial Bonus
         freeHoursUsed = member.freeHoursBalance;
         discount = freeHoursUsed * settings.hourlyRate;
         totalBaseCost = totalBaseCost - discount;
@@ -137,7 +155,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
   const handleNextStep = () => {
     if (currentStep === 'INPUT' && rentalMemberId) setCurrentStep('PAYMENT');
-    else if (currentStep === 'PAYMENT') selectedPayment === 'QRIS' ? setCurrentStep('QRIS') : setCurrentStep('CONFIRM');
+    else if (currentStep === 'PAYMENT') {
+        // Logic: If Cost is 0 (Full Bonus), skip QRIS check/step and go straight to confirm
+        if (calculation?.totalCost === 0) {
+            setCurrentStep('CONFIRM');
+        } else {
+            selectedPayment === 'QRIS' ? setCurrentStep('QRIS') : setCurrentStep('CONFIRM');
+        }
+    }
     else if (currentStep === 'QRIS') setCurrentStep('CONFIRM');
   };
 
@@ -244,8 +269,66 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
      return { tx, progress, isOvertime, isWarning, formattedElapsed: formatTime(elapsedMs), formattedRemaining: formatTime(timeRemainingMs) };
   }
 
+  // --- PAGINATION RENDERER ---
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            if (currentPage <= 3) {
+                pages.push(1, 2, 3, 4, '...', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+            }
+        }
+        return pages;
+    };
+
+    return (
+        <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in">
+            <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <ChevronLeft size={18} />
+            </button>
+
+            {getPageNumbers().map((page, idx) => (
+                <button
+                    key={idx}
+                    onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                    disabled={typeof page !== 'number'}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                        page === currentPage 
+                        ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' 
+                        : typeof page === 'number'
+                            ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10'
+                            : 'text-slate-400 cursor-default'
+                    }`}
+                >
+                    {page}
+                </button>
+            ))}
+
+            <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <ChevronRight size={18} />
+            </button>
+        </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-20">
       {/* 1. Header & Toolbar */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
@@ -253,7 +336,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID SYSTEM - ADDED min-w-0 for safety */}
+        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
            
            {/* Search */}
@@ -311,20 +394,20 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       <div className="space-y-4">
         {/* Widget Header with Count Badge */}
         <div className="flex items-center gap-3 px-1">
-          <div className="p-1.5 bg-palette-mustard/10 rounded-lg text-palette-mustard dark:text-palette-yellow shadow-sm">
+          <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm">
             <Gamepad2 size={18} />
           </div>
           <h3 className="text-lg font-bold text-palette-navy dark:text-white">
             {t('active_consoles')}
           </h3>
           <span className="ml-auto text-[10px] font-bold text-palette-brown/70 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
-            Total: {filteredConsoles.length}
+            Total Unit: {filteredConsoles.length}
           </span>
         </div>
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
-          {filteredConsoles.map(console => {
+          {currentConsoles.map(console => {
             const isActive = console.status === ConsoleStatus.IN_USE;
             const isMaintenance = console.status === ConsoleStatus.MAINTENANCE;
             const session = isActive ? getSessionDetails(console.id, console.currentSessionId) : null;
@@ -345,10 +428,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                         </span>
                     </div>
 
-                    {/* ACTIVE SESSION OVERLAY - RESPONSIVE FIX */}
+                    {/* ACTIVE SESSION OVERLAY */}
                     {isActive && session && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-0 bg-black/10 dark:bg-black/40 backdrop-blur-[2px] overflow-hidden">
-                            {/* Scalable SVG Container: shrink on small screens */}
                             <div className="relative w-20 h-20 md:w-24 md:h-24 mb-3 shrink-0">
                                 <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl">
                                     <circle cx="50%" cy="50%" r="45%" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="transparent" />
@@ -360,20 +442,20 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 </div>
                             </div>
                             
-                            {/* Member Name Badge - Scale down text if long */}
-                            <div className="bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-xl px-3 py-1.5 md:px-4 md:py-2 text-slate-900 dark:text-white flex items-center gap-2 border border-white/20 shadow-xl max-w-full z-10">
+                            {/* Member Name Badge - ROUNDED FULL */}
+                            <div className="bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-full px-4 py-1.5 md:px-5 md:py-2 text-slate-900 dark:text-white flex items-center gap-2 border border-white/20 shadow-xl max-w-full z-10">
                                 <User size={12} className="text-palette-mustard shrink-0"/>
                                 <span className="text-[10px] md:text-xs font-bold truncate max-w-[100px] md:max-w-[120px]">{session.tx.memberName}</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Action Buttons (Edit/Delete) - Ensure stopPropagation */}
+                    {/* Action Buttons (Edit/Delete) */}
                     <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        <button onClick={(e) => { e.stopPropagation(); setEditingConsole(console); setNewConsoleImage(console.imageUrl || ''); }} className="p-2 bg-white/90 hover:bg-white text-slate-700 shadow-md rounded-xl backdrop-blur-md transition-colors"><Edit2 size={14}/></button>
-                        <button onClick={(e) => { e.stopPropagation(); updateConsoleStatus(console.id, isMaintenance ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE); }} className="p-2 bg-white/90 hover:bg-orange-500 hover:text-white text-slate-700 shadow-md rounded-xl backdrop-blur-md transition-colors"><Wrench size={14}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingConsole(console); setNewConsoleImage(console.imageUrl || ''); }} className="p-2 bg-white/90 hover:bg-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Edit2 size={14}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); updateConsoleStatus(console.id, isMaintenance ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE); }} className="p-2 bg-white/90 hover:bg-orange-500 hover:text-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Wrench size={14}/></button>
                         {!isActive && (
-                            <button onClick={(e) => { e.stopPropagation(); openConfirmDelete(console); }} className="p-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-700 shadow-md rounded-xl backdrop-blur-md transition-colors"><Trash2 size={14}/></button>
+                            <button onClick={(e) => { e.stopPropagation(); openConfirmDelete(console); }} className="p-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Trash2 size={14}/></button>
                         )}
                     </div>
                 </div>
@@ -408,6 +490,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
              </div>
            )}
         </div>
+
+        {/* PAGINATION UI */}
+        {renderPagination()}
       </div>
 
       {/* RENTAL MODAL (UNCHANGED) */}
@@ -429,9 +514,86 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                        <div className="h-6 md:hidden"></div>
                     </div>
                   )}
-                  {currentStep === 'PAYMENT' && (<div className="space-y-6"><div className="text-center"><p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{t('pay_method')}</p><div className="grid grid-cols-2 gap-4"><button onClick={() => setSelectedPayment('CASH')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'CASH' ? 'bg-palette-green/10 border-palette-green text-palette-green ring-2 ring-palette-green/20' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}><Wallet size={32} className="mb-2" /><span className="text-sm font-bold">{t('pay_cash')}</span></button><button onClick={() => setSelectedPayment('QRIS')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'QRIS' ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-500 text-blue-600 ring-2 ring-blue-200' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}><QrCode size={32} className="mb-2" /><span className="text-sm font-bold">QRIS</span></button></div></div><div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl text-center border border-slate-100 dark:border-white/10"><span className="text-xs text-slate-500">{t('total_bill')}</span><p className="text-2xl font-black text-palette-navy dark:text-white mt-1">Rp {calculation?.totalCost.toLocaleString()}</p></div><div className="flex gap-3"><button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 text-sm h-12 active:scale-95">{t('back')}</button><button onClick={handleNextStep} className="flex-[2] py-3 bg-palette-mustard text-white rounded-xl font-bold hover:bg-palette-mustard/90 shadow-lg shadow-palette-mustard/20 text-sm h-12 active:scale-95">{selectedPayment === 'CASH' ? t('confirm_pay') : t('scan_qris')}</button></div><div className="h-6 md:hidden"></div></div>)}
+                  {currentStep === 'PAYMENT' && (
+                    <div className="space-y-6">
+                        <div className="text-center">
+                            {calculation?.totalCost === 0 ? (
+                                // AUTOMATION: UI for Full Bonus Coverage
+                                <div className="animate-fade-in">
+                                    <div className="w-20 h-20 bg-palette-green/10 text-palette-green rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                        <Gift size={40} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                                        Full Covered by Bonus!
+                                    </h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Member menggunakan {calculation.freeHoursUsed} jam saldo bonus.
+                                    </p>
+                                </div>
+                            ) : (
+                                // Standard Payment Selection
+                                <>
+                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{t('pay_method')}</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => setSelectedPayment('CASH')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'CASH' ? 'bg-palette-green/10 border-palette-green text-palette-green ring-2 ring-palette-green/20' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}>
+                                            <Wallet size={32} className="mb-2" />
+                                            <span className="text-sm font-bold">{t('pay_cash')}</span>
+                                        </button>
+                                        <button onClick={() => setSelectedPayment('QRIS')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'QRIS' ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-500 text-blue-600 ring-2 ring-blue-200' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}>
+                                            <QrCode size={32} className="mb-2" />
+                                            <span className="text-sm font-bold">QRIS</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        
+                        <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl text-center border border-slate-100 dark:border-white/10">
+                            <span className="text-xs text-slate-500">{t('total_bill')}</span>
+                            <p className={`text-2xl font-black mt-1 ${calculation?.totalCost === 0 ? 'text-palette-green' : 'text-palette-navy dark:text-white'}`}>
+                                Rp {calculation?.totalCost.toLocaleString()}
+                            </p>
+                            {calculation?.totalCost === 0 && <span className="text-[10px] font-bold text-palette-green uppercase tracking-wide">GRATIS</span>}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 text-sm h-12 active:scale-95">{t('back')}</button>
+                            <button onClick={handleNextStep} className="flex-[2] py-3 bg-palette-mustard text-white rounded-xl font-bold hover:bg-palette-mustard/90 shadow-lg shadow-palette-mustard/20 text-sm h-12 active:scale-95">
+                                {calculation?.totalCost === 0 ? 'Klaim Bonus' : (selectedPayment === 'CASH' ? t('confirm_pay') : t('scan_qris'))}
+                            </button>
+                        </div>
+                        <div className="h-6 md:hidden"></div>
+                    </div>
+                  )}
                   {currentStep === 'QRIS' && (<div className="text-center space-y-6"><div className="bg-white p-4 rounded-2xl border border-slate-200 inline-block shadow-lg"><img src="https://beeimg.com/images/k55144992704.jpg" alt="QRIS" className="w-48 h-48 object-cover rounded-lg" /><p className="text-xs font-bold text-slate-900 mt-2">{t('scan_to_pay')}</p></div><div><p className="text-xs text-slate-500">{t('total')}</p><p className="text-2xl font-bold text-slate-900 dark:text-white">Rp {calculation?.totalCost.toLocaleString()}</p></div><div className="flex gap-3"><button onClick={() => setCurrentStep('PAYMENT')} className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 text-sm h-12 active:scale-95">{t('back')}</button><button onClick={handleNextStep} className="flex-[2] py-3 bg-palette-green text-white rounded-xl font-bold hover:bg-palette-green/90 shadow-lg shadow-palette-green/20 text-sm h-12 active:scale-95">{t('paid_confirm')}</button></div><div className="h-6 md:hidden"></div></div>)}
-                  {currentStep === 'CONFIRM' && (<div className="text-center space-y-6 py-4"><div className="w-20 h-20 bg-palette-green/10 text-palette-green rounded-full flex items-center justify-center mx-auto animate-zoom-in"><CheckCircle size={40} /></div><div><h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('ready_start')}</h4><div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl inline-block w-full text-left border border-slate-100 dark:border-white/10"><div className="flex justify-between mb-2"><span className="text-xs text-slate-500">{t('unit_label')}</span><span className="text-sm font-bold text-slate-900 dark:text-white">{consoles.find(c => c.id === selectedConsoleId)?.name}</span></div><div className="flex justify-between mb-2"><span className="text-xs text-slate-500">{t('duration_label')}</span><span className="text-sm font-bold text-slate-900 dark:text-white">{rentalDuration} {t('jam')}</span></div><div className="flex justify-between"><span className="text-xs text-slate-500">{t('method_label')}</span><span className="text-sm font-bold text-palette-mustard">{selectedPayment}</span></div></div></div><button onClick={handleConfirmRental} className="w-full py-4 bg-palette-mustard text-white rounded-xl font-bold text-base shadow-xl shadow-palette-mustard/30 hover:bg-palette-mustard/90 hover:-translate-y-1 transition-all h-14 active:scale-95">{t('start_session')}</button><div className="h-6 md:hidden"></div></div>)}
+                  {currentStep === 'CONFIRM' && (
+                    <div className="text-center space-y-6 py-4">
+                        <div className="w-20 h-20 bg-palette-green/10 text-palette-green rounded-full flex items-center justify-center mx-auto animate-zoom-in">
+                            <CheckCircle size={40} />
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('ready_start')}</h4>
+                            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl inline-block w-full text-left border border-slate-100 dark:border-white/10">
+                                <div className="flex justify-between mb-2">
+                                    <span className="text-xs text-slate-500">{t('unit_label')}</span>
+                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{consoles.find(c => c.id === selectedConsoleId)?.name}</span>
+                                </div>
+                                <div className="flex justify-between mb-2">
+                                    <span className="text-xs text-slate-500">{t('duration_label')}</span>
+                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{rentalDuration} {t('jam')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-xs text-slate-500">{t('method_label')}</span>
+                                    <span className={`text-sm font-bold ${calculation?.totalCost === 0 ? 'text-palette-green' : 'text-palette-mustard'}`}>
+                                        {calculation?.totalCost === 0 ? 'BONUS (FREE)' : selectedPayment}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={handleConfirmRental} className="w-full py-4 bg-palette-mustard text-white rounded-xl font-bold text-base shadow-xl shadow-palette-mustard/30 hover:bg-palette-mustard/90 hover:-translate-y-1 transition-all h-14 active:scale-95">{t('start_session')}</button>
+                        <div className="h-6 md:hidden"></div>
+                    </div>
+                  )}
               </div>
            </div>
          </div>

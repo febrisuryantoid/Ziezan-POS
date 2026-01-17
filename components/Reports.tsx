@@ -222,6 +222,7 @@ const Reports: React.FC = () => {
                 <option value="ALL">{t('all')}</option>
                 <option value="CASH">{t('pay_cash')}</option>
                 <option value="QRIS">QRIS</option>
+                <option value="BONUS">BONUS</option>
              </select>
           </div>
 
@@ -320,7 +321,9 @@ const Reports: React.FC = () => {
                              <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{tx.consoleName}</span>
                              <div className="flex items-center gap-2 shrink-0">
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                                  tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
+                                  tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600' : 
+                                  tx.paymentMethod === 'BONUS' ? 'bg-purple-100 text-purple-600' :
+                                  'bg-green-50 text-green-600'
                                 }`}>
                                   {tx.paymentMethod || 'CASH'}
                                 </span>
@@ -372,7 +375,9 @@ const Reports: React.FC = () => {
                           <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs">{tx.durationHours} {t('hour_short')}</td>
                           <td className="px-6 py-3 text-center">
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg ${
-                                tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 
+                                tx.paymentMethod === 'BONUS' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' :
+                                'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
                             }`}>
                               {tx.paymentMethod || 'CASH'}
                             </span>

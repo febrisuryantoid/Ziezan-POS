@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Calendar, FileText, User } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
@@ -32,15 +32,22 @@ const Members: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [newNickname, setNewNickname] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [newAddress, setNewAddress] = useState('');
+  const [newAddress, setNewAddress] = useState('Nyomplong'); // Default Address
   const [newPhoto, setNewPhoto] = useState('');
   const [newDob, setNewDob] = useState('');
-  const [newTier, setNewTier] = useState<MembershipTierId>('BASIC');
+  const [newJoinDate, setNewJoinDate] = useState(new Date().toISOString().split('T')[0]); // Default Today
+  const [newTier, setNewTier] = useState<MembershipTierId>('BASIC'); // Default Basic
+  const [newNotes, setNewNotes] = useState('');
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
 
   // Refs
   const photoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterTier, sortOption]);
 
   // -- FILTER & SORT LOGIC --
   const filteredMembers = useMemo(() => {
@@ -92,8 +99,12 @@ const Members: React.FC = () => {
   };
 
   const resetForm = () => {
-    setNewName(''); setNewNickname(''); setNewPhone(''); setNewAddress(''); 
-    setNewPhoto(''); setNewDob(''); setNewTier('BASIC');
+    setNewName(''); setNewNickname(''); setNewPhone(''); 
+    setNewAddress('Nyomplong'); // Default Value
+    setNewPhoto(''); setNewDob(''); 
+    setNewJoinDate(new Date().toISOString().split('T')[0]);
+    setNewTier('BASIC'); // Default Value
+    setNewNotes('');
     setIsAdding(false);
   };
 
@@ -109,8 +120,8 @@ const Members: React.FC = () => {
         dateOfBirth: newDob || undefined,
         membershipId: newTier,
         status: MemberStatus.ACTIVE,
-        joinDate: new Date().toISOString(),
-        notes: ''
+        joinDate: newJoinDate ? new Date(newJoinDate).toISOString() : new Date().toISOString(),
+        notes: newNotes
       });
       addToast('success', 'Member Ditambahkan', `Selamat datang, ${newName}!`);
       resetForm();
@@ -141,7 +152,7 @@ const Members: React.FC = () => {
       });
   };
 
-  // --- STYLE HELPERS (MATCHING SETTINGS PAGE) ---
+  // --- STYLE HELPERS ---
   const getTierStyle = (id: string) => {
     switch(id) {
       case 'VIP':
@@ -185,9 +196,67 @@ const Members: React.FC = () => {
     }
   };
 
+  // --- PAGINATION RENDERER ---
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            if (currentPage <= 3) {
+                pages.push(1, 2, 3, 4, '...', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+            }
+        }
+        return pages;
+    };
+
+    return (
+        <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in">
+            <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <ChevronLeft size={18} />
+            </button>
+
+            {getPageNumbers().map((page, idx) => (
+                <button
+                    key={idx}
+                    onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                    disabled={typeof page !== 'number'}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                        page === currentPage 
+                        ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' 
+                        : typeof page === 'number'
+                            ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10'
+                            : 'text-slate-400 cursor-default'
+                    }`}
+                >
+                    {page}
+                </button>
+            ))}
+
+            <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <ChevronRight size={18} />
+            </button>
+        </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6 pb-20">
-      {/* HEADER & FILTERS (MATCHING CONSOLES PAGE STYLE) */}
+      {/* HEADER & FILTERS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
           <h2 className="text-xl font-bold text-palette-navy dark:text-white">{t('members')}</h2>
@@ -195,7 +264,7 @@ const Members: React.FC = () => {
         </div>
 
         {/* RESPONSIVE FILTER GRID SYSTEM */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center">
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
             {/* Search */}
             <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -223,7 +292,7 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Filter Tier (NEW) */}
+            {/* Filter Tier */}
             <div className="relative col-span-1 md:col-span-6 lg:w-40">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
@@ -248,87 +317,106 @@ const Members: React.FC = () => {
         </div>
       </div>
 
-      {/* MEMBER GRID (REDESIGNED TO MATCH SETTINGS CONFIG CARDS) */}
-      {filteredMembers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
-              <Users size={48} className="text-slate-300 mb-4" />
-              <p className="text-slate-500 font-medium">{t('no_data_members')}</p>
+      <div className="space-y-4">
+        {/* Widget Header */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm">
+            <Users size={18} />
           </div>
-      ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {currentMembers.map(member => {
-                  const style = getTierStyle(member.membershipId);
-                  return (
-                  <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card}`}>
-                      
-                      {/* Background Shimmer Effect */}
-                      <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
+          <h3 className="text-lg font-bold text-palette-navy dark:text-white">
+            {t('active_status')}
+          </h3>
+          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
+            Total Member: {filteredMembers.length}
+          </span>
+        </div>
 
-                      {/* Header Section */}
-                      <div className="relative z-10 p-5 flex justify-between items-start">
-                          <div className="flex gap-3">
-                              <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
-                                  <img 
-                                      src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
-                                      alt={member.name} 
-                                      className="w-14 h-14 rounded-2xl object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
-                                  />
-                                  <div className={`absolute -bottom-2 -right-2 p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
-                                      {getIcon(member.membershipId, style.iconColor)}
-                                  </div>
-                              </div>
-                              <div className="min-w-0 flex flex-col justify-center">
-                                  <h3 className={`font-bold text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
-                                      {member.name}
-                                  </h3>
-                                  <p className={`text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
-                              </div>
-                          </div>
-                          
-                          {/* Actions Dropdown / Buttons */}
-                          <div className="flex flex-col gap-1">
-                              <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-2 rounded-xl transition-colors ${style.btnText}`}>
-                                  <Edit2 size={16} />
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-2 rounded-xl transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
-                                  <Trash2 size={16} />
-                              </button>
-                          </div>
-                      </div>
+        {/* MEMBER GRID */}
+        {filteredMembers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
+                <Users size={48} className="text-slate-300 mb-4" />
+                <p className="text-slate-500 font-medium">{t('no_data_members')}</p>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {currentMembers.map(member => {
+                    const style = getTierStyle(member.membershipId);
+                    return (
+                    <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card}`}>
+                        
+                        {/* Background Shimmer Effect */}
+                        <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
 
-                      {/* Stats Section */}
-                      <div className="relative z-10 px-5 pb-2 flex-1">
-                          <div className={`grid grid-cols-2 gap-2 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
-                              <div className="flex flex-col items-center">
-                                  <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
-                                  <div className={`flex items-center gap-1 font-bold ${style.text}`}>
-                                      <Clock size={12} /> 
-                                      <span>{member.totalPlayTime}h</span>
-                                  </div>
-                              </div>
-                              <div className="flex flex-col items-center border-l border-white/10">
-                                  <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
-                                  <div className={`flex items-center gap-1 font-bold ${style.text}`}>
-                                      <Gift size={12} /> 
-                                      <span>{member.freeHoursBalance}h</span>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
+                        {/* Header Section */}
+                        <div className="relative z-10 p-5 flex justify-between items-start">
+                            <div className="flex gap-3 min-w-0">
+                                {/* MEMBER PHOTO */}
+                                <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
+                                    <img 
+                                        src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
+                                        alt={member.name} 
+                                        className="w-14 h-14 rounded-full object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
+                                    />
+                                    <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
+                                        {getIcon(member.membershipId, style.iconColor)}
+                                    </div>
+                                </div>
+                                <div className="min-w-0 flex flex-col justify-center flex-1">
+                                    <h3 className={`font-bold text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
+                                        {member.name}
+                                    </h3>
+                                    <p className={`text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
+                                </div>
+                            </div>
+                            
+                            {/* Actions Dropdown / Buttons */}
+                            <div className="flex flex-col gap-1 shrink-0 ml-1">
+                                <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-2 rounded-full transition-colors ${style.btnText}`}>
+                                    <Edit2 size={16} />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-2 rounded-full transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
 
-                      {/* Footer Info */}
-                      <div className="relative z-10 px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
-                          <span className={`text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
-                              {member.phone || '-'}
-                          </span>
-                          <button onClick={() => handleCopyLink(member.nickname)} className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
-                              <ExternalLink size={10} /> Kartu
-                          </button>
-                      </div>
-                  </div>
-              );})}
-          </div>
-      )}
+                        {/* Stats Section */}
+                        <div className="relative z-10 px-5 pb-2 flex-1">
+                            <div className={`grid grid-cols-2 gap-2 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
+                                <div className="flex flex-col items-center">
+                                    <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
+                                    <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                        <Clock size={12} /> 
+                                        <span>{member.totalPlayTime}h</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center border-l border-white/10">
+                                    <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
+                                    <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                        <Gift size={12} /> 
+                                        <span>{member.freeHoursBalance}h</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Info */}
+                        <div className="relative z-10 px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
+                            <span className={`text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
+                                {member.phone || '-'}
+                            </span>
+                            <button onClick={() => handleCopyLink(member.nickname)} className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
+                                <ExternalLink size={10} /> Kartu
+                            </button>
+                        </div>
+                    </div>
+                );})}
+            </div>
+        )}
+
+        {/* PAGINATION UI */}
+        {renderPagination()}
+      </div>
 
       {/* ADD MEMBER MODAL */}
       {isAdding && (
@@ -342,17 +430,18 @@ const Members: React.FC = () => {
                       <form id="add-member-form" onSubmit={handleAddMember} className="space-y-4">
                           {/* Photo Upload */}
                           <div className="flex items-center gap-4 mb-4">
-                              <div onClick={() => photoInputRef.current?.click()} className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
+                              <div onClick={() => photoInputRef.current?.click()} className="w-24 h-24 rounded-full bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
                                   {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : newPhoto ? <img src={newPhoto} className="w-full h-full object-cover" /> : <Camera className="text-slate-400 group-hover:text-palette-mustard" />}
                               </div>
                               <div className="flex-1">
                                   <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Foto Profil</label>
-                                  <input type="text" placeholder="https://..." value={newPhoto} onChange={e => setNewPhoto(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-palette-mustard" />
+                                  <input type="text" placeholder="https://..." value={newPhoto} onChange={e => setNewPhoto(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-palette-mustard" />
                                   <input type="file" ref={photoInputRef} onChange={e => handlePhotoUpload(e, false)} className="hidden" accept="image/*" />
                                   <button type="button" onClick={() => photoInputRef.current?.click()} className="mt-2 text-[10px] font-bold text-palette-mustard hover:underline flex items-center gap-1"><ImagePlus size={10} /> Upload dari Galeri</button>
                               </div>
                           </div>
 
+                          {/* 1. Nama Lengkap & Panggilan */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')} *</label>
@@ -364,6 +453,7 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
+                          {/* 2. No WA & Alamat (Default Nyomplong) */}
                           <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('phone')} (WA)</label>
                               <div className="relative">
@@ -371,23 +461,44 @@ const Members: React.FC = () => {
                                   <input type="tel" inputMode="numeric" pattern="[0-9]*" value={newPhone} onChange={e => setNewPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm font-mono focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" placeholder="08..." />
                               </div>
                           </div>
+                          <div className="space-y-1.5">
+                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('address')}</label>
+                               <div className="relative">
+                                  <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
+                                  <textarea rows={2} value={newAddress} onChange={e => setNewAddress(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" placeholder="Alamat lengkap..." />
+                               </div>
+                          </div>
 
+                          {/* 3. Membership (Default Basic) & Tanggal Daftar (Default Today) */}
                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
-                                  <input type="date" value={newDob} onChange={e => setNewDob(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
-                              </div>
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('membership')}</label>
                                   <select value={newTier} onChange={e => setNewTier(e.target.value as MembershipTierId)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white appearance-none">
                                       {membershipConfigs.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                   </select>
                               </div>
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('join_date')}</label>
+                                  <input type="date" value={newJoinDate} onChange={e => setNewJoinDate(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
+                          </div>
+
+                          {/* 4. Tanggal Lahir & Catatan (Bonus otomatis) */}
+                          <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
+                              <div className="relative">
+                                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                  <input type="date" value={newDob} onChange={e => setNewDob(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
                           </div>
                           
                           <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('address')}</label>
-                               <textarea rows={2} value={newAddress} onChange={e => setNewAddress(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" placeholder="Alamat singkat..." />
+                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('notes')}</label>
+                               <div className="relative">
+                                  <FileText className="absolute left-3 top-3 text-slate-400" size={16} />
+                                  <textarea rows={2} value={newNotes} onChange={e => setNewNotes(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" placeholder={t('notes_placeholder')} />
+                               </div>
+                               <p className="text-[9px] text-slate-400">*Catatan ini akan otomatis terisi riwayat bonus ulang tahun.</p>
                           </div>
                       </form>
                   </div>
@@ -408,9 +519,9 @@ const Members: React.FC = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto p-6">
                       <form id="edit-member-form" onSubmit={handleUpdateMember} className="space-y-4">
-                          {/* Photo */}
+                          {/* Photo - Same Layout */}
                           <div className="flex items-center gap-4 mb-4">
-                              <div onClick={() => editPhotoInputRef.current?.click()} className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
+                              <div onClick={() => editPhotoInputRef.current?.click()} className="w-24 h-24 rounded-full bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
                                   {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : <img src={editingMember.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full object-cover" />}
                               </div>
                               <div className="flex-1">
@@ -420,11 +531,19 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')}</label>
-                              <input required type="text" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                          {/* 1. Nama Lengkap & Panggilan */}
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')}</label>
+                                  <input required type="text" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">Nickname</label>
+                                  <input type="text" value={editingMember.nickname} onChange={e => setEditingMember({...editingMember, nickname: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
                           </div>
                           
+                          {/* 2. No WA & Alamat */}
                           <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('phone')}</label>
                               <div className="relative">
@@ -432,7 +551,15 @@ const Members: React.FC = () => {
                                 <input type="tel" inputMode="numeric" pattern="[0-9]*" value={editingMember.phone || ''} onChange={e => setEditingMember({...editingMember, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm font-mono focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
                               </div>
                           </div>
+                          <div className="space-y-1.5">
+                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('address')}</label>
+                               <div className="relative">
+                                  <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
+                                  <textarea rows={2} value={editingMember.address || 'Nyomplong'} onChange={e => setEditingMember({...editingMember, address: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" />
+                               </div>
+                          </div>
 
+                          {/* 3. Membership & Tanggal Daftar */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('membership')}</label>
@@ -441,9 +568,33 @@ const Members: React.FC = () => {
                                   </select>
                               </div>
                               <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('bonus_balance')}</label>
-                                  <input type="number" inputMode="numeric" value={editingMember.freeHoursBalance} onChange={e => setEditingMember({...editingMember, freeHoursBalance: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('join_date')}</label>
+                                  <input type="date" value={editingMember.joinDate ? editingMember.joinDate.split('T')[0] : ''} onChange={e => setEditingMember({...editingMember, joinDate: new Date(e.target.value).toISOString()})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
                               </div>
+                          </div>
+
+                          {/* 4. Tanggal Lahir & Bonus (Edit Only) */}
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
+                                  <input type="date" value={editingMember.dateOfBirth ? editingMember.dateOfBirth.split('T')[0] : ''} onChange={e => setEditingMember({...editingMember, dateOfBirth: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                              </div>
+                              <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('bonus_balance')} (Y Jam)</label>
+                                  <div className="relative">
+                                      <Gift className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                      <input type="number" inputMode="numeric" value={editingMember.freeHoursBalance} onChange={e => setEditingMember({...editingMember, freeHoursBalance: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm font-mono focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* 5. Catatan */}
+                          <div className="space-y-1.5">
+                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('notes')}</label>
+                               <div className="relative">
+                                  <FileText className="absolute left-3 top-3 text-slate-400" size={16} />
+                                  <textarea rows={3} value={editingMember.notes || ''} onChange={e => setEditingMember({...editingMember, notes: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" />
+                               </div>
                           </div>
                       </form>
                   </div>
@@ -457,7 +608,7 @@ const Members: React.FC = () => {
       {/* DELETE CONFIRMATION */}
       {deletingMemberId && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+              <div className="bg-white dark:bg-palette-navyLight rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
                   <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
                       <AlertTriangle size={32} />
                   </div>

@@ -31,16 +31,16 @@ const Dashboard: React.FC = () => {
   }));
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="bg-white dark:bg-palette-navyLight p-5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div className="bg-white dark:bg-palette-navyLight p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
       {/* Decorative background blob */}
-      <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-10 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
+      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
       
       <div className="flex justify-between items-start relative z-10">
         <div className="min-w-0">
           <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide truncate">{title}</p>
           <h3 className={`text-2xl font-black mt-2 ${colorClass} truncate`}>{value}</h3>
         </div>
-        <div className={`p-2.5 rounded-xl shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+        <div className={`p-3 rounded-full shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
           <Icon size={20} />
         </div>
       </div>
@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
       {/* 3. Main Content Widgets (Table & Chart) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Rentals Table / List */}
-        <div className="lg:col-span-2 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
+        <div className="lg:col-span-2 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
             <h3 className="font-bold text-sm text-palette-navy dark:text-white flex items-center gap-2">
               <Activity size={16} className="text-palette-mustard" /> {t('recent_tx')}
@@ -121,7 +121,7 @@ const Dashboard: React.FC = () => {
                             <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-0.5">{t('members')}</span>
                             <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName}</span>
                          </div>
-                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                             tx.status === 'ACTIVE' 
                               ? 'bg-palette-green/10 text-palette-green' 
                               : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400'
@@ -181,7 +181,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Charts Widget - Using Palette Colors */}
-        <div className="bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
+        <div className="bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
           <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <MonitorPlay size={16} className="text-palette-mustard" /> {t('console_util')}
           </h3>
@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
                         backgroundColor: theme === 'dark' ? '#181825' : '#ffffff', 
                         borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
                         color: theme === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderRadius: '8px',
+                        borderRadius: '16px',
                         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                         fontSize: '12px'
                       }}

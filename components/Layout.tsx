@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     return (
       <div 
         onClick={() => setTab(id)} 
-        className={`group relative flex items-center justify-center w-10 h-10 mx-auto rounded-xl cursor-pointer transition-all duration-300 mb-3
+        className={`group relative flex items-center justify-center w-10 h-10 mx-auto rounded-full cursor-pointer transition-all duration-300 mb-3
         ${isActive 
           ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/40 scale-105' 
           : 'text-palette-brown/60 dark:text-palette-cream/50 hover:bg-white dark:hover:bg-white/10 hover:text-palette-mustard dark:hover:text-palette-yellow hover:scale-105'}`}
@@ -86,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-90 transition-transform duration-100"
       >
         <div className={`
-           transition-all duration-300 ease-out flex items-center justify-center rounded-2xl mb-1
+           transition-all duration-300 ease-out flex items-center justify-center rounded-full mb-1
            ${isActive 
              ? 'w-12 h-8 bg-palette-mustard/10 text-palette-mustard dark:bg-palette-purple/20 dark:text-palette-purple' 
              : 'w-auto h-auto text-slate-400 dark:text-slate-500'
@@ -118,12 +118,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-20 bg-white/80 dark:bg-palette-navyLight/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-white/5 flex-col items-center py-6 z-50 shadow-2xl transition-colors duration-300 overflow-visible shrink-0">
         
-        {/* App Logo */}
-        <div className="mb-8 w-10 h-10">
+        {/* App Logo - CIRCLE DESIGN SYSTEM */}
+        <div className="mb-8 w-12 h-12">
            <img 
              src={appLogo} 
              alt={appName} 
-             className="w-full h-full object-cover cursor-pointer hover:rotate-12 transition-transform rounded-xl shadow-md bg-white"
+             className="w-full h-full object-cover cursor-pointer hover:rotate-12 transition-transform rounded-full shadow-md bg-white border-2 border-white dark:border-white/10"
              title={appName}
              onClick={() => setTab('dashboard')}
              onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
@@ -136,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
             <NavItemDesktop id="consoles" icon={Gamepad2} label={t('consoles')} />
             <NavItemDesktop id="members" icon={Users} label={t('members')} />
             
-            <div className="w-8 h-[1px] bg-slate-200 dark:bg-white/10 my-3"></div>
+            <div className="w-8 h-[1px] bg-slate-200 dark:bg-white/10 my-3 rounded-full"></div>
             
             <NavItemDesktop id="reports" icon={FileBarChart} label={t('reports')} />
             {user.role === 'ADMIN' && (
@@ -146,9 +146,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
 
         {/* Footer Actions */}
         <div className="mt-auto flex flex-col items-center gap-4">
-           {/* User Avatar */}
+           {/* User Avatar - Already Rounded Full */}
            <div className="group relative cursor-pointer">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-purple p-[2px]">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-purple p-[2px] shadow-lg">
                 <div className="w-full h-full rounded-full bg-white dark:bg-palette-navyLight flex items-center justify-center text-palette-mustard font-black text-xs">
                     {user.username.charAt(0).toUpperCase()}
                 </div>
@@ -157,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
 
            <button 
             onClick={onLogout}
-            className="group relative flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-white hover:bg-palette-red transition-all shadow-sm hover:shadow-palette-red/30"
+            className="group relative flex items-center justify-center w-9 h-9 rounded-full text-slate-400 hover:text-white hover:bg-palette-red transition-all shadow-sm hover:shadow-palette-red/30"
             title={t('logout')}
           >
             <LogOut size={18} />
@@ -187,7 +187,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         {/* Top Header */}
         <header className="bg-white/60 dark:bg-palette-navyLight/60 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 h-16 flex justify-between items-center px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300 shrink-0">
           <div className="flex items-center gap-3 md:hidden">
-             <div className="w-9 h-9 rounded-xl shadow-md border border-white/20 overflow-hidden">
+             <div className="w-10 h-10 rounded-full shadow-md border border-white/20 overflow-hidden">
                 <img 
                   src={appLogo} 
                   alt={appName} 
@@ -211,20 +211,20 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
           <div className="flex items-center gap-3">
             <button
                onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-               className="h-10 px-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-cream font-bold text-[10px] flex items-center gap-2 hover:border-palette-mustard transition-all active:scale-95"
+               className="h-10 px-3 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-cream font-bold text-[10px] flex items-center gap-2 hover:border-palette-mustard transition-all active:scale-95 shadow-sm"
             >
                <Languages size={16} />
                <span className="mt-0.5">{language.toUpperCase()}</span>
             </button>
             <button 
               onClick={toggleTheme}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95"
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95 shadow-sm"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button 
               onClick={onLogout} 
-              className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-red-50 text-palette-red border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 active:scale-95 transition-all"
+              className="md:hidden h-10 w-10 flex items-center justify-center rounded-full bg-red-50 text-palette-red border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 active:scale-95 transition-all shadow-sm"
             >
               <LogOut size={18} />
             </button>
@@ -239,7 +239,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         </main>
 
         {/* Bottom Navigation - Mobile (Premium Glassmorphism) */}
-        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-palette-navyLight/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex justify-between items-center px-2 pb-safe z-50 shadow-2xl shadow-palette-navy/20 rounded-3xl h-[70px]">
+        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-palette-navyLight/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex justify-between items-center px-2 pb-safe z-50 shadow-2xl shadow-palette-navy/20 rounded-full h-[70px]">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />

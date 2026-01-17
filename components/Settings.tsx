@@ -209,12 +209,12 @@ const Settings: React.FC = () => {
         </h3>
         
         <div className="space-y-5 pb-4">
-            {/* Logo Upload Section */}
+            {/* Logo Upload Section - ROUNDED */}
             <div className="flex flex-col items-center sm:items-start gap-4 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wide w-full">{t('logo_label')}</span>
                 <div className="flex flex-row gap-4 items-center w-full">
                     <div className="relative group shrink-0">
-                        <div className="w-20 h-20 rounded-2xl border-2 border-slate-200 dark:border-white/20 overflow-hidden bg-white dark:bg-palette-navy flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-full border-2 border-slate-200 dark:border-white/20 overflow-hidden bg-white dark:bg-palette-navy flex items-center justify-center">
                             {isProcessingLogo ? (
                                 <Loader2 className="w-6 h-6 animate-spin text-palette-mustard" />
                             ) : (
@@ -228,7 +228,7 @@ const Settings: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => logoInputRef.current?.click()}
-                            className="absolute -bottom-2 -right-2 p-2 bg-palette-mustard text-white rounded-full shadow-lg hover:bg-palette-mustard/90 transition-transform active:scale-95"
+                            className="absolute -bottom-1 -right-1 p-2 bg-palette-mustard text-white rounded-full shadow-lg hover:bg-palette-mustard/90 transition-transform active:scale-95"
                             title="Upload Logo"
                         >
                             <Camera size={14} />
@@ -354,7 +354,7 @@ const Settings: React.FC = () => {
         </h3>
         
         {/* Wi-Fi / Cloud Status */}
-        <div className="mb-6 p-5 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
+        <div className="mb-6 p-5 rounded-3xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
             <div className="flex items-center gap-4">
                 <div className="p-3 rounded-full bg-blue-500 text-white animate-pulse">
                     <CloudLightning size={24} />
@@ -369,7 +369,7 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Bluetooth Controls */}
-        <div className={`p-5 rounded-2xl mb-6 border transition-colors ${isConnected ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900/30' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+        <div className={`p-5 rounded-3xl mb-6 border transition-colors ${isConnected ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900/30' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
             <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-full ${isConnected ? 'bg-emerald-500 text-white' : 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-300'}`}>
                     {isConnected ? <BluetoothConnected size={24} /> : <BluetoothOff size={24} />}
@@ -407,7 +407,7 @@ const Settings: React.FC = () => {
             <Database size={20} className="text-emerald-500"/> {t('data_management')}
         </h3>
         
-        <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 border border-slate-100 dark:border-white/10 mb-6">
+        <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-5 border border-slate-100 dark:border-white/10 mb-6">
             <div className="flex items-center gap-2 mb-3">
                 <CloudLightning size={18} className="text-palette-mustard"/>
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{t('smart_cloud_opt')}</span>
@@ -434,10 +434,10 @@ const Settings: React.FC = () => {
 
             <button 
                 onClick={handleBackup}
-                className="w-full group relative flex items-center justify-between p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all overflow-hidden"
+                className="w-full group relative flex items-center justify-between p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-3xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all overflow-hidden"
             >
                 <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white/20 rounded-lg"><Download size={20}/></div>
+                    <div className="p-2 bg-white/20 rounded-full"><Download size={20}/></div>
                     <div className="text-left">
                         <span className="block text-sm font-bold">{t('backup_btn')}</span>
                         <span className="block text-[10px] opacity-80">{t('download_data')}</span>
@@ -448,10 +448,10 @@ const Settings: React.FC = () => {
 
             <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full group relative flex items-center justify-between p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-palette-mustard active:scale-95 transition-all"
+                className="w-full group relative flex items-center justify-between p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-palette-mustard active:scale-95 transition-all"
             >
                 <div className="flex items-center gap-4">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg"><Upload size={20}/></div>
+                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full"><Upload size={20}/></div>
                     <div className="text-left">
                         <span className="block text-sm font-bold">{t('restore_btn')}</span>
                         <span className="block text-[10px] opacity-60">{t('upload_data')}</span>
@@ -486,7 +486,7 @@ const Settings: React.FC = () => {
 
                     <div className="relative z-10 p-5 border-b border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl backdrop-blur-md ${style.inputBg}`}>
+                            <div className={`p-2 rounded-full backdrop-blur-md ${style.inputBg}`}>
                                 {getIcon(m.id, style.iconColor)}
                             </div>
                             <div>
@@ -577,7 +577,7 @@ const Settings: React.FC = () => {
             </h3>
             
             <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-palette-mustard to-palette-copper flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-palette-mustard/30">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-copper flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-palette-mustard/30">
                     FS
                 </div>
                 <div>
@@ -588,16 +588,16 @@ const Settings: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-                <a href="https://febrisuryanto.com" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-palette-cream dark:hover:bg-white/10 group/item transition-colors">
-                    <div className="p-2 bg-white dark:bg-palette-navy rounded-lg text-slate-500 group-hover/item:text-palette-mustard transition-colors shadow-sm"><Globe size={16} /></div>
+                <a href="https://febrisuryanto.com" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-palette-cream dark:hover:bg-white/10 group/item transition-colors">
+                    <div className="p-2 bg-white dark:bg-palette-navy rounded-full text-slate-500 group-hover/item:text-palette-mustard transition-colors shadow-sm"><Globe size={16} /></div>
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">febrisuryanto.com</span>
                 </a>
-                <a href="mailto:hello@febrisuryanto.com" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-palette-cream dark:hover:bg-white/10 group/item transition-colors">
-                    <div className="p-2 bg-white dark:bg-palette-navy rounded-lg text-slate-500 group-hover/item:text-palette-mustard transition-colors shadow-sm"><Mail size={16} /></div>
+                <a href="mailto:hello@febrisuryanto.com" className="flex items-center gap-3 p-3 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-palette-cream dark:hover:bg-white/10 group/item transition-colors">
+                    <div className="p-2 bg-white dark:bg-palette-navy rounded-full text-slate-500 group-hover/item:text-palette-mustard transition-colors shadow-sm"><Mail size={16} /></div>
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">hello@febrisuryanto.com</span>
                 </a>
-                <a href="https://wa.me/6282312907731" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-green-50 dark:hover:bg-green-900/20 group/item transition-colors">
-                    <div className="p-2 bg-white dark:bg-palette-navy rounded-lg text-slate-500 group-hover/item:text-green-500 transition-colors shadow-sm"><Phone size={16} /></div>
+                <a href="https://wa.me/6282312907731" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-green-50 dark:hover:bg-green-900/20 group/item transition-colors">
+                    <div className="p-2 bg-white dark:bg-palette-navy rounded-full text-slate-500 group-hover/item:text-green-500 transition-colors shadow-sm"><Phone size={16} /></div>
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">+62 823-1290-7731</span>
                 </a>
             </div>
@@ -610,7 +610,7 @@ const Settings: React.FC = () => {
       <button 
         key={section}
         onClick={() => setActiveSection(section)}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-full transition-all font-bold text-sm ${
             activeSection === section 
             ? 'bg-palette-mustard text-white shadow-md' 
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
@@ -629,9 +629,9 @@ const Settings: React.FC = () => {
                 <p className="text-palette-brown/70 dark:text-palette-cream/60">{t('config_subtitle')}</p>
             </div>
 
-            <button onClick={() => { setActiveSection('BUSINESS'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
+            <button onClick={() => { setActiveSection('BUSINESS'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-palette-mustard/10 rounded-xl text-palette-mustard"><Building2 size={24}/></div>
+                    <div className="p-3 bg-palette-mustard/10 rounded-full text-palette-mustard"><Building2 size={24}/></div>
                     <div className="text-left">
                         <h3 className="font-bold text-lg text-palette-navy dark:text-white">{t('business_profile')}</h3>
                         <p className="text-xs text-slate-500">Nama, Alamat & Logo</p>
@@ -640,9 +640,9 @@ const Settings: React.FC = () => {
                 <ChevronRight className="text-slate-300" />
             </button>
 
-            <button onClick={() => { setActiveSection('GENERAL'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
+            <button onClick={() => { setActiveSection('GENERAL'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-palette-mustard/10 rounded-xl text-palette-mustard"><Coins size={24}/></div>
+                    <div className="p-3 bg-palette-mustard/10 rounded-full text-palette-mustard"><Coins size={24}/></div>
                     <div className="text-left">
                         <h3 className="font-bold text-lg text-palette-navy dark:text-white">{t('general_settings')}</h3>
                         <p className="text-xs text-slate-500">{t('rate_and_bonus')}</p>
@@ -651,9 +651,9 @@ const Settings: React.FC = () => {
                 <ChevronRight className="text-slate-300" />
             </button>
 
-            <button onClick={() => { setActiveSection('CONNECTIVITY'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
+            <button onClick={() => { setActiveSection('CONNECTIVITY'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600"><Wifi size={24}/></div>
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600"><Wifi size={24}/></div>
                     <div className="text-left">
                         <h3 className="font-bold text-lg text-palette-navy dark:text-white">{t('tv_connectivity')}</h3>
                         <p className="text-xs text-slate-500">{t('bluetooth_settings')}</p>
@@ -662,9 +662,9 @@ const Settings: React.FC = () => {
                 <ChevronRight className="text-slate-300" />
             </button>
 
-            <button onClick={() => { setActiveSection('DATA'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
+            <button onClick={() => { setActiveSection('DATA'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-600"><Database size={24}/></div>
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600"><Database size={24}/></div>
                     <div className="text-left">
                         <h3 className="font-bold text-lg text-palette-navy dark:text-white">{t('data_management')}</h3>
                         <p className="text-xs text-slate-500">Backup & Restore</p>
@@ -673,9 +673,9 @@ const Settings: React.FC = () => {
                 <ChevronRight className="text-slate-300" />
             </button>
 
-            <button onClick={() => { setActiveSection('MEMBERSHIP'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
+            <button onClick={() => { setActiveSection('MEMBERSHIP'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-5 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm active:scale-98 transition-transform">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600"><Crown size={24}/></div>
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full text-purple-600"><Crown size={24}/></div>
                     <div className="text-left">
                         <h3 className="font-bold text-lg text-palette-navy dark:text-white">{t('membership') + ' & Info'}</h3>
                         <p className="text-xs text-slate-500">{t('membership_settings')}</p>
@@ -739,7 +739,7 @@ const Settings: React.FC = () => {
             <p className="text-xs text-palette-brown/70 dark:text-palette-cream/60">{t('config_subtitle')}</p>
           </div>
           
-          <div className="bg-white dark:bg-palette-navyLight rounded-2xl p-2 shadow-sm border border-slate-200 dark:border-white/5 space-y-1">
+          <div className="bg-white dark:bg-palette-navyLight rounded-3xl p-2 shadow-sm border border-slate-200 dark:border-white/5 space-y-1">
               {renderDesktopNavItem({ section: "BUSINESS", icon: Building2, label: t('business_profile') })}
               {renderDesktopNavItem({ section: "GENERAL", icon: Coins, label: t('general_settings') })}
               {renderDesktopNavItem({ section: "CONNECTIVITY", icon: Wifi, label: t('tv_connectivity') })}
