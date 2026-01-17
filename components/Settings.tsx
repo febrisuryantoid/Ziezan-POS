@@ -30,7 +30,7 @@ const Settings: React.FC = () => {
        if (m.id === id) {
           if (field === 'price' || field === 'bonusThreshold' || field === 'bonusReward' || field === 'durationDays') {
              const cleanValue = value.toString().replace(/\D/g, '');
-             return { ...m, [field]: cleanValue === '' ? 0 : parseInt(cleanValue, 10); };
+             return { ...m, [field]: cleanValue === '' ? 0 : parseInt(cleanValue, 10) };
           }
           return { ...m, [field]: value };
        }

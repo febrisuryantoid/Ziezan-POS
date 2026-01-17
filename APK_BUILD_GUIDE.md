@@ -13,7 +13,7 @@ Pastikan komputer Anda sudah terinstal:
 Sebelum membuat APK, aplikasi web Anda **harus sudah online** (dihosting). Google Play Store tidak bisa menerima APK yang mengarah ke `localhost`.
 
 1.  Deploy kode ini ke Vercel, Netlify, atau hosting lainnya.
-2.  Catat URL domain Anda (misalnya: `https://ziezan-pos.vercel.app`).
+2.  Catat URL domain Anda (misalnya: `https://ziezanpos.vercel.app/`).
 
 ## Langkah 2: Install Bubblewrap CLI
 Bubblewrap adalah alat resmi dari Google untuk membuat APK dari PWA. Buka terminal/cmd dan jalankan:

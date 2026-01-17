@@ -108,16 +108,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     <div className="flex h-screen w-full bg-palette-creamLight dark:bg-palette-navy text-palette-brown dark:text-palette-cream overflow-hidden font-sans transition-colors duration-300 fixed inset-0 supports-[height:100dvh]:h-[100dvh]">
       
       {/* Sidebar - Desktop */}
-      {/* UPDATED: Added rounded-r-[32px] for curved right side */}
-      <aside className="hidden md:flex w-20 bg-white dark:bg-palette-navyLight border-r border-slate-200 dark:border-white/5 flex-col items-center py-6 z-50 shadow-xl rounded-r-[32px] transition-colors duration-300 overflow-visible shrink-0">
+      {/* UPDATED: Sidebar width increased slightly to accommodate larger logo */}
+      <aside className="hidden md:flex w-24 bg-white dark:bg-palette-navyLight border-r border-slate-200 dark:border-white/5 flex-col items-center py-6 z-50 shadow-xl rounded-r-[32px] transition-colors duration-300 overflow-visible shrink-0">
         
         {/* App Logo */}
         <div className="mb-8">
            <img 
              src="https://beeimg.com/images/t47564105964.png" 
              alt="Ziezan POS" 
-             className="w-10 h-10 rounded-xl shadow-lg shadow-palette-mustard/20 cursor-pointer hover:scale-110 transition-transform ring-2 ring-white dark:ring-palette-navyLight"
+             className="w-16 h-16 object-contain cursor-pointer hover:scale-105 transition-transform"
              title="Ziezan POS"
+             onClick={() => setTab('dashboard')}
            />
         </div>
 
