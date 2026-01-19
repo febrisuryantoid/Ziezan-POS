@@ -18,69 +18,78 @@ const CardPreview = ({ tier, name, playtime, bonus }: { tier: string, name: stri
     const theme = getTierTheme(tier);
     const TierIcon = theme.icon;
     
+    // Mini Dragon Pattern for preview
+    const DragonPatternMini = ({ color }: { color: string }) => (
+        <div 
+            className="absolute inset-0 opacity-10 pointer-events-none mix-blend-screen"
+            style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+            }}
+        ></div>
+    );
+
     return (
-        <div className="relative w-full aspect-[9/16] max-w-[200px] mx-auto group hover:scale-[1.02] transition-transform duration-300">
-            {/* Animated Border */}
-            <div 
-                className="absolute -inset-[2px] rounded-[24px] animate-spin-slow opacity-100"
-                style={{ background: theme.borderGradient }}
-            ></div>
-            <div 
-                className="absolute -inset-[2px] rounded-[24px] animate-spin-slow opacity-50 blur-lg"
-                style={{ background: theme.borderGradient }}
-            ></div>
+        <div className="relative w-full aspect-[9/16] max-w-[200px] mx-auto group hover:scale-[1.02] transition-transform duration-300 z-10">
+            {/* Border Beam */}
+            <div className="absolute -inset-[2px] rounded-[26px] overflow-hidden">
+                <div className={`absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slow bg-[conic-gradient(transparent_0deg,transparent_90deg,currentColor_180deg,transparent_270deg,transparent_360deg)] ${theme.text} opacity-80 blur-sm`}></div>
+            </div>
 
             {/* Inner Content */}
-            <div className={`relative h-full w-full rounded-[22px] ${theme.bgInner} backdrop-blur-xl flex flex-col items-center p-4 overflow-hidden`}>
+            <div className={`relative h-full w-full rounded-[24px] ${theme.bgInner} flex flex-col items-center p-4 overflow-hidden border ${theme.borderInner}`}>
+                <DragonPatternMini color={theme.dragonColor} />
                 
                 {/* Header */}
-                <div className="flex flex-col items-center w-full mt-2 mb-3 relative">
-                    <div className={`absolute -top-6 z-20`}>
-                        <TierIcon size={24} className={`${theme.textColor} drop-shadow-md`} fill="currentColor" />
-                    </div>
-
+                <div className="flex flex-col items-center w-full mt-4 mb-3 relative z-10">
                     <div className="relative">
-                        <div className={`absolute -inset-1 rounded-full opacity-40 blur-sm ${theme.badgeGradient}`}></div>
+                        <div className={`absolute -inset-1 rounded-full opacity-50 blur-sm bg-gradient-to-tr ${theme.conic}`}></div>
                         <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-b from-white/20 to-transparent relative z-10">
                             <img src="https://beeimg.com/images/s77882238754.png" alt="Profile" className="w-full h-full rounded-full object-cover bg-black"/>
                         </div>
-                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest flex items-center gap-1 z-20 whitespace-nowrap text-white ${theme.badgeGradient}`}>
+                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest flex items-center gap-1 z-20 whitespace-nowrap text-white bg-gradient-to-r ${theme.conic}`}>
                             <Hexagon size={6} fill="currentColor" /> {tier}
                         </div>
                     </div>
                     
                     <div className="mt-3 text-center">
                         <h1 className="text-sm font-black text-white tracking-wide">{name}</h1>
-                        <p className={`text-[8px] font-bold tracking-widest uppercase opacity-80 ${theme.textColor}`}>@nickname</p>
+                        <p className={`text-[8px] font-bold tracking-widest uppercase opacity-80 ${theme.text}`}>@nickname</p>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-2 w-full mb-2">
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex flex-col items-center justify-center">
-                        <Clock size={10} className={`${theme.textColor} mb-0.5`} />
-                        <span className="text-xs font-black text-white">{playtime}</span>
-                        <span className="text-[6px] uppercase font-bold text-slate-400">Jam</span>
+                <div className="grid grid-cols-2 gap-2 w-full mb-2 relative z-10">
+                    <div className={`bg-black/40 border border-white/5 rounded-xl p-2 flex flex-col items-center justify-center relative overflow-hidden group/mini`}>
+                        <div className={`absolute -inset-[1px] opacity-0 group-hover/mini:opacity-30 bg-gradient-to-br ${theme.conic}`}></div>
+                        <Clock size={10} className={`${theme.text} mb-0.5 relative z-10`} />
+                        <span className="text-xs font-black text-white relative z-10">{playtime}</span>
+                        <span className="text-[6px] uppercase font-bold text-slate-400 relative z-10">Jam</span>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex flex-col items-center justify-center">
-                        <Trophy size={10} className="text-yellow-500 mb-0.5" />
-                        <span className="text-xs font-black text-white">{bonus}</span>
-                        <span className="text-[6px] uppercase font-bold text-slate-400">Bonus</span>
+                    <div className={`bg-black/40 border border-white/5 rounded-xl p-2 flex flex-col items-center justify-center relative overflow-hidden group/mini`}>
+                        <div className={`absolute -inset-[1px] opacity-0 group-hover/mini:opacity-30 bg-gradient-to-br ${theme.conic}`}></div>
+                        <Trophy size={10} className="text-yellow-500 mb-0.5 relative z-10" />
+                        <span className="text-xs font-black text-white relative z-10">{bonus}</span>
+                        <span className="text-[6px] uppercase font-bold text-slate-400 relative z-10">Bonus</span>
                     </div>
                 </div>
 
                 {/* Progress */}
-                <div className="w-full mt-auto mb-1">
+                <div className="w-full mt-auto mb-1 relative z-10">
                     <div className="flex justify-between items-end px-1 mb-1">
                         <span className="text-[6px] font-bold uppercase text-slate-400 flex items-center gap-1">
-                            <Zap size={6} className={theme.textColor}/> Lvl
+                            <Zap size={6} className={theme.text}/> Lvl
                         </span>
-                        <span className={`text-[6px] font-bold ${theme.textColor}`}>75%</span>
+                        <span className={`text-[6px] font-bold ${theme.text}`}>75%</span>
                     </div>
                     <div className="h-1.5 w-full bg-black/60 rounded-full overflow-hidden p-[1px] border border-white/10">
-                        <div className={`h-full rounded-full ${theme.progressColor}`} style={{ width: '75%' }}></div>
+                        <div className={`h-full rounded-full bg-gradient-to-r ${theme.conic}`} style={{ width: '75%' }}></div>
                     </div>
                 </div>
+            </div>
+
+            {/* Floating Icon (Outside Box) */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-50">
+                <TierIcon size={32} className={`${theme.text} ${theme.textGlow} drop-shadow-lg`} fill="currentColor" />
             </div>
         </div>
     );
