@@ -8,82 +8,77 @@ import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, Blueto
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
-import { getTierTheme, CosmicBackground } from './PublicMemberCard';
+import { getTierTheme, GamingBackground } from './PublicMemberCard';
 import { syncService } from '../services/sync';
 
 type SettingsSection = 'BUSINESS' | 'GENERAL' | 'CONNECTIVITY' | 'DATA' | 'MEMBERSHIP';
 
-// --- UPDATED PREVIEW COMPONENT TO MATCH NEW DESIGN ---
+// --- UPDATED PREVIEW COMPONENT (MATCHING NEW DESIGN) ---
 const CardPreview = ({ tier, name, playtime, bonus }: { tier: string, name: string, playtime: string, bonus: number }) => {
     const theme = getTierTheme(tier);
     const TierIcon = theme.icon;
     
     return (
-        <div className="relative w-full aspect-[9/16] max-w-[240px] mx-auto group">
-            {/* Card Container */}
-            <div className={`
-                relative w-full h-full 
-                ${theme.cardShape} ${theme.container} ${theme.innerGlow}
-                flex flex-col items-center p-4 z-10 overflow-hidden
-            `}>
-                
-                {/* Ornament Layers (VIP) */}
-                {theme.ornament && (
-                    <>
-                        <div className="absolute top-2 left-2 w-12 h-12 border-t-2 border-l-2 border-amber-500/30 rounded-tl-2xl pointer-events-none"></div>
-                        <div className="absolute top-2 right-2 w-12 h-12 border-t-2 border-r-2 border-amber-500/30 rounded-tr-2xl pointer-events-none"></div>
-                        <div className="absolute bottom-2 left-2 w-12 h-12 border-b-2 border-l-2 border-amber-500/30 rounded-bl-2xl pointer-events-none"></div>
-                        <div className="absolute bottom-2 right-2 w-12 h-12 border-b-2 border-r-2 border-amber-500/30 rounded-br-2xl pointer-events-none"></div>
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
-                    </>
-                )}
+        <div className="relative w-full aspect-[9/16] max-w-[200px] mx-auto group hover:scale-[1.02] transition-transform duration-300">
+            {/* Animated Border */}
+            <div 
+                className="absolute -inset-[2px] rounded-[24px] animate-spin-slow opacity-100"
+                style={{ background: theme.borderGradient }}
+            ></div>
+            <div 
+                className="absolute -inset-[2px] rounded-[24px] animate-spin-slow opacity-50 blur-lg"
+                style={{ background: theme.borderGradient }}
+            ></div>
 
+            {/* Inner Content */}
+            <div className={`relative h-full w-full rounded-[22px] ${theme.bgInner} backdrop-blur-xl flex flex-col items-center p-4 overflow-hidden`}>
+                
                 {/* Header */}
-                <div className="flex flex-col items-center w-full mt-2 mb-4 relative">
-                    <div className={`absolute -top-8 z-20`}>
-                        <TierIcon size={24} className={`drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] ${theme.particleColor}`} fill="currentColor" />
+                <div className="flex flex-col items-center w-full mt-2 mb-3 relative">
+                    <div className={`absolute -top-6 z-20`}>
+                        <TierIcon size={24} className={`${theme.textColor} drop-shadow-md`} fill="currentColor" />
                     </div>
 
                     <div className="relative">
-                        <div className={`absolute inset-0 rounded-full blur-lg opacity-50 ${theme.borderGradient}`}></div>
-                        <div className={`w-16 h-16 rounded-full p-[2px] ${theme.borderGradient} shadow-xl relative z-10`}>
-                            <img src="https://beeimg.com/images/s77882238754.png" alt="Profile" className="w-full h-full rounded-full object-cover bg-[#0a0a1a] border-2 border-black"/>
+                        <div className={`absolute -inset-1 rounded-full opacity-40 blur-sm ${theme.badgeGradient}`}></div>
+                        <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-b from-white/20 to-transparent relative z-10">
+                            <img src="https://beeimg.com/images/s77882238754.png" alt="Profile" className="w-full h-full rounded-full object-cover bg-black"/>
                         </div>
-                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1 z-20 whitespace-nowrap ${theme.badgeStyle}`}>
-                            <Hexagon size={8} fill="currentColor" /> {tier}
+                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest flex items-center gap-1 z-20 whitespace-nowrap text-white ${theme.badgeGradient}`}>
+                            <Hexagon size={6} fill="currentColor" /> {tier}
                         </div>
                     </div>
                     
-                    <div className="mt-4 text-center">
-                        <h1 className={`text-lg font-black tracking-tight leading-none mb-0.5 ${theme.textTitle}`}>{name}</h1>
-                        <p className={`text-[10px] font-bold tracking-widest uppercase opacity-70 ${theme.textSub}`}>@nickname</p>
+                    <div className="mt-3 text-center">
+                        <h1 className="text-sm font-black text-white tracking-wide">{name}</h1>
+                        <p className={`text-[8px] font-bold tracking-widest uppercase opacity-80 ${theme.textColor}`}>@nickname</p>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-2 w-full mb-3">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center">
-                        <Clock size={12} className={`${theme.particleColor} mb-0.5`} />
-                        <span className={`text-sm font-black ${theme.textValue}`}>{playtime}</span>
-                        <span className="text-[8px] uppercase font-bold text-slate-400">Jam</span>
+                <div className="grid grid-cols-2 gap-2 w-full mb-2">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex flex-col items-center justify-center">
+                        <Clock size={10} className={`${theme.textColor} mb-0.5`} />
+                        <span className="text-xs font-black text-white">{playtime}</span>
+                        <span className="text-[6px] uppercase font-bold text-slate-400">Jam</span>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center">
-                        <Trophy size={12} className="text-yellow-500 mb-0.5" />
-                        <span className={`text-sm font-black ${theme.textValue}`}>{bonus}</span>
-                        <span className="text-[8px] uppercase font-bold text-slate-400">Bonus</span>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex flex-col items-center justify-center">
+                        <Trophy size={10} className="text-yellow-500 mb-0.5" />
+                        <span className="text-xs font-black text-white">{bonus}</span>
+                        <span className="text-[6px] uppercase font-bold text-slate-400">Bonus</span>
                     </div>
                 </div>
 
                 {/* Progress */}
-                <div className="w-full mt-auto mb-2">
+                <div className="w-full mt-auto mb-1">
                     <div className="flex justify-between items-end px-1 mb-1">
-                        <span className="text-[8px] font-bold uppercase text-slate-400 flex items-center gap-1">
-                            <Zap size={8} className={theme.particleColor}/> Level
+                        <span className="text-[6px] font-bold uppercase text-slate-400 flex items-center gap-1">
+                            <Zap size={6} className={theme.textColor}/> Lvl
                         </span>
-                        <span className={`text-[8px] font-bold ${theme.textSub}`}>75%</span>
+                        <span className={`text-[6px] font-bold ${theme.textColor}`}>75%</span>
                     </div>
-                    <div className="h-2 w-full bg-black/60 rounded-full overflow-hidden p-[1px] border border-white/10">
-                        <div className={`h-full rounded-full ${theme.progressFill}`} style={{ width: '75%' }}></div>
+                    <div className="h-1.5 w-full bg-black/60 rounded-full overflow-hidden p-[1px] border border-white/10">
+                        <div className={`h-full rounded-full ${theme.progressColor}`} style={{ width: '75%' }}></div>
                     </div>
                 </div>
             </div>
@@ -93,6 +88,7 @@ const CardPreview = ({ tier, name, playtime, bonus }: { tier: string, name: stri
 
 const Settings: React.FC = () => {
   const { settings, membershipConfigs, updateSettings, updateMembershipConfig, refreshData } = useData();
+// ... (rest of imports and state logic remains exactly the same as previous full version)
   const { t } = useLanguage();
   const { isConnected: isBtConnected, connect: connectBt, disconnect: disconnectBt } = useBluetooth();
   const { addToast } = useToast();
@@ -291,7 +287,7 @@ const Settings: React.FC = () => {
          <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-4">{t('rate_and_bonus')}</h3>
          
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5">
+             <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10">
                  <div className="flex items-center gap-3 mb-4">
                      <div className="p-2 bg-palette-mustard/10 rounded-lg text-palette-mustard"><Banknote size={20}/></div>
                      <h4 className="font-bold text-palette-navy dark:text-white">{t('hourly_rate')}</h4>
@@ -309,7 +305,7 @@ const Settings: React.FC = () => {
                  <p className="text-xs text-slate-500 mt-2">{t('rate_desc')}</p>
              </div>
 
-             <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5">
+             <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10">
                  <div className="flex items-center gap-3 mb-4">
                      <div className="p-2 bg-palette-green/10 rounded-lg text-palette-green"><Gift size={20}/></div>
                      <h4 className="font-bold text-palette-navy dark:text-white">{t('birthday_bonus')}</h4>
@@ -335,7 +331,7 @@ const Settings: React.FC = () => {
          <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-4">{t('tv_connectivity')}</h3>
          
          {/* TV Cloud Status */}
-         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 flex items-center justify-between">
+         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10 flex items-center justify-between">
              <div className="flex items-center gap-4">
                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center">
                      <CloudLightning size={24} />
@@ -352,7 +348,7 @@ const Settings: React.FC = () => {
          </div>
 
          {/* Bluetooth Settings */}
-         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5">
+         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10">
              <div className="flex justify-between items-start mb-6">
                  <div className="flex items-center gap-4">
                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isBtConnected ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
@@ -392,7 +388,7 @@ const Settings: React.FC = () => {
          <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-4">{t('data_management')}</h3>
 
          {/* Cloud Retention */}
-         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5">
+         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10">
              <div className="flex items-center gap-3 mb-4">
                  <div className="p-2 bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg"><Database size={20}/></div>
                  <div>
@@ -424,7 +420,7 @@ const Settings: React.FC = () => {
          </div>
 
          {/* Backup & Restore (Coming Soon/Placeholder functional) */}
-         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 opacity-80">
+         <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/10 opacity-80">
              <div className="flex items-center gap-3 mb-4">
                  <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-lg"><FileJson size={20}/></div>
                  <h4 className="font-bold text-palette-navy dark:text-white">Backup & Restore (Local)</h4>
@@ -453,7 +449,9 @@ const Settings: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-[#050510] p-8 rounded-3xl border border-slate-200 dark:border-white/5 relative overflow-hidden">
                 {/* Mini Cosmic Background for Preview Area */}
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <GamingBackground />
+                </div>
                 
                 <CardPreview tier="BASIC" name="Member Baru" playtime="2.5" bonus={0} />
                 <CardPreview tier="PLUS" name="Member Setia" playtime="25.0" bonus={2} />
@@ -468,8 +466,6 @@ const Settings: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 gap-6">
                 {localMemberships.map(m => {
-                const style = getTierStyle(m.id);
-                // Map the new style object back to old simple styles for the Config Form (simplified)
                 const formStyle = {
                     card: m.id === 'VIP' ? 'border-amber-500/30 bg-amber-50 dark:bg-amber-900/10' : 
                           m.id === 'PLUS' ? 'border-purple-500/30 bg-purple-50 dark:bg-purple-900/10' : 
