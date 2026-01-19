@@ -185,7 +185,7 @@ const Reports: React.FC = () => {
                      type="date" 
                      value={startDate} 
                      onChange={(e) => setStartDate(e.target.value)}
-                     className="w-full bg-transparent border-none text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
+                     className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
                   />
               </div>
               <span className="text-slate-400">-</span>
@@ -194,7 +194,7 @@ const Reports: React.FC = () => {
                      type="date" 
                      value={endDate} 
                      onChange={(e) => setEndDate(e.target.value)}
-                     className="w-full bg-transparent border-none text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
+                     className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
                   />
               </div>
            </div>

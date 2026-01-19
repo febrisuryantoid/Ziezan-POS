@@ -88,8 +88,8 @@ const Members: React.FC = () => {
       return matchesSearch && matchesStatus && matchesTier;
     }).sort((a, b) => {
       switch (sortOption) {
-        case 'NAME_ASC': return a.name.localeCompare(b.name);
-        case 'NAME_DESC': return b.name.localeCompare(a.name);
+        case 'NAME_ASC': return a.nickname.localeCompare(b.nickname);
+        case 'NAME_DESC': return b.nickname.localeCompare(a.nickname);
         case 'PLAYTIME_DESC': 
             // Sort by REALTIME playtime
             return getRealtimePlaytime(b) - getRealtimePlaytime(a);
@@ -219,9 +219,9 @@ const Members: React.FC = () => {
             <button 
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={18} />
             </button>
 
             {getPageNumbers().map((page, idx) => (
@@ -229,7 +229,7 @@ const Members: React.FC = () => {
                     key={idx}
                     onClick={() => typeof page === 'number' && setCurrentPage(page)}
                     disabled={typeof page !== 'number'}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                         page === currentPage 
                         ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' 
                         : typeof page === 'number'
@@ -244,9 +244,9 @@ const Members: React.FC = () => {
             <button 
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <ChevronRight size={16} />
+                <ChevronRight size={18} />
             </button>
         </div>
     );
@@ -369,17 +369,16 @@ const Members: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Identity Section */}
+                            {/* Identity Section - HIDDEN Full Name */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <h3 className={`font-bold text-sm sm:text-base leading-tight truncate ${theme.text}`}>
-                                        {member.name}
+                                        {member.nickname}
                                     </h3>
                                     {member.membershipId === 'MYTHIC' && <span className="text-[9px] font-black text-red-500 animate-pulse">GOD</span>}
                                 </div>
                                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                                    <span className="font-bold truncate">@{member.nickname}</span>
-                                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                    {/* Removed member.name */}
                                     <span className={`font-black uppercase ${theme.text}`}>{member.membershipId}</span>
                                 </div>
                             </div>
@@ -397,6 +396,13 @@ const Members: React.FC = () => {
                                     className="p-1.5 rounded-lg bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
                                 >
                                     <Copy size={14} />
+                                </button>
+                                {/* Added Delete Button */}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} 
+                                    className="p-1.5 rounded-lg bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                >
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         </div>
@@ -429,7 +435,7 @@ const Members: React.FC = () => {
             </div>
         )}
 
-        {/* PAGINATION UI */}
+        {/* PAGINATION UI - UX IMPROVED */}
         {renderPagination()}
       </div>
 

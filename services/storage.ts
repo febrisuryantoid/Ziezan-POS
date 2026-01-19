@@ -121,11 +121,20 @@ export const getMemberships = (): MembershipConfig[] => {
   if (data) {
       const parsed = JSON.parse(data);
       // Ensure we always have the 7 tiers even if local storage is old
-      // We map over default and merge preserved fields (isActive)
+      // We map over default and merge preserved fields
       const merged = DEFAULT_MEMBERSHIPS.map(def => {
           const existing = parsed.find((p: any) => p.id === def.id);
           if (existing) {
-             return { ...def, isActive: existing.isActive }; 
+             // CRITICAL FIX: Merge all configurable fields, not just isActive
+             return { 
+                 ...def, 
+                 isActive: existing.isActive ?? def.isActive,
+                 minHours: existing.minHours ?? def.minHours,
+                 bonusThreshold: existing.bonusThreshold ?? def.bonusThreshold,
+                 bonusReward: existing.bonusReward ?? def.bonusReward,
+                 price: existing.price ?? def.price,
+                 durationDays: existing.durationDays ?? def.durationDays
+             }; 
           }
           return def;
       });
@@ -208,12 +217,11 @@ export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
   if (data) {
       const parsed = JSON.parse(data);
+      // Merge saved data with defaults. 
+      // Note: Spread operator overwrites DEFAULT_SETTINGS with parsed values if they exist.
       return { 
         ...DEFAULT_SETTINGS, 
-        ...parsed,
-        birthdayBonusHours: parsed.birthdayBonusHours ?? DEFAULT_SETTINGS.birthdayBonusHours,
-        cloudRetentionDays: parsed.cloudRetentionDays ?? DEFAULT_SETTINGS.cloudRetentionDays,
-        businessName: parsed.businessName || DEFAULT_SETTINGS.businessName,
+        ...parsed
       };
   }
   return DEFAULT_SETTINGS;

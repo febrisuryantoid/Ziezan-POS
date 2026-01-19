@@ -294,14 +294,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       consoleId,
       consoleName: consoleUnit.name,
       memberId,
-      memberName: member.name, 
+      // CHANGE: Use Nickname as the primary identifier in Transaction Snapshot
+      memberName: member.nickname || member.name, 
       startTime: new Date().toISOString(),
       durationHours: duration,
       cost,
       discountApplied: discount,
       paymentMethod: finalPaymentMethod,
       status: 'ACTIVE',
-      operatorName: operator || 'Unknown', // FIX: Fallback for operator name
+      operatorName: operator || 'Unknown', 
       synced: false
     };
 
@@ -333,7 +334,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
-  // ROOT CAUSE FIX 2: Ensure Financial Integrity & Cost Sanitization
   const stopRental = (transactionId: string, extraCost: number = 0, finalPaymentMethod?: PaymentMethod, notes?: string) => {
     const tx = transactions.find(t => t.id === transactionId);
     if (!tx || tx.status === 'COMPLETED') return;

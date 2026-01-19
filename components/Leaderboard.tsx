@@ -122,8 +122,9 @@ const Leaderboard: React.FC = () => {
 
               {/* Info Card - Glassmorphism */}
               <div className="mt-[-20px] pt-8 pb-3 px-4 w-32 md:w-40 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex flex-col items-center text-center shadow-xl">
+                  {/* CHANGE: Display Nickname */}
                   <h3 className={`font-bold text-sm md:text-base truncate w-full ${theme.text}`}>
-                      {member.name}
+                      {member.nickname}
                   </h3>
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
                       {theme.id}
@@ -240,11 +241,11 @@ const Leaderboard: React.FC = () => {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-slate-200 text-sm truncate group-hover:text-white transition-colors">{m.name}</h4>
+                                            {/* CHANGE: Display Nickname, REMOVED Full Name */}
+                                            <h4 className="font-bold text-slate-200 text-sm truncate group-hover:text-white transition-colors">{m.nickname}</h4>
                                             {m.membershipId === 'MYTHIC' && <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold border border-red-500/30">GOD</span>}
                                         </div>
                                         <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                                            <span>@{m.nickname}</span>
                                             <span className="w-1 h-1 rounded-full bg-slate-700"></span>
                                             <span className={`${theme.text}`}>{m.membershipId}</span>
                                         </div>

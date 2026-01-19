@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2 } from 'lucide-react';
+import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2, LayoutGrid } from 'lucide-react';
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
@@ -16,7 +16,7 @@ type SettingsSection = 'BUSINESS' | 'GENERAL' | 'CONNECTIVITY' | 'DATA' | 'MEMBE
 // --- HELPER COMPONENTS ---
 
 const SectionHeader = ({ title, sub }: { title: string, sub?: string }) => (
-    <div className="mb-6 border-l-4 border-palette-mustard pl-4">
+    <div className="mb-6 border-l-4 border-palette-mustard pl-4 hidden lg:block">
         <h3 className="text-xl font-black text-white uppercase tracking-wide">{title}</h3>
         {sub && <p className="text-sm text-slate-400 font-medium mt-1">{sub}</p>}
     </div>
@@ -36,14 +36,16 @@ const InputGroup = ({ label, icon: Icon, children }: { label: string, icon?: any
 const StyledInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input 
         {...props}
-        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-palette-mustard/50 focus:ring-1 focus:ring-palette-mustard/50 transition-all placeholder:text-slate-700"
+        // UX UPDATE: Use text-base on mobile to prevent iOS zoom, text-sm on desktop
+        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-base md:text-sm font-bold text-white focus:outline-none focus:border-palette-mustard/50 focus:ring-1 focus:ring-palette-mustard/50 transition-all placeholder:text-slate-700"
     />
 );
 
 const StyledTextArea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
     <textarea 
         {...props}
-        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-palette-mustard/50 focus:ring-1 focus:ring-palette-mustard/50 transition-all placeholder:text-slate-700 resize-none"
+        // UX UPDATE: Use text-base on mobile
+        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-base md:text-sm font-bold text-white focus:outline-none focus:border-palette-mustard/50 focus:ring-1 focus:ring-palette-mustard/50 transition-all placeholder:text-slate-700 resize-none"
     />
 );
 
@@ -69,6 +71,9 @@ const Settings: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('BUSINESS');
   const [isSaving, setIsSaving] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Mobile Navigation State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -109,8 +114,6 @@ const Settings: React.FC = () => {
       }
   };
 
-  const formatNumber = (num: number) => num.toString();
-  
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -123,6 +126,31 @@ const Settings: React.FC = () => {
         }
     }
   };
+
+  // Helper for Mobile Navigation Logic
+  const navigateToSection = (section: SettingsSection) => {
+      setActiveSection(section);
+      setIsMobileMenuOpen(false);
+      window.scrollTo(0, 0);
+  };
+
+  const MobileMenuItem = ({ section, icon: Icon, label, desc }: { section: SettingsSection, icon: any, label: string, desc: string }) => (
+    <button
+        onClick={() => navigateToSection(section)}
+        className="w-full bg-[#0f1016] p-5 rounded-2xl border border-white/5 flex items-center justify-between group active:scale-95 transition-all shadow-sm mb-3"
+    >
+        <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/5 rounded-xl text-slate-300 group-hover:bg-palette-mustard group-hover:text-white transition-colors">
+                <Icon size={20} />
+            </div>
+            <div className="text-left">
+                <h4 className="font-bold text-white text-sm">{label}</h4>
+                <p className="text-[10px] text-slate-500 font-medium">{desc}</p>
+            </div>
+        </div>
+        <ChevronRight size={18} className="text-slate-600 group-hover:text-palette-mustard group-hover:translate-x-1 transition-all" />
+    </button>
+  );
 
   const renderDesktopNavItem = ({ section, icon: Icon, label }: { section: SettingsSection, icon: any, label: string }) => {
     const isActive = activeSection === section;
@@ -144,14 +172,14 @@ const Settings: React.FC = () => {
   };
 
   const renderBusinessSettings = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
         <SectionHeader title={t('business_profile')} sub="Identitas rental yang akan tampil di struk dan aplikasi." />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Logo Section */}
             <div className="lg:col-span-1">
                 <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5 flex flex-col items-center text-center">
-                    <div className="relative group cursor-pointer w-40 h-40 mb-4" onClick={() => logoInputRef.current?.click()}>
+                    <div className="relative group cursor-pointer w-32 h-32 lg:w-40 lg:h-40 mb-4" onClick={() => logoInputRef.current?.click()}>
                         <div className="w-full h-full rounded-full bg-[#0a0a12] border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden relative z-10">
                             {localSettings.businessLogo ? (
                                 <img src={localSettings.businessLogo} alt="Business Logo" className="w-full h-full object-cover" />
@@ -217,7 +245,7 @@ const Settings: React.FC = () => {
   );
 
   const renderGeneralSettings = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
          <SectionHeader title={t('rate_and_bonus')} sub="Konfigurasi harga dasar dan bonus ulang tahun." />
          
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -273,7 +301,7 @@ const Settings: React.FC = () => {
   );
 
   const renderConnectivity = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
          <SectionHeader title={t('tv_connectivity')} sub="Integrasi Hardware IoT & Bluetooth." />
          
          <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -332,7 +360,7 @@ const Settings: React.FC = () => {
   );
 
   const renderDataManagement = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
          <SectionHeader title={t('data_management')} sub="Optimasi penyimpanan dan backup lokal." />
 
          <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5">
@@ -374,12 +402,13 @@ const Settings: React.FC = () => {
              </div>
              <p className="text-xs text-slate-500 mb-6 whitespace-pre-line">{t('backup_restore_desc')}</p>
              
-             <div className="flex gap-4">
-                 <button className="flex-1 py-3 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
-                    <Download size={16} /> {t('download_data')}
+             {/* UX UPDATE: Buttons stack on mobile, row on tablet+ */}
+             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                 <button className="flex-1 py-3.5 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors active:scale-95 text-sm">
+                    <Download size={18} /> {t('download_data')}
                  </button>
-                 <button className="flex-1 py-3 bg-white/10 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-white/20 transition-colors">
-                    <Upload size={16} /> {t('restore_btn')}
+                 <button className="flex-1 py-3.5 bg-white/10 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-white/20 transition-colors active:scale-95 text-sm">
+                    <Upload size={18} /> {t('restore_btn')}
                  </button>
              </div>
          </div>
@@ -387,7 +416,7 @@ const Settings: React.FC = () => {
   );
 
   const renderMembershipAndDev = () => (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
         <SectionHeader title={t('membership_settings')} sub="Atur Tier, Syarat Rank, dan Bonus." />
         
         {/* NEW: RESET SEASON BUTTON - SLEEKER DESIGN */}
@@ -503,11 +532,38 @@ const Settings: React.FC = () => {
     </div>
   );
 
+  const getSectionTitle = () => {
+      switch(activeSection) {
+          case 'BUSINESS': return t('business_profile');
+          case 'GENERAL': return t('general_settings');
+          case 'CONNECTIVITY': return t('tv_connectivity');
+          case 'DATA': return t('data_management');
+          case 'MEMBERSHIP': return t('membership_settings');
+          default: return 'Settings';
+      }
+  };
+
   return (
-    <div className="max-w-[1600px] mx-auto h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-8 pb-4">
-      {/* Sidebar Navigation */}
-      <nav className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-6">
-          <div className="hidden lg:block pl-2">
+    <div className="max-w-[1600px] mx-auto h-full lg:h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-8 lg:pb-4 relative">
+      
+      {/* 1. Mobile Navigation List (Visible ONLY on Mobile & isMobileMenuOpen = true) */}
+      <div className={`lg:hidden w-full ${isMobileMenuOpen ? 'block' : 'hidden'} animate-fade-in pb-24`}>
+          <div className="mb-6">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('system_settings')}</h2>
+            <p className="text-xs text-slate-500 mt-1">{t('config_subtitle')}</p>
+          </div>
+          <div className="space-y-1">
+              <MobileMenuItem section="BUSINESS" icon={Building2} label={t('business_profile')} desc="Identitas & Logo" />
+              <MobileMenuItem section="GENERAL" icon={Coins} label={t('general_settings')} desc="Harga & Bonus" />
+              <MobileMenuItem section="CONNECTIVITY" icon={Wifi} label={t('tv_connectivity')} desc="Bluetooth & IoT" />
+              <MobileMenuItem section="DATA" icon={Database} label={t('data_management')} desc="Backup & Cloud" />
+              <MobileMenuItem section="MEMBERSHIP" icon={Crown} label={t('membership_settings')} desc="Rank & Rewards" />
+          </div>
+      </div>
+
+      {/* 2. Desktop Sidebar Navigation (Always Visible on Desktop) */}
+      <nav className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-6">
+          <div className="pl-2">
             <h2 className="text-3xl font-black text-white tracking-tight">{t('system_settings')}</h2>
             <p className="text-xs text-slate-400 font-medium mt-1">{t('config_subtitle')}</p>
           </div>
@@ -520,7 +576,7 @@ const Settings: React.FC = () => {
               {renderDesktopNavItem({ section: "MEMBERSHIP", icon: Crown, label: t('membership_settings') })}
           </div>
 
-          <div className="mt-auto hidden lg:block">
+          <div className="mt-auto">
             <button 
                 onClick={handleSave}
                 disabled={isSaving}
@@ -533,8 +589,27 @@ const Settings: React.FC = () => {
           </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pr-2 pb-20 lg:pb-4 custom-scrollbar min-w-0">
+      {/* 3. Main Content Area */}
+      {/* On Mobile: Visible ONLY when isMobileMenuOpen = false. On Desktop: Always Visible. */}
+      {/* UPDATE: Use fullscreen overlay on mobile to hide the Layout bottom navbar */}
+      <main className={`
+          flex-1 min-w-0
+          ${!isMobileMenuOpen 
+             ? 'fixed inset-0 z-[60] bg-slate-50 dark:bg-[#030712] overflow-y-auto px-4 pb-32 pt-4' // Fullscreen mobile overlay
+             : 'hidden lg:block lg:overflow-y-auto lg:pr-2 custom-scrollbar'}
+      `}>
+          
+          {/* Mobile Header (Back Button) - With Blurred Backdrop */}
+          <div className="lg:hidden flex items-center gap-4 mb-6 sticky top-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-sm z-30 py-2 border-b border-slate-200 dark:border-white/5 -mx-4 px-4">
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 rounded-xl bg-white dark:bg-white/10 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/20 transition-colors shadow-sm border border-slate-200 dark:border-white/5"
+              >
+                  <ArrowLeft size={20} />
+              </button>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wide truncate">{getSectionTitle()}</h3>
+          </div>
+
           <div className="max-w-4xl">
             {activeSection === 'BUSINESS' && renderBusinessSettings()}
             {activeSection === 'GENERAL' && renderGeneralSettings()}
@@ -544,16 +619,18 @@ const Settings: React.FC = () => {
           </div>
       </main>
       
-      {/* Mobile Save Button (Floating) */}
-      <div className="fixed bottom-24 right-6 lg:hidden z-50">
-        <button 
-            onClick={handleSave}
-            disabled={isSaving}
-            className="w-14 h-14 rounded-full bg-palette-mustard text-white shadow-2xl flex items-center justify-center transition-all active:scale-90"
-        >
-            {isSaving ? <Loader2 size={24} className="animate-spin"/> : <Save size={24} />}
-        </button>
-      </div>
+      {/* Mobile Save Button (Sticky Bottom) - Visible only inside a section */}
+      {!isMobileMenuOpen && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#0f1016] border-t border-slate-200 dark:border-white/10 lg:hidden z-[61] pb-safe">
+            <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="w-full h-12 rounded-xl bg-palette-mustard text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 font-bold uppercase tracking-wider"
+            >
+                {isSaving ? <Loader2 size={20} className="animate-spin"/> : <><Save size={20} /> {t('save_changes')}</>}
+            </button>
+          </div>
+      )}
 
     </div>
   );

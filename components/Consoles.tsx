@@ -116,7 +116,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   // Sort Members A-Z and filter for dropdown
   const sortedAndFilteredMembers = useMemo(() => {
       const activeMembers = members.filter(m => m.status === 'ACTIVE');
-      const sorted = activeMembers.sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = activeMembers.sort((a, b) => a.nickname.localeCompare(b.nickname));
       if (!memberSearchTerm) return sorted;
       const lowerTerm = memberSearchTerm.toLowerCase();
       return sorted.filter(m => m.name.toLowerCase().includes(lowerTerm) || m.nickname.toLowerCase().includes(lowerTerm));
@@ -695,11 +695,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                       sortedAndFilteredMembers.map(m => (
                                          <div 
                                             key={m.id} 
-                                            onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.name); setIsMemberDropdownOpen(false); }}
+                                            onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname); setIsMemberDropdownOpen(false); }}
                                             className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0"
                                          >
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{m.name}</p>
-                                            <p className="text-xs text-slate-500">@{m.nickname} • {m.membershipId}</p>
+                                            {/* CHANGE: Display Nickname in Dropdown, Removed Name */}
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{m.nickname}</p>
+                                            <p className="text-xs text-slate-500">{m.membershipId}</p>
                                          </div>
                                       ))
                                    ) : (
