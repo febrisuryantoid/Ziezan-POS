@@ -166,7 +166,7 @@ const Reports: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-20">
       {/* 1. Header & Toolbar */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
@@ -174,32 +174,32 @@ const Reports: React.FC = () => {
           <p className="text-slate-500 text-xs">{t('overview_subtitle')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID - UPDATED FOR TABLET SAFETY */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
+        {/* RESPONSIVE FILTER GRID - OPTIMIZED FOR 320px MOBILE */}
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
            
-           {/* Date Picker Start - 1/2 on Mobile, 4/12 on Tablet, Auto on Desktop */}
+           {/* Date Picker Start - 1/2 on Mobile */}
            <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input 
                  type="date" 
                  value={startDate} 
                  onChange={(e) => setStartDate(e.target.value)}
-                 className="h-11 pl-10 pr-2 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
+                 className="h-10 sm:h-11 pl-9 pr-1 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-[10px] sm:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
               />
            </div>
            
-           {/* Date Picker End */}
+           {/* Date Picker End - 1/2 on Mobile */}
            <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input 
                  type="date" 
                  value={endDate} 
                  onChange={(e) => setEndDate(e.target.value)}
-                 className="h-11 pl-10 pr-2 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
+                 className="h-10 sm:h-11 pl-9 pr-1 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-[10px] sm:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
               />
            </div>
 
-           {/* Search - Full on Mobile, 4/12 on Tablet, Flex Grow on Desktop */}
+           {/* Search - Full on Mobile */}
            <div className="relative col-span-2 md:col-span-4 lg:flex-grow lg:w-auto lg:min-w-[200px] xl:w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
@@ -207,17 +207,17 @@ const Reports: React.FC = () => {
               placeholder={t('search_reports_placeholder')} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
+              className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
             />
           </div>
 
-          {/* Payment Filter - 1/2 on Mobile, 6/12 on Tablet, Fixed on Desktop */}
+          {/* Payment Filter - 1/2 on Mobile */}
           <div className="relative col-span-1 md:col-span-6 lg:w-32">
              <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={paymentFilter}
                 onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | PaymentMethod)}
-                className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
+                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
              >
                 <option value="ALL">{t('all')}</option>
                 <option value="CASH">{t('pay_cash')}</option>
@@ -226,13 +226,13 @@ const Reports: React.FC = () => {
              </select>
           </div>
 
-          {/* Sort - 1/2 on Mobile, 6/12 on Tablet, Fixed on Desktop */}
+          {/* Sort - 1/2 on Mobile */}
           <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
+                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
              >
                 <option value="DATE_DESC">{t('sort_date_new')}</option>
                 <option value="DATE_ASC">{t('sort_date_old')}</option>
@@ -241,10 +241,10 @@ const Reports: React.FC = () => {
              </select>
           </div>
 
-          {/* Export Button - Full on Mobile, Full on Tablet, Auto on Desktop */}
+          {/* Export Button - Full on Mobile */}
           <button 
             onClick={handleExportCSV}
-            className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20 whitespace-nowrap active:scale-95"
+            className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20 whitespace-nowrap active:scale-95"
           >
             <Download size={16} /> {t('export_csv')}
           </button>
@@ -252,22 +252,22 @@ const Reports: React.FC = () => {
       </div>
 
       {/* 2. Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Transaction History Widget */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
           
           {/* Widget Header & Rows Per Page Filter */}
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-4">
-             <div className="flex items-center gap-3">
+          <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
+             <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400">
-                  <FileText size={18} />
+                  <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </div>
                 <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                     {t('history_tx')}
                     </h3>
                 </div>
-                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
                     Total: {totalItems}
                 </span>
              </div>
@@ -304,9 +304,9 @@ const Reports: React.FC = () => {
                    {currentTransactions.map(tx => {
                      const { datePart, timePart } = formatDateTime(tx.startTime);
                      return (
-                     <div key={tx.id} className="p-4 flex flex-col gap-2">
+                     <div key={tx.id} className="p-3 sm:p-4 flex flex-col gap-2">
                         <div className="flex justify-between items-start">
-                           <span className="text-[10px] font-medium text-slate-500">{datePart} • {timePart}</span>
+                           <span className="text-[9px] sm:text-[10px] font-medium text-slate-500">{datePart} • {timePart}</span>
                            <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-md ${
                              tx.status === 'ACTIVE' 
                               ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' 
@@ -318,7 +318,7 @@ const Reports: React.FC = () => {
                         <div>
                           <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{tx.memberName}</h4>
                           <div className="flex justify-between items-center mt-1">
-                             <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[120px]">{tx.consoleName}</span>
+                             <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[150px]">{tx.consoleName}</span>
                              <div className="flex items-center gap-2 shrink-0">
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                                   tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600' : 
@@ -331,8 +331,8 @@ const Reports: React.FC = () => {
                              </div>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
-                           <button onClick={() => setSelectedTxForPrint(tx)} className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                        <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                           <button onClick={() => setSelectedTxForPrint(tx)} className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white active:scale-95">
                               <Printer size={14} />
                            </button>
                            <span className="text-sm font-mono font-bold text-slate-900 dark:text-white">
@@ -436,26 +436,26 @@ const Reports: React.FC = () => {
         </div>
 
         {/* Daily Recap Widget */}
-        <div className="space-y-6">
-           {/* ... Summary Card & Daily Recap List (Unchanged) ... */}
-           <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-3xl p-6 text-white shadow-xl shadow-brand-500/20">
+        <div className="space-y-4 sm:space-y-6">
+           {/* Summary Card */}
+           <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-xl shadow-brand-500/20">
               <p className="text-brand-100 font-medium text-xs mb-1">{t('gross_revenue')}</p>
-              <h3 className="text-2xl font-bold">Rp {totalRevenuePeriod.toLocaleString()}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold">Rp {totalRevenuePeriod.toLocaleString()}</h3>
               <p className="text-[10px] text-brand-200 mt-2 flex items-center gap-1 opacity-80">
                  <Calendar size={12}/> {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
               </p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-             <div className="flex items-center gap-3 mb-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3 sm:p-4">
+             <div className="flex items-center gap-3 mb-3 sm:mb-4">
                 <div className="p-1.5 bg-brand-100 dark:bg-brand-900/30 rounded-lg text-brand-600 dark:text-brand-400">
-                  <Calendar size={18} />
+                  <Calendar size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   {t('daily_recap')}
                 </h3>
              </div>
-             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+             <div className="space-y-2 sm:space-y-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                {dates.map(date => (
                  <div key={date} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-brand-200 dark:hover:border-brand-800 transition-colors group">
                     <div>

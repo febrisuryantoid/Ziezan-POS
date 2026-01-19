@@ -60,7 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="text-center mb-4 sm:mb-6 shrink-0">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-palette-mustard blur-xl opacity-20 rounded-full"></div>
-              {/* Responsive Logo Size */}
+              {/* Responsive Logo Size - Smaller on very short screens if needed */}
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
@@ -72,17 +72,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 w-full">
             <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                {/* FIX: text-base on mobile prevents iOS zoom */}
                 <input 
                     type="text" 
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_username')}
                 />
               </div>
@@ -91,11 +92,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                {/* FIX: text-base on mobile prevents iOS zoom */}
                 <input 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_password')}
                 />
               </div>
@@ -116,7 +118,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center shrink-0">
+          <div className="mt-4 sm:mt-6 text-center shrink-0">
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
               &copy; {currentYear} Ziezan Station
             </p>

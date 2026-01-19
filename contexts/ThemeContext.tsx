@@ -10,7 +10,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('light');
+  // Default to 'dark' for better initial impression
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
     // Check local storage or system preference

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { ConsoleStatus } from '../types';
-import { Clock, Gamepad2, Wifi, WifiOff, Tv } from 'lucide-react';
+import { Clock, Gamepad2, Wifi, Tv, Power } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { wifiService, RemoteCommandPayload } from '../services/wifi';
 
@@ -10,6 +9,9 @@ const TVReceiver: React.FC = () => {
   const { t } = useLanguage();
   const [assignedConsoleId, setAssignedConsoleId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Burn-in Protection State (Pixel Shifting)
+  const [shiftPos, setShiftPos] = useState({ x: 0, y: 0 });
   
   // Real-time Override State (For instant feedback from Wi-Fi command)
   const [instantSession, setInstantSession] = useState<{
@@ -31,13 +33,11 @@ const TVReceiver: React.FC = () => {
     // Listen for Cloud commands
     const unsubscribe = wifiService.listenForCommands(assignedConsoleId, (cmd: RemoteCommandPayload) => {
         if (cmd.type === 'START') {
-            // Immediately show the session without waiting for DB sync
             setInstantSession({
-                startTime: Date.now(), // approximation, close enough for display
+                startTime: Date.now(), 
                 durationSeconds: cmd.durationSeconds || 3600,
                 memberName: cmd.memberName || 'Member'
             });
-            // Also trigger a data refresh to get the actual record eventually
             refreshData();
         } else if (cmd.type === 'STOP') {
             setInstantSession(null);
@@ -50,9 +50,20 @@ const TVReceiver: React.FC = () => {
     };
   }, [assignedConsoleId, refreshData]);
 
-  // Clock tick
+  // Clock tick & Pixel Shifting (Anti Burn-in)
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => {
+        setCurrentTime(new Date());
+        
+        // Shift UI slightly every minute to prevent OLED burn-in
+        // Random move between -5px to 5px
+        if (new Date().getSeconds() === 0) {
+            setShiftPos({
+                x: Math.floor(Math.random() * 10) - 5,
+                y: Math.floor(Math.random() * 10) - 5
+            });
+        }
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -61,12 +72,11 @@ const TVReceiver: React.FC = () => {
     setAssignedConsoleId(id);
   };
 
-  // Find active data from Database/LocalStorage (Slower source)
+  // Find active data from Database/LocalStorage
   const activeConsole = consoles.find(c => c.id === assignedConsoleId);
   const dbTransaction = transactions.find(t => t.id === activeConsole?.currentSessionId && t.status === 'ACTIVE');
 
-  // Determine which data to show: Instant (Wi-Fi) or Persistent (DB)
-  // Instant session takes precedence for immediate feedback, clears when stopped or when DB syncs matching data
+  // Determine which data to show
   const activeSession = instantSession || (dbTransaction ? {
       startTime: new Date(dbTransaction.startTime).getTime(),
       durationSeconds: dbTransaction.durationHours * 3600,
@@ -91,105 +101,120 @@ const TVReceiver: React.FC = () => {
 
   const remainingTime = getRemainingTime();
   const isExpired = remainingTime === "00:00:00";
-  const durationHoursDisplay = activeSession ? (activeSession.durationSeconds / 3600).toFixed(1) : 0;
 
   // -- SETUP VIEW (If no console assigned) --
   if (!assignedConsoleId) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-12">
-        <Tv size={64} className="mb-6 text-brand-500" />
-        <h1 className="text-4xl font-bold mb-2 text-brand-400">Ziezan Station</h1>
-        <p className="text-slate-400 mb-8 text-xl">{t('tv_select_unit')}</p>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 font-sans">
+        <Tv size={48} className="mb-6 text-palette-mustard animate-pulse" />
+        <h1 className="text-3xl font-bold mb-2 text-white">Ziezan TV Setup</h1>
+        <p className="text-slate-400 mb-8 text-lg">{t('tv_select_unit')}</p>
         
-        <div className="grid grid-cols-2 gap-6 w-full max-w-4xl">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-5xl">
           {consoles.map(c => (
             <button
               key={c.id}
               onClick={() => handleAssign(c.id)}
-              className="p-8 bg-slate-900 border-2 border-slate-800 hover:border-brand-500 hover:bg-slate-800 rounded-2xl text-left transition-all group focus:ring-4 focus:ring-brand-500 focus:outline-none"
+              className="p-6 bg-slate-900 border border-slate-800 hover:border-palette-mustard hover:bg-slate-800 rounded-xl text-left transition-all group focus:ring-4 focus:ring-palette-mustard focus:outline-none"
             >
-              <h3 className="text-2xl font-bold group-hover:text-brand-400">{c.name}</h3>
-              <p className="text-slate-500 mt-2">ID: {c.id}</p>
+              <h3 className="text-xl font-bold group-hover:text-palette-mustard truncate">{c.name}</h3>
+              <p className="text-slate-500 mt-1 text-xs">ID: {c.id.substring(0,6)}</p>
             </button>
           ))}
           {consoles.length === 0 && (
-             <p className="col-span-2 text-center text-slate-500">{t('tv_no_consoles')}</p>
+             <p className="col-span-3 text-center text-slate-500 italic py-10">{t('tv_no_consoles')}</p>
           )}
         </div>
       </div>
     );
   }
 
-  // -- OVERLAY VIEW (Active) --
+  // -- HUD MODE (Minimal Overlay for Gameplay) --
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden font-sans cursor-none">
+    // Background Black (Safe for TVs)
+    <div className="min-h-screen bg-black relative overflow-hidden font-mono cursor-none selection:bg-none">
       
-      {/* Background Simulation (Ambient Mode / Wallpaper) */}
-      <div className="absolute inset-0 opacity-40">
-         <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-black animate-pulse duration-[10s]"></div>
-      </div>
-
-      {/* Top Status Bar */}
-      <div className="absolute top-8 right-8 flex items-center gap-4 text-white/50 bg-black/30 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
-         <div className="flex items-center gap-2">
-           <Wifi size={20} className="text-brand-400" />
-           <span className="text-sm font-medium tracking-wider">Wi-Fi / Cloud Ready</span>
-         </div>
-         <span className="text-sm border-l border-white/20 pl-4">{currentTime.toLocaleTimeString()}</span>
-      </div>
-
-      {/* Console Identity */}
-      <div className="absolute top-8 left-8">
-        <h2 className="text-brand-400/50 text-2xl font-bold tracking-widest uppercase">{activeConsole?.name || t('unknown_unit')}</h2>
-      </div>
-
-      {/* MAIN OVERLAY CONTENT */}
+      {/* 
+         HUD CONTAINER 
+         Position: Fixed Top Right (Safe Area for Overscan)
+         Style: Small, High Contrast, Semi-Transparent Black Background
+         Animation: Pixel Shifting for Burn-in Protection
+      */}
       {activeSession ? (
-        <div className={`absolute bottom-12 left-12 p-8 rounded-3xl backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-500 ${isExpired ? 'bg-red-900/40 border-red-500/50' : 'bg-slate-900/80 border-brand-500/30'}`}>
-           <div className="flex items-start gap-6">
-              <div className={`p-4 rounded-2xl ${isExpired ? 'bg-red-500 text-white' : 'bg-brand-500 text-slate-900'}`}>
-                <Clock size={48} className={!isExpired ? "animate-pulse" : ""} />
-              </div>
-              <div>
-                <p className="text-brand-200/60 text-lg font-medium uppercase tracking-wider mb-1">{t('time_remaining')}</p>
-                <h1 className={`text-8xl font-black tabular-nums tracking-tight leading-none ${isExpired ? 'text-red-400' : 'text-brand-400'}`}>
-                  {remainingTime}
-                </h1>
-                <div className="mt-4 flex items-center gap-3 text-white/80">
-                   <div className="w-8 h-8 rounded-full bg-brand-400/20 text-brand-400 flex items-center justify-center text-sm font-bold border border-brand-400/30">
-                     {activeSession.memberName.charAt(0)}
-                   </div>
-                   <span className="text-xl font-medium">{activeSession.memberName}</span>
-                   <span className="mx-2 opacity-50">•</span>
-                   <span className="text-xl opacity-80">{durationHoursDisplay} {t('hour_short')} Session</span>
+        <div 
+            className="fixed top-6 right-6 z-50 transition-transform duration-1000 ease-in-out"
+            style={{ transform: `translate(${shiftPos.x}px, ${shiftPos.y}px)` }}
+        >
+            <div className={`
+                flex items-center gap-4 px-5 py-3 rounded-full border shadow-2xl backdrop-blur-sm
+                ${isExpired 
+                    ? 'bg-red-950/90 border-red-500/50 shadow-red-900/20' 
+                    : 'bg-black/80 border-slate-700/50 shadow-black/50'
+                }
+            `}>
+                {/* Status Indicator Dot */}
+                <div className={`w-3 h-3 rounded-full shrink-0 ${isExpired ? 'bg-red-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
+                
+                {/* Content */}
+                <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        {/* Member Name - Very Small & Uppercase */}
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 max-w-[100px] truncate">
+                            {activeSession.memberName}
+                        </span>
+                        {/* Console Icon */}
+                        <Gamepad2 size={10} className="text-slate-500"/>
+                    </div>
+                    
+                    {/* TIMER - The most important part */}
+                    <div className={`
+                        font-bold leading-none tracking-tight tabular-nums
+                        ${isExpired ? 'text-red-500' : 'text-white'}
+                    `}
+                    style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }} // Responsive Font: 24px on 32", 40px+ on 65"
+                    >
+                        {remainingTime}
+                    </div>
                 </div>
-              </div>
-           </div>
-           
-           {isExpired && (
-             <div className="mt-6 bg-red-600/90 text-white py-2 px-4 rounded-lg text-center font-bold text-lg animate-bounce">
-               {t('session_ended')}
-             </div>
-           )}
+            </div>
+
+            {/* Overtime Warning Banner (Only appears if expired) */}
+            {isExpired && (
+                <div className="mt-2 text-center">
+                    <span className="inline-block bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest animate-bounce shadow-lg">
+                        {t('session_ended')}
+                    </span>
+                </div>
+            )}
         </div>
       ) : (
-        /* IDLE / AVAILABLE STATE */
-        <div className="absolute bottom-12 left-12 flex items-center gap-6 animate-fade-in">
-           <div className="p-6 bg-slate-900/60 border border-brand-500/30 backdrop-blur-lg rounded-3xl">
-              <Gamepad2 size={64} className="text-brand-400 mb-2" />
-              <h1 className="text-4xl font-bold text-brand-400">{t('available_status')}</h1>
-              <p className="text-brand-200/60 mt-1 text-lg">{t('ready_to_play')}</p>
-           </div>
+        /* 
+           IDLE STATE (SCREENSAVER)
+           Prevents black screen confusion, but keeps it very dark to save energy/burn-in.
+           Floating logo effect.
+        */
+        <div className="fixed inset-0 flex items-center justify-center opacity-30">
+            <div className="flex flex-col items-center animate-pulse-slow">
+                <div className="p-4 rounded-full bg-slate-900/50 border border-slate-800">
+                    <Power size={32} className="text-slate-600" />
+                </div>
+                <p className="mt-4 text-xs font-bold text-slate-700 tracking-[0.3em] uppercase">{activeConsole?.name || 'ZIEZAN STATION'}</p>
+                <p className="text-[10px] text-slate-800 mt-1">{t('available_status')}</p>
+            </div>
         </div>
       )}
+
+      {/* Connectivity Status (Tiny, Bottom Right) */}
+      <div className="fixed bottom-4 right-4 flex items-center gap-2 opacity-20">
+         <Wifi size={12} className="text-white" />
+         <span className="text-[10px] text-white font-mono">{currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+      </div>
       
-      {/* Reset Config Button (Hidden/Subtle) */}
+      {/* Hidden Reset Trigger (Bottom Left Corner click) */}
       <button 
-        onClick={() => { localStorage.removeItem('tv_assigned_console_id'); setAssignedConsoleId(null); }}
-        className="absolute bottom-4 right-4 text-white/10 hover:text-white/50 text-xs p-2"
-      >
-        {t('tv_reset_id')}
-      </button>
+        onClick={() => { if(confirm('Reset TV ID?')) { localStorage.removeItem('tv_assigned_console_id'); setAssignedConsoleId(null); }}}
+        className="fixed bottom-0 left-0 w-16 h-16 z-[100] cursor-default"
+      />
 
     </div>
   );

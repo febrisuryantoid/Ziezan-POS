@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus, PaymentMethod, Console, Transaction, MemberStatus } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass, Printer, Bluetooth, Filter, ArrowUpDown, ChevronDown, Check, UserPlus, GripHorizontal, Image as ImageIcon, Link as LinkIcon, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Power, Timer, Wrench, Trash2, Play, Plus, X, Wallet, QrCode, CheckCircle, ArrowRight, Loader2, Edit2, Save, Search, Gamepad2, Gift, User, Clock, AlertCircle, PlusCircle, Hourglass, Printer, Bluetooth, Filter, ArrowUpDown, ChevronDown, Check, UserPlus, GripHorizontal, Image as ImageIcon, Link as LinkIcon, AlertTriangle, ChevronLeft, ChevronRight, Construction, ShoppingBag, Banknote } from 'lucide-react';
 import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { bluetoothService } from '../services/bluetooth';
@@ -34,6 +34,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const [currentStep, setCurrentStep] = useState<'INPUT' | 'PAYMENT' | 'QRIS' | 'CONFIRM'>('INPUT');
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('CASH');
   
+  // Modal State (Checkout / Stop Session)
+  const [checkoutTx, setCheckoutTx] = useState<Transaction | null>(null);
+  const [extraCost, setExtraCost] = useState(0);
+  const [checkoutPayment, setCheckoutPayment] = useState<PaymentMethod>('CASH');
+
   // Member Search State (Combobox)
   const [memberSearchTerm, setMemberSearchTerm] = useState('');
   const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
@@ -173,6 +178,21 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   };
 
+  // --- CHECKOUT LOGIC ---
+  const initiateCheckout = (tx: Transaction) => {
+      setCheckoutTx(tx);
+      setExtraCost(0); // Reset
+      setCheckoutPayment(tx.paymentMethod); // Default to initial method
+  };
+
+  const confirmCheckout = () => {
+      if (checkoutTx) {
+          stopRental(checkoutTx.id, extraCost, checkoutPayment);
+          addToast('success', 'Sesi Selesai', 'Transaksi berhasil disimpan.');
+          setCheckoutTx(null);
+      }
+  };
+
   const handleQuickAddMember = () => {
       if (!memberSearchTerm.trim()) return;
       const name = memberSearchTerm.trim();
@@ -196,12 +216,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     if(newConsoleName.trim()) {
       const normalizedName = newConsoleName.trim().toLowerCase();
       const isDuplicate = consoles.some(c => c.name.toLowerCase() === normalizedName);
-      if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama unit ini sudah ada.'); return; }
+      if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama console ini sudah ada.'); return; }
       addConsole({ name: newConsoleName.trim(), imageUrl: newConsoleImage });
       setNewConsoleName('');
       setNewConsoleImage('');
       setIsAdding(false);
-      addToast('success', 'Unit Ditambahkan', `Console ${newConsoleName} berhasil dibuat.`);
+      addToast('success', 'Console Ditambahkan', `Console ${newConsoleName} berhasil dibuat.`);
     }
   }
 
@@ -210,12 +230,29 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     if(editingConsole && editingConsole.name) {
       const normalizedName = editingConsole.name.trim().toLowerCase();
       const isDuplicate = consoles.some(c => c.id !== editingConsole.id && c.name.toLowerCase() === normalizedName);
-      if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama unit ini sudah digunakan.'); return; }
+      if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama console ini sudah digunakan.'); return; }
       updateConsole(editingConsole.id, editingConsole.name.trim(), editingConsole.imageUrl);
       setEditingConsole(null);
-      addToast('success', 'Unit Diperbarui', 'Data console berhasil diubah.');
+      addToast('success', 'Console Diperbarui', 'Data console berhasil diubah.');
     }
   }
+
+  // --- TOGGLE MAINTENANCE ---
+  const toggleMaintenance = (c: Console) => {
+    if (c.status === ConsoleStatus.IN_USE) {
+      addToast('error', 'Gagal', 'Console sedang digunakan. Selesaikan sesi terlebih dahulu.');
+      return;
+    }
+    
+    const newStatus = c.status === ConsoleStatus.MAINTENANCE ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE;
+    updateConsoleStatus(c.id, newStatus);
+    
+    if(newStatus === ConsoleStatus.MAINTENANCE) {
+       addToast('warning', 'Mode Maintenance', `${c.name} kini dalam perbaikan.`);
+    } else {
+       addToast('success', 'Console Tersedia', `${c.name} sudah aktif kembali.`);
+    }
+  };
 
   // --- DELETE CONFIRMATION HANDLERS ---
   const openConfirmDelete = (console: Console) => {
@@ -229,7 +266,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     if(!success) {
       addToast('error', 'Gagal Menghapus', t('unit_in_use'));
     } else {
-      addToast('info', 'Unit Dihapus', `Data ${deletingConsole.name} telah dihapus.`);
+      addToast('info', 'Console Dihapus', `Data ${deletingConsole.name} telah dihapus.`);
     }
     setDeletingConsole(null);
   };
@@ -332,14 +369,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       {/* 1. Header & Toolbar */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
-          <h2 className="text-xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID SYSTEM */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
+        {/* RESPONSIVE FILTER GRID SYSTEM - Optimized for 320px screens */}
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
            
-           {/* Search */}
+           {/* Search - Full Width on Mobile */}
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
@@ -347,17 +384,17 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               placeholder={t('search_placeholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
+              className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
             />
           </div>
 
-          {/* Sort */}
+          {/* Sort - Half Width on Mobile */}
           <div className="relative col-span-1 md:col-span-6 lg:w-48">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
+                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
              >
                 <option value="NAME_ASC">{t('sort_name_asc')}</option>
                 <option value="NAME_DESC">{t('sort_name_desc')}</option>
@@ -366,13 +403,13 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
              </select>
           </div>
 
-          {/* Filter Status */}
+          {/* Filter Status - Half Width on Mobile */}
           <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
+                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
              >
                 <option value="ALL">{t('filter_all')}</option>
                 <option value="AVAILABLE">{t('filter_avail')}</option>
@@ -380,10 +417,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
              </select>
           </div>
 
-          {/* Add Button */}
+          {/* Add Button - Full Width on Mobile */}
           <button 
             onClick={() => setIsAdding(true)}
-            className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
+            className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
           >
             <Plus size={18} /> {t('add_unit')}
           </button>
@@ -400,13 +437,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <h3 className="text-lg font-bold text-palette-navy dark:text-white">
             {t('active_consoles')}
           </h3>
-          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
-            Total Unit: {filteredConsoles.length}
+          {/* FIX TEXT COLOR CONTRAST: dark:text-slate-300 */}
+          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
+            Total Console: {filteredConsoles.length}
           </span>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
           {currentConsoles.map(console => {
             const isActive = console.status === ConsoleStatus.IN_USE;
             const isMaintenance = console.status === ConsoleStatus.MAINTENANCE;
@@ -415,242 +453,459 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             
             return (
               <div key={console.id} className={`group relative rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-xl dark:shadow-none bg-white dark:bg-palette-navyLight ${
-                isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/30 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'
+                isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'
               }`}>
                 {/* Image Container */}
-                <div className="relative w-full aspect-square bg-white dark:bg-transparent overflow-hidden p-8 flex items-center justify-center">
-                    <img src={imageUrl} alt={console.name} className={`w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-xl ${isMaintenance ? 'grayscale opacity-50' : isActive ? 'opacity-40' : 'opacity-100'}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)}/>
-                    
-                    <div className="absolute top-4 right-4 z-10">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide backdrop-blur-md shadow-lg border border-white/10 ${isActive ? (session?.isOvertime ? 'bg-red-500 text-white animate-pulse' : 'bg-palette-mustard text-white') : isMaintenance ? 'bg-orange-500 text-white' : 'bg-emerald-500 text-white'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full bg-white ${isActive ? 'animate-ping' : ''}`} />
-                            {isActive ? (session?.isOvertime ? 'OVERTIME' : 'PLAYING') : isMaintenance ? 'MAINTENANCE' : 'READY'}
-                        </span>
-                    </div>
+                <div className="aspect-video w-full bg-slate-100 dark:bg-black/20 relative">
+                  <img 
+                    src={imageUrl} 
+                    alt={console.name} 
+                    className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`}
+                    onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)}
+                  />
+                  {/* Status Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                  
+                  {/* MAINTENANCE OVERLAY */}
+                  {isMaintenance && (
+                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-[1px] animate-fade-in">
+                        <div className="w-full h-full absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(249,115,22,0.1)_10px,rgba(249,115,22,0.1)_20px)] pointer-events-none"></div>
+                        <Construction size={48} className="text-palette-copper mb-2 animate-bounce" />
+                        <span className="bg-palette-copper text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg border border-white/20 tracking-wider">UNDER MAINTENANCE</span>
+                     </div>
+                  )}
+                  
+                  {/* Top Right Actions */}
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                     {/* MAINTENANCE TOGGLE BUTTON */}
+                     <button 
+                        onClick={() => toggleMaintenance(console)} 
+                        className={`p-2 backdrop-blur-md rounded-full text-white transition-colors ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-slate-500/50 hover:bg-slate-500'}`}
+                        title={isMaintenance ? "Selesai Perbaikan" : "Mode Perbaikan"}
+                     >
+                        <Wrench size={14} />
+                     </button>
+                     
+                     <button onClick={() => setEditingConsole(console)} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"><Edit2 size={14} /></button>
+                     <button onClick={() => openConfirmDelete(console)} className="p-2 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40"><Trash2 size={14} /></button>
+                  </div>
 
-                    {/* ACTIVE SESSION OVERLAY */}
-                    {isActive && session && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-0 bg-black/10 dark:bg-black/40 backdrop-blur-[2px] overflow-hidden">
-                            <div className="relative w-20 h-20 md:w-24 md:h-24 mb-3 shrink-0">
-                                <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl">
-                                    <circle cx="50%" cy="50%" r="45%" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="transparent" />
-                                    <circle cx="50%" cy="50%" r="45%" stroke={session.isOvertime ? '#ef4444' : '#fbbf24'} strokeWidth="8" fill="transparent" strokeDasharray={283} strokeDashoffset={283 - (283 * session.progress) / 100} strokeLinecap="round" className="transition-all duration-1000 ease-linear"/>
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                                    <span className="text-lg md:text-xl font-black font-mono shadow-black drop-shadow-md tracking-tight">{session.formattedRemaining}</span>
-                                    <span className="text-[8px] md:text-[9px] uppercase opacity-90 font-bold bg-black/20 px-2 rounded-full mt-0.5">{t('remaining')}</span>
-                                </div>
-                            </div>
-                            
-                            {/* Member Name Badge - ROUNDED FULL */}
-                            <div className="bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-full px-4 py-1.5 md:px-5 md:py-2 text-slate-900 dark:text-white flex items-center gap-2 border border-white/20 shadow-xl max-w-full z-10">
-                                <User size={12} className="text-palette-mustard shrink-0"/>
-                                <span className="text-[10px] md:text-xs font-bold truncate max-w-[100px] md:max-w-[120px]">{session.tx.memberName}</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Action Buttons (Edit/Delete) */}
-                    <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        <button onClick={(e) => { e.stopPropagation(); setEditingConsole(console); setNewConsoleImage(console.imageUrl || ''); }} className="p-2 bg-white/90 hover:bg-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Edit2 size={14}/></button>
-                        <button onClick={(e) => { e.stopPropagation(); updateConsoleStatus(console.id, isMaintenance ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE); }} className="p-2 bg-white/90 hover:bg-orange-500 hover:text-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Wrench size={14}/></button>
-                        {!isActive && (
-                            <button onClick={(e) => { e.stopPropagation(); openConfirmDelete(console); }} className="p-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-700 shadow-md rounded-full backdrop-blur-md transition-colors"><Trash2 size={14}/></button>
-                        )}
-                    </div>
+                  {/* Status Badge */}
+                  <div className="absolute top-3 left-3 z-20">
+                     <span className={`px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${
+                        isActive ? 'bg-palette-mustard/90 text-white animate-pulse' :
+                        isMaintenance ? 'bg-palette-copper/90 text-white' :
+                        'bg-palette-green/90 text-white'
+                     }`}>
+                        {isActive ? t('session_active') : isMaintenance ? t('maintenance') : t('available_status')}
+                     </span>
+                  </div>
                 </div>
-                
-                {/* Body Content */}
-                <div className="p-5 flex flex-col gap-3 flex-1 justify-between bg-slate-50/50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight truncate text-center" title={console.name}>{console.name}</h3>
-                        {isActive && session && (<div className="flex justify-center items-center mt-1 text-xs text-slate-500 dark:text-slate-400"><span>{t('elapsed')}: <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{session.formattedElapsed}</span></span></div>)}
-                        {!isActive && !isMaintenance && (<p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center justify-center gap-1"><CheckCircle size={12}/> Siap Digunakan</p>)}
-                        {isMaintenance && (<p className="text-xs text-orange-500 font-medium mt-1 flex items-center justify-center gap-1"><Wrench size={12}/> Perbaikan</p>)}
-                    </div>
-                    {isActive ? (
-                        <div className="grid grid-cols-4 gap-2">
-                            <button className="col-span-1 py-2.5 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/20 flex flex-col items-center justify-center transition-colors shadow-sm" title="Extend 1 Hour"><PlusCircle size={18}/></button>
-                            <button onClick={() => session && setPrintTx(session.tx)} className="col-span-1 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex flex-col items-center justify-center transition-colors shadow-sm" title="Print Struk"><Printer size={18}/></button>
-                            <button onClick={() => console.currentSessionId && stopRental(console.currentSessionId)} className="col-span-2 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-red-500/20 flex items-center justify-center gap-2"><Power size={16} /> {t('stop_session')}</button>
-                        </div>
-                    ) : isMaintenance ? (
-                        <div className="p-3 bg-orange-50 dark:bg-orange-900/10 rounded-xl text-center border border-orange-200 dark:border-orange-900/30"><span className="text-xs font-bold text-orange-600 dark:text-orange-400">MAINTENANCE MODE</span></div>
-                    ) : (
-                        <button onClick={() => setSelectedConsoleId(console.id)} className="w-full py-3.5 bg-palette-mustard text-white rounded-xl font-bold transition-all shadow-lg shadow-palette-mustard/20 hover:bg-palette-mustard/90 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 group/btn"><Play size={20} className="fill-current group-hover/btn:scale-110 transition-transform" /> <span className="text-sm">{t('rent_unit')}</span></button>
-                    )}
+
+                {/* Content Body */}
+                <div className="p-4 sm:p-5 flex flex-col flex-1 relative">
+                   <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
+                   
+                   {isActive && session ? (
+                      <div className="mt-2 space-y-3">
+                         <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 max-w-[60%] truncate"><User size={12}/> {session.tx.memberName}</span>
+                            <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{session.formattedRemaining}</span>
+                         </div>
+                         {/* Progress Bar */}
+                         <div className="h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-palette-mustard'}`} 
+                              style={{ width: `${session.progress}%` }}
+                            ></div>
+                         </div>
+                         <div className="flex justify-between text-[9px] sm:text-[10px] font-bold uppercase text-slate-400">
+                            <span>{t('elapsed')}</span>
+                            <span>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
+                         </div>
+                      </div>
+                   ) : (
+                      <div className="mt-2 flex-1 flex items-center text-slate-400 text-xs">
+                         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg w-full ${isMaintenance ? 'bg-palette-copper/10 text-palette-copper' : 'bg-slate-50 dark:bg-white/5'}`}>
+                            {isMaintenance ? <Construction size={14}/> : <Clock size={14} />}
+                            <span className="truncate">{isMaintenance ? 'Unit sedang diperbaiki' : t('ready_to_play')}</span>
+                         </div>
+                      </div>
+                   )}
+
+                   {/* Footer Action */}
+                   <div className="mt-4 sm:mt-5 pt-4 border-t border-slate-100 dark:border-white/5">
+                      {isActive && session ? (
+                         <button 
+                           onClick={() => initiateCheckout(session.tx)}
+                           className="w-full py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+                         >
+                            <Power size={16} /> Checkout / Stop
+                         </button>
+                      ) : (
+                         <button 
+                           onClick={() => setSelectedConsoleId(console.id)}
+                           disabled={isMaintenance}
+                           className={`w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${
+                               isMaintenance 
+                               ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' 
+                               : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-slate-900/10'
+                           }`}
+                         >
+                            {isMaintenance ? (
+                                <span className="text-[10px]">UNDER MAINTENANCE</span>
+                            ) : (
+                                <><Play size={16} fill="currentColor" /> {t('start_session')}</>
+                            )}
+                         </button>
+                      )}
+                   </div>
                 </div>
               </div>
             );
           })}
-           {filteredConsoles.length === 0 && (
-             <div className="col-span-full flex flex-col items-center justify-center py-12 md:py-20 text-slate-500 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/10">
-               <div className="p-4 md:p-6 bg-slate-50 dark:bg-white/5 rounded-full mb-3 md:mb-4"><Gamepad2 className="w-8 h-8 md:w-12 md:h-12 text-slate-400/80" /></div>
-               <p className="font-medium text-sm md:text-base">{t('no_data_consoles')}</p>
-             </div>
-           )}
         </div>
 
         {/* PAGINATION UI */}
         {renderPagination()}
       </div>
 
-      {/* RENTAL MODAL */}
-      {selectedConsoleId && (
-         <div className="fixed inset-0 z-[100] flex items-center sm:items-center justify-center sm:bg-palette-navy/80 bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
-           <div className="absolute inset-0 sm:hidden" onClick={resetModal}></div>
-           <div className={`bg-white dark:bg-palette-navyLight w-full max-w-lg shadow-2xl overflow-hidden border-t sm:border border-slate-200 dark:border-white/10 flex flex-col ${isMobile ? 'fixed bottom-0 rounded-t-3xl max-h-[90vh] animate-slide-in' : 'rounded-3xl max-h-[90vh] relative'}`}>
-              {isMobile && <div className="w-full flex justify-center pt-3 pb-1" onClick={resetModal}><div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full"></div></div>}
-              {/* Modal Body */}
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5"><div><h3 className="text-lg font-bold text-palette-navy dark:text-white flex items-center gap-2"><Gamepad2 className="text-palette-mustard" size={20} />{consoles.find(c => c.id === selectedConsoleId)?.name}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{t('new_rental_session')}</p></div><button onClick={resetModal} className="p-2 bg-white dark:bg-white/5 rounded-full hover:bg-slate-200 transition-colors border border-slate-200 dark:border-white/10 text-slate-500"><X size={18}/></button></div>
-              <div className="p-6 overflow-y-auto">
-                  {/* ... Steps (INPUT, PAYMENT, QRIS, CONFIRM) ... */}
-                  {currentStep === 'INPUT' && (
-                    <div className="space-y-5">
-                       <div className="space-y-2 relative" ref={dropdownRef}><label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><User size={12}/> {t('select_member')}</label><div className="relative"><User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />{rentalMemberId ? (<div className="w-full bg-palette-mustard/10 border border-palette-mustard text-palette-navy dark:text-white text-sm rounded-xl pl-10 pr-10 py-3 font-bold flex items-center justify-between"><span>{members.find(m => m.id === rentalMemberId)?.name}</span><button onClick={() => { setRentalMemberId(''); setMemberSearchTerm(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-white/50 hover:bg-white text-palette-mustard"><X size={14} /></button></div>) : (<input type="search" className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-sm rounded-xl pl-10 pr-10 py-3 focus:ring-2 focus:ring-palette-mustard focus:outline-none font-medium h-12 placeholder-slate-400" placeholder="Ketik nama member..." value={memberSearchTerm} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} onFocus={() => setIsMemberDropdownOpen(true)}/>)}{!rentalMemberId && (<div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><ChevronDown size={16} /></div>)}</div>{isMemberDropdownOpen && !rentalMemberId && (<div className="absolute z-50 w-full mt-1 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-x-hidden animate-fade-in custom-scrollbar">{sortedAndFilteredMembers.length > 0 ? (sortedAndFilteredMembers.map(m => (<button key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.name); setIsMemberDropdownOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center justify-between group border-b border-slate-100 dark:border-white/5 last:border-0"><div><p className="text-sm font-bold text-slate-900 dark:text-white">{m.name}</p>{m.nickname && <p className="text-xs text-slate-500">@{m.nickname}</p>}</div>{m.freeHoursBalance > 0 && (<span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><Gift size={10} /> {m.freeHoursBalance}h</span>)}</button>))) : (<div className="p-3 text-center"><p className="text-xs text-slate-500 mb-2">Member tidak ditemukan.</p>{memberSearchTerm.length > 2 && (<button onClick={handleQuickAddMember} className="w-full py-2 bg-palette-mustard text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-palette-mustard/90"><UserPlus size={14} /> Tambah "{memberSearchTerm}"</button>)}</div>)}</div>)}</div>
-                       <div className="space-y-2"><label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><Clock size={12}/> {t('duration_hrs')}</label><div className="flex items-center gap-4"><button onClick={() => setRentalDuration(Math.max(1, rentalDuration - 1))} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold text-xl hover:bg-palette-mustard/20 transition-colors flex items-center justify-center active:scale-95">-</button><div className="relative flex-1"><Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="number" inputMode="numeric" min="1" max="12" value={rentalDuration} onChange={(e) => setRentalDuration(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xl text-center font-bold rounded-xl py-2.5 pl-8 focus:ring-2 focus:ring-palette-mustard focus:outline-none h-12"/></div><button onClick={() => setRentalDuration(rentalDuration + 1)} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold text-xl hover:bg-palette-mustard/20 transition-colors flex items-center justify-center active:scale-95">+</button></div></div>
-                       {calculation && (<div className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2"><div className="flex justify-between text-slate-600 dark:text-slate-300 text-xs"><span>{t('duration_label')}</span><span className="font-bold">{rentalDuration} {t('jam')}</span></div><div className="flex justify-between text-slate-600 dark:text-slate-300 text-xs"><span>{t('cost')}:</span> <span>Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span></div>{calculation.freeHoursUsed > 0 && (<div className="flex justify-between text-palette-green dark:text-palette-green font-bold bg-palette-green/10 px-2 py-1 rounded-lg text-xs"><span className="flex items-center gap-1"><Gift size={12}/> {t('use_bonus')}</span> <span>-{calculation.freeHoursUsed} {t('jam')}</span></div>)}<div className="border-t-2 border-dashed border-slate-200 dark:border-white/10 mt-2 pt-2 flex justify-between items-center"><span className="font-bold text-slate-900 dark:text-white text-sm">{t('total_pay')}</span> <span className="text-xl font-black text-palette-mustard">Rp {calculation.totalCost.toLocaleString()}</span></div></div>)}
-                       <button onClick={handleNextStep} disabled={!rentalMemberId} className="w-full py-4 bg-palette-mustard hover:bg-palette-mustard/90 text-white rounded-xl font-bold text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-palette-mustard/30 hover:-translate-y-1 active:scale-95 h-14">{t('next_payment')}</button>
-                       <div className="h-6 md:hidden"></div>
-                    </div>
-                  )}
-                  {currentStep === 'PAYMENT' && (
-                    <div className="space-y-6">
-                        <div className="text-center">
-                            {calculation?.totalCost === 0 ? (
-                                // AUTOMATION: UI for Full Bonus Coverage
-                                <div className="animate-fade-in">
-                                    <div className="w-20 h-20 bg-palette-green/10 text-palette-green rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                                        <Gift size={40} />
-                                    </div>
-                                    <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-                                        Full Covered by Bonus!
-                                    </h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        Member menggunakan {calculation.freeHoursUsed} jam saldo bonus.
-                                    </p>
-                                </div>
-                            ) : (
-                                // Standard Payment Selection
-                                <>
-                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4">{t('pay_method')}</p>
-                                    
-                                    {/* INFO PARTIAL BONUS */}
-                                    {calculation && calculation.freeHoursUsed > 0 && (
-                                       <div className="mb-4 bg-blue-50 dark:bg-blue-900/10 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-2">
-                                         <Gift size={14} /> Bonus terpakai: {calculation.freeHoursUsed} Jam
-                                       </div>
-                                    )}
+      {/* --- MODALS --- */}
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => setSelectedPayment('CASH')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'CASH' ? 'bg-palette-green/10 border-palette-green text-palette-green ring-2 ring-palette-green/20' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}>
-                                            <Wallet size={32} className="mb-2" />
-                                            <span className="text-sm font-bold">{t('pay_cash')}</span>
-                                        </button>
-                                        <button onClick={() => setSelectedPayment('QRIS')} className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all h-32 active:scale-95 ${selectedPayment === 'QRIS' ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-500 text-blue-600 ring-2 ring-blue-200' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'}`}>
-                                            <QrCode size={32} className="mb-2" />
-                                            <span className="text-sm font-bold">QRIS</span>
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        
-                        <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl text-center border border-slate-100 dark:border-white/10">
-                            <span className="text-xs text-slate-500">{t('total_bill')}</span>
-                            <p className={`text-2xl font-black mt-1 ${calculation?.totalCost === 0 ? 'text-palette-green' : 'text-palette-navy dark:text-white'}`}>
-                                Rp {calculation?.totalCost.toLocaleString()}
-                            </p>
-                            {calculation?.totalCost === 0 && <span className="text-[10px] font-bold text-palette-green uppercase tracking-wide">GRATIS</span>}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 text-sm h-12 active:scale-95">{t('back')}</button>
-                            <button onClick={handleNextStep} className="flex-[2] py-3 bg-palette-mustard text-white rounded-xl font-bold hover:bg-palette-mustard/90 shadow-lg shadow-palette-mustard/20 text-sm h-12 active:scale-95">
-                                {calculation?.totalCost === 0 ? 'Klaim Bonus' : (selectedPayment === 'CASH' ? t('confirm_pay') : t('scan_qris'))}
-                            </button>
-                        </div>
-                        <div className="h-6 md:hidden"></div>
-                    </div>
-                  )}
-                  {currentStep === 'QRIS' && (<div className="text-center space-y-6"><div className="bg-white p-4 rounded-2xl border border-slate-200 inline-block shadow-lg"><img src="https://beeimg.com/images/k55144992704.jpg" alt="QRIS" className="w-48 h-48 object-cover rounded-lg" /><p className="text-xs font-bold text-slate-900 mt-2">{t('scan_to_pay')}</p></div><div><p className="text-xs text-slate-500">{t('total')}</p><p className="text-2xl font-bold text-slate-900 dark:text-white">Rp {calculation?.totalCost.toLocaleString()}</p></div><div className="flex gap-3"><button onClick={() => setCurrentStep('PAYMENT')} className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 text-sm h-12 active:scale-95">{t('back')}</button><button onClick={handleNextStep} className="flex-[2] py-3 bg-palette-green text-white rounded-xl font-bold hover:bg-palette-green/90 shadow-lg shadow-palette-green/20 text-sm h-12 active:scale-95">{t('paid_confirm')}</button></div><div className="h-6 md:hidden"></div></div>)}
-                  {currentStep === 'CONFIRM' && (
-                    <div className="text-center space-y-6 py-4">
-                        <div className="w-20 h-20 bg-palette-green/10 text-palette-green rounded-full flex items-center justify-center mx-auto animate-zoom-in">
-                            <CheckCircle size={40} />
-                        </div>
-                        <div>
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('ready_start')}</h4>
-                            <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl inline-block w-full text-left border border-slate-100 dark:border-white/10">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-xs text-slate-500">{t('unit_label')}</span>
-                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{consoles.find(c => c.id === selectedConsoleId)?.name}</span>
-                                </div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-xs text-slate-500">{t('duration_label')}</span>
-                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{rentalDuration} {t('jam')}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-xs text-slate-500">{t('method_label')}</span>
-                                    <span className={`text-sm font-bold ${calculation?.totalCost === 0 ? 'text-palette-green' : 'text-palette-mustard'}`}>
-                                        {calculation?.totalCost === 0 ? 'BONUS (FREE)' : selectedPayment}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <button onClick={handleConfirmRental} className="w-full py-4 bg-palette-mustard text-white rounded-xl font-bold text-base shadow-xl shadow-palette-mustard/30 hover:bg-palette-mustard/90 hover:-translate-y-1 transition-all h-14 active:scale-95">{t('start_session')}</button>
-                        <div className="h-6 md:hidden"></div>
-                    </div>
-                  )}
+      {/* 1. CHECKOUT MODAL (NEW FEATURE FOR SAFETY & F&B) */}
+      {checkoutTx && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
+           <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
+                 <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Checkout Sesi</h3>
+                    <p className="text-xs text-slate-500">Konfirmasi pembayaran akhir</p>
+                 </div>
+                 <button onClick={() => setCheckoutTx(null)} className="p-2 bg-white dark:bg-white/10 rounded-full hover:bg-slate-200"><X size={18} /></button>
               </div>
-           </div>
-         </div>
-      )}
-
-      {/* CREATE MODAL */}
-      {isAdding && (
-         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in"><div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-white/10"><div className="flex justify-between items-center mb-6"><h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('add_unit')}</h3><button onClick={() => setIsAdding(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full hover:bg-slate-200 transition-colors"><X size={18}/></button></div><form onSubmit={handleAddConsole} className="space-y-4"><div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">{t('console_name')}</label><div className="relative"><Gamepad2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" value={newConsoleName} onChange={(e) => setNewConsoleName(e.target.value)} className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-300 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all text-sm h-12" placeholder={t('console_name_placeholder')} required autoFocus/></div></div><div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Gambar (URL)</label><div className="relative mb-2"><LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="url" value={newConsoleImage} onChange={(e) => setNewConsoleImage(e.target.value)} className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-300 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all text-sm h-12" placeholder="https://..."/></div><div className="w-full aspect-video rounded-xl bg-slate-100 dark:bg-black/20 overflow-hidden border border-slate-200 dark:border-white/10 flex items-center justify-center p-4">{newConsoleImage ? (<img src={newConsoleImage} alt="Preview" className="h-full object-contain" onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} />) : (<div className="flex flex-col items-center text-slate-400"><ImageIcon size={24} className="mb-1"/><span className="text-[10px]">{t('preview_image')}</span></div>)}</div></div><div className="flex justify-end pt-4"><button type="submit" className="px-6 py-2.5 bg-palette-mustard text-white rounded-xl font-bold flex items-center gap-2 hover:bg-palette-mustard/90 transition-all w-full justify-center sm:w-auto shadow-lg shadow-palette-mustard/20 text-sm h-12"><Save size={16} /> {t('save')}</button></div></form></div></div>
-      )}
-
-      {/* EDIT MODAL */}
-      {editingConsole && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in"><div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-md shadow-2xl p-6 border border-slate-200 dark:border-white/10"><div className="flex justify-between items-center mb-6"><h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('edit_unit')}</h3><button onClick={() => setEditingConsole(null)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full hover:bg-slate-200 transition-colors"><X size={18}/></button></div><form onSubmit={handleUpdateConsole} className="space-y-4"><div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">{t('console_name')}</label><div className="relative"><Gamepad2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input required className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-300 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all text-sm h-12" value={editingConsole.name} onChange={e => setEditingConsole({...editingConsole, name: e.target.value})} /></div></div><div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Gambar (URL)</label><div className="relative mb-2"><LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="url" value={editingConsole.imageUrl || ''} onChange={(e) => setEditingConsole({...editingConsole, imageUrl: e.target.value})} className="w-full bg-slate-50 dark:bg-palette-navy border border-slate-300 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all text-sm h-12" placeholder="https://..."/></div><div className="w-full aspect-video rounded-xl bg-slate-100 dark:bg-black/20 overflow-hidden border border-slate-200 dark:border-white/10 flex items-center justify-center p-4"><img src={editingConsole.imageUrl || DEFAULT_CONSOLE_IMAGE} alt="Preview" className="h-full object-contain" onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} /></div></div><div className="flex justify-end pt-4"><button type="submit" className="px-6 py-2.5 bg-palette-mustard text-white rounded-xl font-bold flex items-center gap-2 hover:bg-palette-mustard/90 transition-all w-full justify-center sm:w-auto shadow-lg shadow-palette-mustard/20 text-sm h-12"><Save size={16}/> {t('save')}</button></div></form></div></div>
-      )}
-
-      {/* CUSTOM DELETE CONFIRMATION MODAL */}
-      {deletingConsole && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
-                 <AlertTriangle size={32} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Konfirmasi Hapus</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                 Apakah Anda yakin untuk menghapus unit <strong>{deletingConsole.name}</strong> dari database?
-              </p>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="p-6 overflow-y-auto space-y-5">
+                 {/* Bill Summary */}
+                 <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Member</span>
+                        <span className="font-bold dark:text-white">{checkoutTx.memberName}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Durasi Rental</span>
+                        <span className="font-bold dark:text-white">{checkoutTx.durationHours} Jam</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Biaya Rental</span>
+                        <span className="font-mono dark:text-white">Rp {checkoutTx.cost.toLocaleString()}</span>
+                    </div>
+                    
+                    {/* Add-ons / F&B Input (Simple Version) */}
+                    <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10">
+                        <div className="flex items-center gap-2 mb-2">
+                            <ShoppingBag size={16} className="text-palette-mustard"/>
+                            <span className="text-xs font-bold uppercase text-slate-500">Jajanan / Tambahan (Rp)</span>
+                        </div>
+                        <input 
+                            type="number" 
+                            inputMode="numeric"
+                            value={extraCost}
+                            onChange={(e) => setExtraCost(Math.max(0, parseInt(e.target.value) || 0))}
+                            className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-right font-mono font-bold focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white"
+                            placeholder="0"
+                        />
+                    </div>
+
+                    <div className="border-t border-slate-200 dark:border-white/10 pt-3 flex justify-between items-center">
+                        <span className="text-lg font-bold text-slate-900 dark:text-white">Total Akhir</span>
+                        <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                            Rp {(checkoutTx.cost + extraCost).toLocaleString()}
+                        </span>
+                    </div>
+                 </div>
+
+                 {/* Payment Method Selector */}
+                 <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Metode Pembayaran</label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => setCheckoutPayment('CASH')}
+                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
+                        >
+                            <Wallet size={16} /> Tunai
+                        </button>
+                        <button 
+                            onClick={() => setCheckoutPayment('QRIS')}
+                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
+                        >
+                            <QrCode size={16} /> QRIS
+                        </button>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
                  <button 
-                    onClick={() => setDeletingConsole(null)}
-                    className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 font-bold text-sm transition-colors"
+                    onClick={confirmCheckout}
+                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
                  >
-                    Tidak
-                 </button>
-                 <button 
-                    onClick={executeDelete}
-                    className="py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-500/20 transition-all"
-                 >
-                    Ya, Hapus
+                    <Power size={18} /> Selesaikan & Simpan
                  </button>
               </div>
            </div>
         </div>
       )}
 
-      {/* PRINT MODAL */}
-      {printTx && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in"><div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center"><h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3><p className="text-xs text-slate-500 mb-6">{t('receipt_for_tx', { name: printTx.memberName })}</p><div className="grid grid-cols-1 gap-3"><button onClick={handlePrintWifi} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold h-14"><Printer size={20} className="text-palette-mustard"/><span className="text-sm">{t('print_wifi')}</span></button><button onClick={handlePrintBluetooth} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold h-14"><Bluetooth size={20} className="text-blue-500"/><span className="text-sm">{t('print_bt')}</span></button></div><button onClick={() => setPrintTx(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline p-2">{t('cancel')}</button></div></div>
+      {/* 2. RENTAL MODAL */}
+      {selectedConsoleId && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
+           <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
+                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('new_rental_session')}</h3>
+                 <button onClick={resetModal} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full hover:bg-slate-200"><X size={18} /></button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto">
+                 {/* Step 1: Member & Duration */}
+                 {currentStep === 'INPUT' && (
+                    <div className="space-y-5">
+                       <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-500 uppercase">{t('select_member')}</label>
+                          <div className="relative" ref={dropdownRef}>
+                             <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <input 
+                                   type="text" 
+                                   placeholder={t('search_placeholder')} 
+                                   value={memberSearchTerm}
+                                   onFocus={() => setIsMemberDropdownOpen(true)}
+                                   onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }}
+                                   className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white"
+                                />
+                             </div>
+                             
+                             {isMemberDropdownOpen && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20">
+                                   {sortedAndFilteredMembers.length > 0 ? (
+                                      sortedAndFilteredMembers.map(m => (
+                                         <div 
+                                            key={m.id} 
+                                            onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.name); setIsMemberDropdownOpen(false); }}
+                                            className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0"
+                                         >
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{m.name}</p>
+                                            <p className="text-xs text-slate-500">@{m.nickname} • {m.membershipId}</p>
+                                         </div>
+                                      ))
+                                   ) : (
+                                      <div className="p-3 text-center">
+                                         <p className="text-xs text-slate-500 mb-2">Member tidak ditemukan.</p>
+                                         <button onClick={handleQuickAddMember} className="text-xs font-bold text-palette-mustard hover:underline flex items-center justify-center gap-1 w-full"><UserPlus size={12}/> Tambah "{memberSearchTerm}"</button>
+                                      </div>
+                                   )}
+                                </div>
+                             )}
+                          </div>
+                          {rentalMemberId && <div className="text-xs text-emerald-500 font-bold flex items-center gap-1"><CheckCircle size={12}/> Member terpilih</div>}
+                       </div>
+
+                       <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-500 uppercase">{t('duration_hrs')}</label>
+                          <div className="flex items-center gap-4">
+                             <button onClick={() => setRentalDuration(Math.max(1, rentalDuration - 1))} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-200"><ChevronLeft/></button>
+                             <div className="flex-1 text-center">
+                                <span className="text-3xl font-black text-slate-900 dark:text-white">{rentalDuration}</span>
+                                <span className="text-xs text-slate-500 block">{t('jam')}</span>
+                             </div>
+                             <button onClick={() => setRentalDuration(rentalDuration + 1)} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-200"><ChevronRight/></button>
+                          </div>
+                       </div>
+                    </div>
+                 )}
+
+                 {/* Step 2: Payment Method */}
+                 {currentStep === 'PAYMENT' && calculation && (
+                    <div className="space-y-4">
+                       <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl space-y-2">
+                          <div className="flex justify-between text-sm">
+                             <span className="text-slate-500">{t('cost')} Normal</span>
+                             <span className="font-mono text-slate-900 dark:text-white">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
+                          </div>
+                          {calculation.freeHoursUsed > 0 && (
+                             <div className="flex justify-between text-sm text-emerald-500">
+                                <span className="flex items-center gap-1"><Gift size={12}/> {t('use_bonus')} ({calculation.freeHoursUsed}h)</span>
+                                <span className="font-mono">-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
+                             </div>
+                          )}
+                          <div className="border-t border-slate-200 dark:border-white/10 my-2"></div>
+                          <div className="flex justify-between text-lg font-bold">
+                             <span className="text-slate-900 dark:text-white">{t('total_bill')}</span>
+                             <span className="font-mono text-palette-mustard">Rp {calculation.totalCost.toLocaleString()}</span>
+                          </div>
+                       </div>
+
+                       {calculation.totalCost > 0 && (
+                          <div className="grid grid-cols-2 gap-3">
+                             <button 
+                                onClick={() => setSelectedPayment('CASH')}
+                                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'CASH' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
+                             >
+                                <Wallet size={24} />
+                                <span className="font-bold text-xs">{t('pay_cash')}</span>
+                             </button>
+                             <button 
+                                onClick={() => setSelectedPayment('QRIS')}
+                                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'QRIS' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
+                             >
+                                <QrCode size={24} />
+                                <span className="font-bold text-xs">QRIS</span>
+                             </button>
+                          </div>
+                       )}
+                    </div>
+                 )}
+
+                 {/* Step 3: QRIS Scan (Mock) */}
+                 {currentStep === 'QRIS' && (
+                    <div className="flex flex-col items-center justify-center py-4">
+                       <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-lg mb-4">
+                          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MOCK_QRIS_PAYMENT" alt="QRIS" className="w-full h-full" />
+                       </div>
+                       <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t('scan_to_pay')}</p>
+                       <p className="text-xs text-slate-500">Scan QRIS di atas untuk pembayaran.</p>
+                    </div>
+                 )}
+
+                 {/* Step 4: Confirm Start */}
+                 {currentStep === 'CONFIRM' && (
+                    <div className="text-center py-6">
+                       <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                          <Gamepad2 size={40} />
+                       </div>
+                       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('ready_start')}</h3>
+                       <p className="text-slate-500 text-sm">Console akan menyala dan timer dimulai.</p>
+                    </div>
+                 )}
+              </div>
+
+              <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
+                 {currentStep === 'INPUT' ? (
+                    <button 
+                       onClick={handleNextStep} disabled={!rentalMemberId}
+                       className="w-full py-3.5 bg-palette-mustard text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                       {t('next_payment')}
+                    </button>
+                 ) : currentStep === 'CONFIRM' ? (
+                    <button 
+                       onClick={handleConfirmRental}
+                       className="w-full py-3.5 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20"
+                    >
+                       {t('start_session')}
+                    </button>
+                 ) : (
+                    <div className="flex gap-3">
+                       <button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-3.5 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-slate-600 dark:text-slate-300">{t('back')}</button>
+                       <button onClick={handleNextStep} className="flex-[2] py-3.5 bg-palette-mustard text-white rounded-xl font-bold">{currentStep === 'QRIS' ? t('paid_confirm') : t('confirm_pay')}</button>
+                    </div>
+                 )}
+              </div>
+           </div>
+        </div>
       )}
+
+      {/* 3. ADD / EDIT CONSOLE MODAL */}
+      {(isAdding || editingConsole) && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm rounded-3xl shadow-2xl p-6">
+               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  {isAdding ? <PlusCircle size={20} className="text-palette-mustard"/> : <Edit2 size={20} className="text-palette-mustard"/>}
+                  {isAdding ? t('add_unit') : t('edit_unit')}
+               </h3>
+               
+               <form onSubmit={isAdding ? handleAddConsole : handleUpdateConsole} className="space-y-4">
+                  <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-500 uppercase">{t('console_name')}</label>
+                     <input 
+                        type="text" 
+                        required
+                        value={isAdding ? newConsoleName : editingConsole?.name}
+                        onChange={(e) => isAdding ? setNewConsoleName(e.target.value) : setEditingConsole(prev => prev ? {...prev, name: e.target.value} : null)}
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard font-bold dark:text-white"
+                        placeholder={t('console_name_placeholder')}
+                     />
+                  </div>
+                  <div className="space-y-1.5">
+                     <label className="text-xs font-bold text-slate-500 uppercase">Image URL (Optional)</label>
+                     <div className="relative">
+                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input 
+                           type="text"
+                           value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''}
+                           onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)}
+                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard dark:text-white"
+                           placeholder="https://..."
+                        />
+                     </div>
+                  </div>
+                  
+                  <div className="pt-2 flex gap-3">
+                     <button type="button" onClick={() => { setIsAdding(false); setEditingConsole(null); }} className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">{t('cancel')}</button>
+                     <button type="submit" className="flex-1 py-3 bg-palette-mustard text-white rounded-xl font-bold shadow-lg shadow-palette-mustard/20">{t('save')}</button>
+                  </div>
+               </form>
+            </div>
+         </div>
+      )}
+
+      {/* 4. DELETE CONFIRMATION */}
+      {deletingConsole && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+              <div className="bg-white dark:bg-palette-navyLight rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
+                      <AlertTriangle size={32} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('delete_confirm')}</h3>
+                  <p className="text-sm text-slate-500 mb-6">Unit: {deletingConsole.name}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => setDeletingConsole(null)} className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-sm">{t('cancel')}</button>
+                      <button onClick={executeDelete} className="py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-500/20">Ya, Hapus</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* 5. PRINT SELECTION MODAL */}
+      {printTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
+           <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3>
+              
+              <div className="grid grid-cols-1 gap-3">
+                 <button 
+                    onClick={handlePrintWifi}
+                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                 >
+                    <Printer size={20} className="text-palette-mustard"/>
+                    <span className="text-sm">{t('print_wifi')}</span>
+                 </button>
+
+                 <button 
+                    onClick={handlePrintBluetooth}
+                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                 >
+                    <Bluetooth size={20} className="text-blue-500"/>
+                    <span className="text-sm">{t('print_bt')}</span>
+                 </button>
+              </div>
+
+              <button onClick={() => setPrintTx(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline">
+                 {t('cancel')}
+              </button>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 };

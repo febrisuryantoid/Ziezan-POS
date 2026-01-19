@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon } from 'lucide-react';
+import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { MembershipConfig } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
@@ -26,6 +26,10 @@ const Settings: React.FC = () => {
   const [localMemberships, setLocalMemberships] = useState(membershipConfigs);
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessingLogo, setIsProcessingLogo] = useState(false);
+
+  // System Status State
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +42,26 @@ const Settings: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Monitor Online/Sync Status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    const handleSyncStart = () => setIsSyncing(true);
+    const handleSyncEnd = () => setIsSyncing(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('sync-start', handleSyncStart);
+    window.addEventListener('sync-end', handleSyncEnd);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('sync-start', handleSyncStart);
+      window.removeEventListener('sync-end', handleSyncEnd);
+    };
   }, []);
 
   // Update local state when context changes (e.g. after sync)
@@ -200,7 +224,7 @@ const Settings: React.FC = () => {
     }
   };
 
-  // --- RENDER FUNCTIONS (Correctly Defined Outside or Inline) ---
+  // --- RENDER FUNCTIONS ---
 
   const renderBusinessSettings = () => (
     <div className="bg-white dark:bg-palette-navyLight p-6 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm h-full flex flex-col animate-fade-in overflow-y-auto">
@@ -352,18 +376,45 @@ const Settings: React.FC = () => {
         <h3 className="text-lg font-bold text-palette-navy dark:text-white mb-6 flex items-center gap-2">
             <Wifi size={20} className="text-blue-500"/> {t('tv_connectivity')}
         </h3>
+
+        {/* System Status Indicators - MOVED HERE FROM SIDEBAR */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+             <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-colors ${isOnline ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900/30' : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30'}`}>
+                 <div className={`p-2 rounded-full ${isOnline ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                    {isOnline ? <Wifi size={18} /> : <WifiOff size={18} />}
+                 </div>
+                 <div>
+                    <span className="block text-[10px] font-bold uppercase opacity-60 text-slate-500 dark:text-slate-400">Internet</span>
+                    <span className={`text-xs font-bold ${isOnline ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                        {isOnline ? t('online') : t('offline')}
+                    </span>
+                 </div>
+             </div>
+
+             <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-colors ${isSyncing ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-900/30' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/30'}`}>
+                 <div className={`p-2 rounded-full ${isSyncing ? 'bg-amber-500 text-white animate-spin' : 'bg-blue-500 text-white'}`}>
+                    {isSyncing ? <RefreshCw size={18} /> : <CheckCircle2 size={18} />}
+                 </div>
+                 <div>
+                    <span className="block text-[10px] font-bold uppercase opacity-60 text-slate-500 dark:text-slate-400">Data Sync</span>
+                    <span className={`text-xs font-bold ${isSyncing ? 'text-amber-700 dark:text-amber-400' : 'text-blue-700 dark:text-blue-400'}`}>
+                        {isSyncing ? t('syncing') : t('synced')}
+                    </span>
+                 </div>
+             </div>
+        </div>
         
-        {/* Wi-Fi / Cloud Status */}
-        <div className="mb-6 p-5 rounded-3xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
+        {/* Wi-Fi / Cloud Info */}
+        <div className="mb-6 p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
             <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-blue-500 text-white animate-pulse">
+                <div className="p-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                     <CloudLightning size={24} />
                 </div>
                 <div>
-                    <p className="font-bold text-base text-blue-700 dark:text-blue-400">
-                        Ziezan Cloud Link (Wi-Fi)
+                    <p className="font-bold text-base text-slate-700 dark:text-slate-200">
+                        Ziezan Cloud Link
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{t('cloud_link_desc')}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('cloud_link_desc')}</p>
                 </div>
             </div>
         </div>

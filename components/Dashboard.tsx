@@ -31,34 +31,34 @@ const Dashboard: React.FC = () => {
   }));
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="bg-white dark:bg-palette-navyLight p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div className="bg-white dark:bg-palette-navyLight p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
       {/* Decorative background blob */}
       <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
       
       <div className="flex justify-between items-start relative z-10">
-        <div className="min-w-0">
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide truncate">{title}</p>
-          <h3 className={`text-2xl font-black mt-2 ${colorClass} truncate`}>{value}</h3>
+        <div className="min-w-0 pr-2">
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wide truncate">{title}</p>
+          <h3 className={`text-xl sm:text-2xl font-black mt-1 sm:mt-2 ${colorClass} truncate`}>{value}</h3>
         </div>
-        <div className={`p-3 rounded-full shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
-          <Icon size={20} />
+        <div className={`p-2.5 sm:p-3 rounded-full shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+          <Icon size={18} className="sm:w-5 sm:h-5" />
         </div>
       </div>
-      <p className="text-[10px] text-slate-400 mt-2 font-medium truncate">{sub}</p>
+      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-medium truncate">{sub}</p>
     </div>
   );
 
   return (
-    // UPDATED: Removed h-full to allow content to grow naturally without colliding with parent height constraints
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* 1. Header Section */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
         <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('overview_subtitle')}</p>
       </div>
 
       {/* 2. Stats Grid Widget - USING PALETTE COLORS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Improved Grid: 1 Col on tiny screens (<400px), 2 Cols on standard phones, 4 on desktop */}
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard 
           title={t('active_consoles')}
           value={`${stats.activeConsoles} / ${consoles.length}`}
@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* 3. Main Content Widgets (Table & Chart) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Active Rentals Table / List */}
         <div className="lg:col-span-2 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="flex-1 p-0">
             {recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-slate-500">
                 <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-full mb-3">
                    <Activity className="w-6 h-6 text-slate-400/80" />
                 </div>
@@ -115,13 +115,13 @@ const Dashboard: React.FC = () => {
                 {/* Mobile View: Vertical Stack */}
                 <div className="md:hidden">
                    {recentTransactions.map(tx => (
-                     <div key={tx.id} className="p-4 border-b border-slate-100 dark:border-white/5 last:border-0">
+                     <div key={tx.id} className="p-3 sm:p-4 border-b border-slate-100 dark:border-white/5 last:border-0">
                        <div className="flex justify-between items-start mb-2 gap-2">
                          <div className="min-w-0 flex-1">
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-0.5">{t('members')}</span>
+                            <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 block mb-0.5">{t('members')}</span>
                             <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName}</span>
                          </div>
-                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                             tx.status === 'ACTIVE' 
                               ? 'bg-palette-green/10 text-palette-green' 
                               : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400'
@@ -129,13 +129,13 @@ const Dashboard: React.FC = () => {
                             {tx.status}
                           </span>
                        </div>
-                       <div className="flex justify-between items-end mt-2">
+                       <div className="flex justify-between items-end mt-1">
                          <div className="min-w-0 flex-1">
-                           <div className="text-[10px] text-slate-500 mb-0.5">{t('consoles')}</div>
+                           <div className="text-[9px] text-slate-500 mb-0.5">{t('consoles')}</div>
                            <div className="text-xs text-slate-700 dark:text-slate-300 truncate">{tx.consoleName}</div>
                          </div>
                          <div className="text-right shrink-0 ml-2">
-                           <div className="text-[10px] text-slate-500 mb-0.5">{t('duration')}</div>
+                           <div className="text-[9px] text-slate-500 mb-0.5">{t('duration')}</div>
                            <div className="text-xs font-semibold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
                          </div>
                        </div>
@@ -181,13 +181,14 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Charts Widget - Using Palette Colors */}
-        <div className="bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
-          <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-6 flex items-center gap-2">
+        <div className="bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-4 sm:p-5 flex flex-col">
+          <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-4 flex items-center gap-2">
             <MonitorPlay size={16} className="text-palette-mustard" /> {t('console_util')}
           </h3>
           
-          {/* FIX: Explicit Inline Style Height to prevent Recharts warning */}
-          <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+          {/* FIX: Explicit Inline Style Height. Reduce height on mobile for visibility. */}
+          {/* Mobile height: 200px, Desktop height: 300px */}
+          <div className="w-full h-[200px] sm:h-[300px]">
              {consoleUsageData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={consoleUsageData}>

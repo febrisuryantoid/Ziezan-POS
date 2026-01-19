@@ -31,7 +31,7 @@ interface DataContextType {
 
   // Rental Actions
   startRental: (memberId: string, consoleId: string, duration: number, operator: string, paymentMethod: PaymentMethod) => void;
-  stopRental: (transactionId: string) => void;
+  stopRental: (transactionId: string, extraCost?: number, finalPaymentMethod?: PaymentMethod, notes?: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -352,17 +352,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
-  const stopRental = (transactionId: string) => {
+  const stopRental = (transactionId: string, extraCost: number = 0, finalPaymentMethod?: PaymentMethod, notes?: string) => {
     const tx = transactions.find(t => t.id === transactionId);
     if (!tx || tx.status === 'COMPLETED') return;
 
     // 1. Close Transaction
+    // Allow updating cost if extra items (F&B) were added
+    // Allow updating payment method if decided at the end
     const updatedTx: Transaction = { 
         ...tx, 
+        cost: tx.cost + extraCost,
+        paymentMethod: finalPaymentMethod || tx.paymentMethod,
         status: 'COMPLETED', 
         endTime: new Date().toISOString(),
         synced: false 
     };
+    
+    // Save Notes/Add-ons (Optional: needs schema update if we want to save 'notes' permanently in TX, currently not in interface, so we just log it or rely on extraCost)
+    // For V1 SaaS MVP, we just add cost.
+
     const newTransactions = transactions.map(t => t.id === transactionId ? updatedTx : t);
     setTransactions(newTransactions);
     safeSave(() => Storage.saveTransactions(newTransactions));
@@ -400,7 +408,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedMember = {
             ...member,
             totalPlayTime: member.totalPlayTime + tx.durationHours,
-            totalAmountPaid: member.totalAmountPaid + tx.cost,
+            totalAmountPaid: member.totalAmountPaid + updatedTx.cost, // Use updated cost including extras
             hoursProgressToNextBonus: newProgress,
             freeHoursBalance: newFreeBalance,
             synced: false

@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Gamepad2, Users, Settings, LogOut, FileBarChart, Moon, Sun, Languages, Bluetooth, BluetoothOff, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { LayoutDashboard, Gamepad2, Users, Settings, LogOut, FileBarChart, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useBluetooth } from '../contexts/BluetoothContext';
 import { useData } from '../contexts/DataContext';
 
 interface LayoutProps {
@@ -16,11 +15,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onLogout }) => {
   const { theme, toggleTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
-  const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
   const { settings } = useData();
-  
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isSyncing, setIsSyncing] = useState(false);
   
   // DYNAMIC ADDRESS BAR COLOR LOGIC
   useEffect(() => {
@@ -30,25 +25,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
       metaThemeColor.setAttribute("content", theme === 'dark' ? '#0f0720' : '#f5f3ff');
     }
   }, [theme]);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    const handleSyncStart = () => setIsSyncing(true);
-    const handleSyncEnd = () => setIsSyncing(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('sync-start', handleSyncStart);
-    window.addEventListener('sync-end', handleSyncEnd);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('sync-start', handleSyncStart);
-      window.removeEventListener('sync-end', handleSyncEnd);
-    };
-  }, []);
   
   // Desktop Sidebar Item (Minimized with Tooltip)
   const NavItemDesktop = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => {
@@ -83,20 +59,20 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     return (
       <button 
         onClick={handleClick}
-        className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-90 transition-transform duration-100"
+        className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-95 transition-transform duration-100 min-w-0"
       >
         <div className={`
-           transition-all duration-300 ease-out flex items-center justify-center rounded-full mb-1
+           transition-all duration-300 ease-out flex items-center justify-center rounded-full mb-0.5
            ${isActive 
-             ? 'w-12 h-8 bg-palette-mustard/10 text-palette-mustard dark:bg-palette-purple/20 dark:text-palette-purple' 
+             ? 'w-10 h-7 sm:w-12 sm:h-8 bg-palette-mustard/10 text-palette-mustard dark:bg-palette-purple/20 dark:text-palette-purple' 
              : 'w-auto h-auto text-slate-400 dark:text-slate-500'
            }
         `}>
-           <Icon size={isActive ? 22 : 24} strokeWidth={isActive ? 2.5 : 2} />
+           <Icon size={isActive ? 20 : 22} strokeWidth={isActive ? 2.5 : 2} className="sm:w-6 sm:h-6" />
         </div>
         
         <span className={`
-            text-[10px] font-bold leading-none tracking-tight transition-all duration-300
+            text-[9px] sm:text-[10px] font-bold leading-none tracking-tight transition-all duration-300 truncate w-full text-center
             ${isActive 
                 ? 'text-palette-mustard dark:text-palette-purple scale-100' 
                 : 'text-slate-400 dark:text-slate-500 scale-90'
@@ -145,7 +121,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         </nav>
 
         {/* Footer Actions */}
-        <div className="mt-auto flex flex-col items-center gap-4">
+        <div className="mt-auto flex flex-col items-center gap-5">
+           
            {/* User Avatar - Already Rounded Full */}
            <div className="group relative cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-purple p-[2px] shadow-lg">
@@ -168,26 +145,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
         
-        {/* Top Status Bar (Harmonized) */}
-        <div className="bg-white/80 dark:bg-palette-navy/80 backdrop-blur-md text-slate-600 dark:text-slate-400 px-4 py-1.5 flex justify-end gap-4 text-[10px] font-bold tracking-wide z-20 border-b border-slate-200/50 dark:border-white/5 shrink-0 uppercase shadow-sm">
-            <div className={`flex items-center gap-1.5 ${isOnline ? 'text-palette-green' : 'text-palette-red'}`}>
-                {isOnline ? <Wifi size={12}/> : <WifiOff size={12}/>} 
-                <span className="hidden sm:inline">{isOnline ? t('online') : t('offline')}</span>
-            </div>
-            <div className={`flex items-center gap-1.5 ${isBtConnected ? 'text-blue-500 cursor-default' : 'text-slate-400 cursor-pointer hover:text-palette-mustard'}`} onClick={!isBtConnected ? connectBt : undefined}>
-                {isBtConnected ? <Bluetooth size={12}/> : <BluetoothOff size={12}/>}
-                <span className="hidden sm:inline">{isBtConnected ? t('tv_connected') : t('tv_disconnected')}</span>
-            </div>
-            <div className={`flex items-center gap-1.5 ${isSyncing ? 'text-palette-mustard animate-pulse' : 'text-slate-400'}`}>
-                <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""}/>
-                <span className="hidden sm:inline">{isSyncing ? t('syncing') : t('synced')}</span>
-            </div>
-        </div>
-
         {/* Top Header */}
         <header className="bg-white/60 dark:bg-palette-navyLight/60 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 h-16 flex justify-between items-center px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300 shrink-0">
           <div className="flex items-center gap-3 md:hidden">
-             <div className="w-10 h-10 rounded-full shadow-md border border-white/20 overflow-hidden">
+             <div className="w-9 h-9 rounded-full shadow-md border border-white/20 overflow-hidden shrink-0">
                 <img 
                   src={appLogo} 
                   alt={appName} 
@@ -195,7 +156,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
                   onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
                 />
              </div>
-             <span className="font-extrabold text-lg text-palette-navy dark:text-white tracking-tight truncate max-w-[150px]">{appName}<span className="text-palette-mustard">.</span></span>
+             {/* Hide Name on VERY small screens (iPhone 5S width 320px) to prevent overlap */}
+             <span className="hidden min-[360px]:inline-block font-extrabold text-lg text-palette-navy dark:text-white tracking-tight truncate max-w-[120px]">{appName}<span className="text-palette-mustard">.</span></span>
           </div>
           
           <div className="hidden md:block">
@@ -208,38 +170,39 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
                onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-               className="h-10 px-3 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-cream font-bold text-[10px] flex items-center gap-2 hover:border-palette-mustard transition-all active:scale-95 shadow-sm"
+               className="h-9 px-2.5 sm:h-10 sm:px-3 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-cream font-bold text-[10px] flex items-center gap-2 hover:border-palette-mustard transition-all active:scale-95 shadow-sm"
             >
-               <Languages size={16} />
+               <Languages size={14} className="sm:w-4 sm:h-4" />
                <span className="mt-0.5">{language.toUpperCase()}</span>
             </button>
             <button 
               onClick={toggleTheme}
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95 shadow-sm"
+              className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-palette-brown dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95 shadow-sm"
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === 'dark' ? <Sun size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Moon size={16} className="sm:w-[18px] sm:h-[18px]" />}
             </button>
             <button 
               onClick={onLogout} 
-              className="md:hidden h-10 w-10 flex items-center justify-center rounded-full bg-red-50 text-palette-red border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 active:scale-95 transition-all shadow-sm"
+              className="md:hidden h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center rounded-full bg-red-50 text-palette-red border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 active:scale-95 transition-all shadow-sm"
             >
-              <LogOut size={18} />
+              <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           </div>
         </header>
 
-        {/* Content Scroll Area - Improved Padding for Tablet */}
-        <main className="flex-1 overflow-y-auto scroll-smooth pb-24 md:pb-6 overscroll-contain bg-slate-50/50 dark:bg-black/20">
-          <div className="w-full h-full p-4 sm:p-6 lg:p-8 animate-fade-in">
+        {/* Content Scroll Area */}
+        {/* FIX: Optimized padding for 320px devices (p-3) */}
+        <main className="flex-1 overflow-y-auto scroll-smooth pb-32 md:pb-8 overscroll-contain bg-slate-50/50 dark:bg-black/20">
+          <div className="w-full h-full p-3 sm:p-6 lg:p-8 animate-fade-in">
             {children}
           </div>
         </main>
 
         {/* Bottom Navigation - Mobile (Premium Glassmorphism) */}
-        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-palette-navyLight/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex justify-between items-center px-2 pb-safe z-50 shadow-2xl shadow-palette-navy/20 rounded-full h-[70px]">
+        <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-palette-navyLight/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex justify-between items-center px-1 pb-safe z-50 shadow-2xl shadow-palette-navy/20 rounded-3xl sm:rounded-full h-[65px] sm:h-[70px]">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />

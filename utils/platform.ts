@@ -3,7 +3,10 @@ export const isTV = (): boolean => {
   const isSmartTV = /smart-tv|smarttv|googletv|androidtv|hbbtv|netcast|viera|bravia|webos|tizen/i.test(userAgent);
   const isLargeScreenNoTouch = window.innerWidth >= 1080 && !('ontouchstart' in window);
   
-  // Allow manual override for testing via URL param ?mode=tv
+  // Allow manual override via URL Path (/tv) OR Query Param (?mode=tv)
+  // This enables easy access via "namadomain.com/tv"
+  if (window.location.pathname === '/tv') return true;
+
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('mode') === 'tv') return true;
 

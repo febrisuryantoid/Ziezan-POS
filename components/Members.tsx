@@ -135,7 +135,6 @@ const Members: React.FC = () => {
   const handleUpdateMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingMember && editingMember.id) {
-      console.log("Updating member:", editingMember.id, editingMember.name);
       updateMember(editingMember);
       setEditingMember(null);
       addToast('success', 'Data Diperbarui', 'Perubahan data member berhasil disimpan.');
@@ -266,13 +265,13 @@ const Members: React.FC = () => {
       {/* HEADER & FILTERS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
-          <h2 className="text-xl font-bold text-palette-navy dark:text-white">{t('members')}</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('members')}</h2>
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_members_desc')}</p>
         </div>
 
-        {/* RESPONSIVE FILTER GRID SYSTEM */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-3 items-center min-w-0">
-            {/* Search */}
+        {/* RESPONSIVE FILTER GRID SYSTEM - Optimized for 320px screens */}
+        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
+            {/* Search - Full Width on Mobile, adjusted text size for iOS input zoom prevention */}
             <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
@@ -280,17 +279,17 @@ const Members: React.FC = () => {
                     placeholder={t('search_placeholder')} 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
+                    className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
                 />
             </div>
 
-            {/* Sort */}
+            {/* Sort - Half Width on Mobile */}
             <div className="relative col-span-1 md:col-span-6 lg:w-48">
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value as SortOption)}
-                    className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
+                    className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
                 >
                     <option value="NAME_ASC">{t('sort_name_asc')}</option>
                     <option value="NAME_DESC">{t('sort_name_desc')}</option>
@@ -299,13 +298,13 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Filter Tier */}
+            {/* Filter Tier - Half Width on Mobile */}
             <div className="relative col-span-1 md:col-span-6 lg:w-40">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
                     value={filterTier}
                     onChange={(e) => setFilterTier(e.target.value)}
-                    className="h-11 pl-10 pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
+                    className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
                 >
                     <option value="ALL">{t('all')}</option>
                     {membershipConfigs.map(c => (
@@ -314,10 +313,10 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Add Button */}
+            {/* Add Button - Full Width on Mobile for easy access */}
             <button 
                 onClick={() => setIsAdding(true)}
-                className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
+                className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
             >
                 <UserPlus size={18} /> {t('add_member')}
             </button>
@@ -333,8 +332,8 @@ const Members: React.FC = () => {
           <h3 className="text-lg font-bold text-palette-navy dark:text-white">
             {t('active_status')}
           </h3>
-          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
-            Total Member: {filteredMembers.length}
+          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
+            Total: {filteredMembers.length}
           </span>
         </div>
 
@@ -345,7 +344,7 @@ const Members: React.FC = () => {
                 <p className="text-slate-500 font-medium">{t('no_data_members')}</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 {currentMembers.map(member => {
                     const style = getTierStyle(member.membershipId);
                     return (
@@ -355,51 +354,51 @@ const Members: React.FC = () => {
                         <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
 
                         {/* Header Section */}
-                        <div className="relative z-10 p-5 flex justify-between items-start">
+                        <div className="relative z-10 p-4 sm:p-5 flex justify-between items-start">
                             <div className="flex gap-3 min-w-0">
                                 {/* MEMBER PHOTO */}
                                 <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
                                     <img 
                                         src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
                                         alt={member.name} 
-                                        className="w-14 h-14 rounded-full object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
+                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
                                     />
-                                    <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
+                                    <div className={`absolute -bottom-1 -right-1 p-1 sm:p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
                                         {getIcon(member.membershipId, style.iconColor)}
                                     </div>
                                 </div>
                                 <div className="min-w-0 flex flex-col justify-center flex-1">
-                                    <h3 className={`font-bold text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
+                                    <h3 className={`font-bold text-base sm:text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
                                         {member.name}
                                     </h3>
-                                    <p className={`text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
+                                    <p className={`text-[10px] sm:text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
                                 </div>
                             </div>
                             
                             {/* Actions Dropdown / Buttons */}
                             <div className="flex flex-col gap-1 shrink-0 ml-1">
-                                <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-2 rounded-full transition-colors ${style.btnText}`}>
+                                <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-1.5 sm:p-2 rounded-full transition-colors ${style.btnText}`}>
                                     <Edit2 size={16} />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-2 rounded-full transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
+                                <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-1.5 sm:p-2 rounded-full transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
                                     <Trash2 size={16} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Stats Section */}
-                        <div className="relative z-10 px-5 pb-2 flex-1">
-                            <div className={`grid grid-cols-2 gap-2 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
+                        <div className="relative z-10 px-4 sm:px-5 pb-2 flex-1">
+                            <div className={`grid grid-cols-2 gap-2 p-2 sm:p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
                                 <div className="flex flex-col items-center">
-                                    <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
-                                    <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                    <span className={`text-[9px] sm:text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
+                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text}`}>
                                         <Clock size={12} /> 
                                         <span>{member.totalPlayTime}h</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center border-l border-white/10">
-                                    <span className={`text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
-                                    <div className={`flex items-center gap-1 font-bold ${style.text}`}>
+                                    <span className={`text-[9px] sm:text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
+                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text}`}>
                                         <Gift size={12} /> 
                                         <span>{member.freeHoursBalance}h</span>
                                     </div>
@@ -408,11 +407,11 @@ const Members: React.FC = () => {
                         </div>
 
                         {/* Footer Info */}
-                        <div className="relative z-10 px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
-                            <span className={`text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
+                        <div className="relative z-10 px-4 sm:px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
+                            <span className={`text-[9px] sm:text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
                                 {member.phone || '-'}
                             </span>
-                            <button onClick={() => handleCopyLink(member.nickname)} className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
+                            <button onClick={() => handleCopyLink(member.nickname)} className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
                                 <ExternalLink size={10} /> Kartu
                             </button>
                         </div>
@@ -522,7 +521,7 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* EDIT MEMBER MODAL */}
+      {/* EDIT MEMBER MODAL - Consistent UI */}
       {editingMember && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">
