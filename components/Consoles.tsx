@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus, PaymentMethod, Console, Transaction, MemberStatus } from '../types';
@@ -203,7 +202,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           phone: '',
           address: '-',
           status: MemberStatus.ACTIVE,
-          membershipId: 'BASIC',
+          membershipId: 'WARRIOR', // Fixed: Changed from 'BASIC' to 'WARRIOR'
           notes: 'Added via Quick Rental',
           joinDate: new Date().toISOString()
       });
