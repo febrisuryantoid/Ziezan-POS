@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Crown, Star, Shield, Clock, Calendar, Loader2, AlertCircle, Gamepad2, Zap, Trophy, Hexagon, Sparkles, Swords, Medal, Flame, Gem } from 'lucide-react';
+import { Crown, Star, Shield, Clock, Calendar, Loader2, AlertCircle, Gamepad2, Zap, Trophy, Hexagon, Sparkles, Swords, Medal, Flame, Gem, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Member } from '../types';
 
@@ -14,7 +14,7 @@ const DragonPattern = ({ color }: { color: string }) => (
   <div 
     className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
     style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415-1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
         maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
     }}
   ></div>
@@ -149,16 +149,49 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
     refreshData();
   }, [refreshData]);
 
+  // Initial Data Check with Timeout for Sync
   useEffect(() => {
-    if (members.length > 0) {
-      const found = members.find(m => 
-        m.nickname.toLowerCase() === nickname.toLowerCase() || 
-        m.id === nickname
-      );
-      setMember(found || null);
-      setLoading(false);
-    }
+    let checkInterval: ReturnType<typeof setInterval>;
+    
+    const findMember = () => {
+        if (members.length > 0) {
+            const found = members.find(m => 
+                m.nickname.toLowerCase() === nickname.toLowerCase() || 
+                m.id === nickname
+            );
+            if (found) {
+                setMember(found);
+                setLoading(false);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Try finding immediately
+    if (findMember()) return;
+
+    // Retry every 500ms for up to 3 seconds if not found immediately (waiting for sync)
+    let retries = 0;
+    checkInterval = setInterval(() => {
+        retries++;
+        if (findMember() || retries > 6) {
+            clearInterval(checkInterval);
+            setLoading(false);
+        }
+    }, 500);
+
+    return () => clearInterval(checkInterval);
   }, [members, nickname]);
+
+  const handleManualRefresh = () => {
+      setLoading(true);
+      refreshData();
+      // Force reload page if simple refresh doesn't work (last resort for stuck cache)
+      setTimeout(() => {
+          if (!member) window.location.reload();
+      }, 1500);
+  };
 
   const stats = useMemo(() => {
     if (!member) return null;
@@ -209,8 +242,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050510] flex items-center justify-center">
+      <div className="min-h-screen bg-[#050510] flex flex-col gap-4 items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <p className="text-white/50 text-xs font-mono animate-pulse">SYNCING DATA...</p>
       </div>
     );
   }
@@ -220,7 +254,13 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
       <div className="min-h-screen bg-[#050510] flex flex-col items-center justify-center text-slate-400 p-8 text-center font-sans">
         <AlertCircle size={48} className="mb-4 text-red-500" />
         <h1 className="text-2xl font-bold text-white mb-2">Member Tidak Ditemukan</h1>
-        <p>Pastikan link atau nickname yang Anda masukkan benar.</p>
+        <p className="mb-6">Pastikan link atau nickname yang Anda masukkan benar.</p>
+        <button 
+            onClick={handleManualRefresh}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
+        >
+            <RefreshCw size={18} /> Refresh Data
+        </button>
       </div>
     );
   }

@@ -17,14 +17,21 @@ const Reports: React.FC = () => {
   const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
   const { addToast } = useToast();
   
-  // Default Dates
+  // Default Dates (Local Timezone aware)
+  // We use this trick to get YYYY-MM-DD in local time
+  const toLocalDateString = (date: Date) => {
+      const offset = date.getTimezoneOffset();
+      const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+      return localDate.toISOString().split('T')[0];
+  };
+
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
   // Filters State
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | PaymentMethod>('ALL');
-  const [startDate, setStartDate] = useState<string>(firstDay.toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState<string>(today.toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState<string>(toLocalDateString(firstDay));
+  const [endDate, setEndDate] = useState<string>(toLocalDateString(today));
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('DATE_DESC');
   
@@ -48,10 +55,13 @@ const Reports: React.FC = () => {
       return { datePart, timePart };
   };
 
-  // Filter Logic
+  // Filter Logic - ROOT CAUSE FIX for TIMEZONE
   const filteredTransactions = transactions.filter(tx => {
-    const txDate = tx.startTime.split('T')[0];
-    const isDateInRange = txDate >= startDate && txDate <= endDate;
+    // Convert transaction UTC time to LOCAL YYYY-MM-DD for comparison
+    const txDateObj = new Date(tx.startTime);
+    const txDateLocal = toLocalDateString(txDateObj);
+
+    const isDateInRange = txDateLocal >= startDate && txDateLocal <= endDate;
     const isPaymentMatch = paymentFilter === 'ALL' ? true : tx.paymentMethod === paymentFilter;
     const isSearchMatch = 
         tx.memberName.toLowerCase().includes(searchQuery.toLowerCase()) || 

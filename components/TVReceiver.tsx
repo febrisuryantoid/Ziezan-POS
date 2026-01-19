@@ -63,11 +63,11 @@ const TVReceiver: React.FC = () => {
         setCurrentTime(now);
         
         // Shift UI slightly every minute to prevent OLED burn-in
-        // Random move between 0px to 20px
+        // Random move between -20px to +20px in both X and Y directions
         if (now.getSeconds() === 0) {
             setShiftPos({
-                x: Math.floor(Math.random() * 20) * -1, // Shift left (negative x) since we are on right
-                y: Math.floor(Math.random() * 20) // Shift down
+                x: Math.floor(Math.random() * 41) - 20, 
+                y: Math.floor(Math.random() * 41) - 20
             });
         }
     }, 1000);
@@ -281,8 +281,11 @@ const TVReceiver: React.FC = () => {
       ) : (
         /* IDLE STATE */
         <div className="fixed inset-0 flex items-center justify-center opacity-30">
-            <div className="flex flex-col items-center animate-pulse-slow">
-                <div className="p-6 rounded-full bg-slate-900/50 border-4 border-slate-800">
+            <div 
+                className="flex flex-col items-center transition-transform duration-1000"
+                style={{ transform: `translate(${shiftPos.x}px, ${shiftPos.y}px)` }}
+            >
+                <div className="p-6 rounded-full bg-slate-900/50 border-4 border-slate-800 animate-pulse-slow">
                     <Power size={64} className="text-slate-600" />
                 </div>
                 <p className="mt-6 text-xl font-bold text-slate-700 tracking-[0.5em] uppercase">{activeConsole?.name || 'ZIEZAN STATION'}</p>

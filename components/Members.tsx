@@ -139,6 +139,12 @@ const Members: React.FC = () => {
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (newName.trim()) {
+      // FIX: Prevent Duplicate Phone
+      if (newPhone && members.some(m => m.phone === newPhone)) {
+          addToast('error', 'Gagal', 'Nomor HP ini sudah terdaftar.');
+          return;
+      }
+
       addMember({
         name: newName,
         nickname: newNickname,
@@ -170,9 +176,14 @@ const Members: React.FC = () => {
 
   const handleDeleteMember = () => {
     if (deletingMemberId) {
-      deleteMember(deletingMemberId);
+      // Call Context which now returns boolean for success
+      const success = deleteMember(deletingMemberId);
+      if (success) {
+          addToast('info', 'Member Dihapus', 'Data member telah dihapus dari sistem.');
+      } else {
+          addToast('error', 'Gagal Hapus', 'Member sedang bermain! Selesaikan sesi dahulu.');
+      }
       setDeletingMemberId(null);
-      addToast('info', 'Member Dihapus', 'Data member telah dihapus dari sistem.');
     }
   };
 

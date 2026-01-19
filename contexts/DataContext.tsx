@@ -27,9 +27,9 @@ interface DataContextType {
   // Member Actions
   addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
-  deleteMember: (id: string) => void;
+  deleteMember: (id: string) => boolean; // Changed return type to boolean for success/fail feedback
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
-  resetSeason: () => void; // NEW: Reset Leaderboard
+  resetSeason: () => void;
 
   // Rental Actions
   startRental: (memberId: string, consoleId: string, duration: number, operator: string, paymentMethod: PaymentMethod) => void;
@@ -88,7 +88,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let hasUpdates = false;
     
     // Sort configs DESCENDING (Highest minHours first)
-    // Mythic -> Legend -> Epic ... -> Warrior
     const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
 
     const updatedMembers = members.map(member => {
@@ -110,17 +109,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 2. AUTO RANK CHECK (STRICT MODE)
-        // Find the highest tier that matches the member's play time.
-        // This handles upgrades AND correcting tiers if the config changed (e.g., Basic -> Warrior).
         let targetTierId = updatedMember.membershipId;
-        
-        // Find first config where member's time >= config's min hours
         const matchedConfig = sortedConfigs.find(config => updatedMember.totalPlayTime >= config.minHours);
         
         if (matchedConfig) {
             targetTierId = matchedConfig.id;
         } else {
-            // Should not happen if Warrior starts at 0, but fallback to lowest
             targetTierId = sortedConfigs[sortedConfigs.length - 1].id;
         }
 
@@ -225,11 +219,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
-  const deleteMember = (id: string) => {
+  // ROOT CAUSE FIX 1: Prevent deleting active members
+  const deleteMember = (id: string): boolean => {
+    // Check if member has active transaction
+    const hasActiveTx = transactions.some(t => t.memberId === id && t.status === 'ACTIVE');
+    if (hasActiveTx) {
+        return false; // Fail safe
+    }
+
     const updated = members.filter(m => m.id !== id);
     safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
     syncService.deleteMember(id);
+    return true;
   };
 
   const upgradeMember = (memberId: string, newTierId: MembershipTierId) => {
@@ -242,11 +244,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // NEW: Reset Season Logic (Updated for Mythic)
   const resetSeason = () => {
       const updatedMembers = members.map(m => {
           let newTier: MembershipTierId = 'WARRIOR';
-          // Soft Reset Logic: Drop 1 Tier
           if (m.membershipId === 'MYTHIC') newTier = 'LEGEND';
           else if (m.membershipId === 'LEGEND') newTier = 'EPIC';
           else if (m.membershipId === 'EPIC') newTier = 'GRANDMASTER';
@@ -256,8 +256,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           return {
               ...m,
-              totalPlayTime: 0, // Reset Rank XP
-              membershipId: newTier, // Soft Reset Rank
+              totalPlayTime: 0,
+              membershipId: newTier,
               synced: false
           };
       });
@@ -301,7 +301,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       discountApplied: discount,
       paymentMethod: finalPaymentMethod,
       status: 'ACTIVE',
-      operatorName: operator,
+      operatorName: operator || 'Unknown', // FIX: Fallback for operator name
       synced: false
     };
 
@@ -333,13 +333,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
+  // ROOT CAUSE FIX 2: Ensure Financial Integrity & Cost Sanitization
   const stopRental = (transactionId: string, extraCost: number = 0, finalPaymentMethod?: PaymentMethod, notes?: string) => {
     const tx = transactions.find(t => t.id === transactionId);
     if (!tx || tx.status === 'COMPLETED') return;
 
+    // Sanitize extraCost to prevent negative values (fraud prevention)
+    const safeExtraCost = Math.max(0, extraCost);
+
     const updatedTx: Transaction = { 
         ...tx, 
-        cost: tx.cost + extraCost,
+        cost: tx.cost + safeExtraCost, // Add sanitized extra cost (F&B, etc)
         paymentMethod: finalPaymentMethod || tx.paymentMethod,
         status: 'COMPLETED', 
         endTime: new Date().toISOString(),
@@ -367,24 +371,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (member) {
         const currentConfig = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
         
-        let newProgress = member.hoursProgressToNextBonus + tx.durationHours;
+        // BUG FIX (Bonus Farming): Bonus progress ONLY if PAID (CASH/QRIS), NOT for BONUS sessions.
+        const isBonusSession = tx.paymentMethod === 'BONUS';
+        
+        let newProgress = member.hoursProgressToNextBonus;
         let newFreeBalance = member.freeHoursBalance;
 
-        // 1. Calculate Bonus Reward based on CURRENT Tier
-        if (newProgress >= currentConfig.bonusThreshold && currentConfig.bonusThreshold > 0) {
-            const multipliers = Math.floor(newProgress / currentConfig.bonusThreshold);
-            newFreeBalance += (multipliers * currentConfig.bonusReward);
-            newProgress = newProgress % currentConfig.bonusThreshold;
+        if (!isBonusSession) {
+            newProgress += tx.durationHours;
+            if (newProgress >= currentConfig.bonusThreshold && currentConfig.bonusThreshold > 0) {
+                const multipliers = Math.floor(newProgress / currentConfig.bonusThreshold);
+                newFreeBalance += (multipliers * currentConfig.bonusReward);
+                newProgress = newProgress % currentConfig.bonusThreshold;
+            }
         }
 
-        // 2. AUTO RANK UP LOGIC based on TOTAL PLAY TIME (Season XP)
         const newTotalPlayTime = member.totalPlayTime + tx.durationHours;
         let newTierId = member.membershipId;
         
-        // Check all configs to find highest eligible tier
-        // Sort configs by minHours descending
         const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
-        
         const bestConfig = sortedConfigs.find(config => newTotalPlayTime >= config.minHours);
         if (bestConfig) {
             newTierId = bestConfig.id;
@@ -394,6 +399,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...member,
             membershipId: newTierId,
             totalPlayTime: newTotalPlayTime,
+            // FIX: totalAmountPaid MUST include the final transaction cost (including extraCost)
             totalAmountPaid: member.totalAmountPaid + updatedTx.cost, 
             hoursProgressToNextBonus: newProgress,
             freeHoursBalance: newFreeBalance,

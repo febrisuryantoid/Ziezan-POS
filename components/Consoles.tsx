@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus, PaymentMethod, Console, Transaction, MemberStatus } from '../types';
@@ -193,6 +194,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       }
   };
 
+  // FIX: Quick Add Member integration
   const handleQuickAddMember = () => {
       if (!memberSearchTerm.trim()) return;
       const name = memberSearchTerm.trim();
@@ -202,11 +204,13 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           phone: '',
           address: '-',
           status: MemberStatus.ACTIVE,
-          membershipId: 'WARRIOR', // Fixed: Changed from 'BASIC' to 'WARRIOR'
+          membershipId: 'WARRIOR',
           notes: 'Added via Quick Rental',
           joinDate: new Date().toISOString()
       });
+      // Force update the selection immediately
       setRentalMemberId(newMemberId);
+      setMemberSearchTerm(name); // Keep name in input
       setIsMemberDropdownOpen(false);
       addToast('success', 'Member Baru Ditambahkan', `Member ${name} berhasil dibuat dan dipilih.`);
   };
@@ -610,6 +614,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             type="number" 
                             inputMode="numeric"
                             value={extraCost}
+                            // ROOT CAUSE FIX 3: Prevent negative input
                             onChange={(e) => setExtraCost(Math.max(0, parseInt(e.target.value) || 0))}
                             className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-right font-mono font-bold focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white"
                             placeholder="0"
