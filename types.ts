@@ -16,7 +16,8 @@ export enum MemberStatus {
 }
 
 export type PaymentMethod = 'CASH' | 'QRIS' | 'BONUS';
-export type MembershipTierId = 'BASIC' | 'PLUS' | 'VIP';
+// Updated to 7 Tiers (Mythic Added)
+export type MembershipTierId = 'WARRIOR' | 'ELITE' | 'MASTER' | 'GRANDMASTER' | 'EPIC' | 'LEGEND' | 'MYTHIC';
 
 // --- NEW: TOAST TYPES ---
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -40,8 +41,9 @@ export interface User {
 export interface MembershipConfig {
   id: MembershipTierId;
   name: string;
-  price: number; // For selling the plan
-  durationDays: number; // 0 for lifetime/unlimited
+  minHours: number; // NEW: Minimum hours required to reach this tier
+  price: number; // Registration fee (if any, usually 0 for auto-rank)
+  durationDays: number; // 0 for seasonal/lifetime
   bonusThreshold: number; // Play X hours
   bonusReward: number; // Get Y hours
   isActive: boolean;
@@ -51,34 +53,34 @@ export interface MembershipConfig {
 export interface Console {
   id: string;
   name: string;
-  imageUrl?: string; // New field for custom console image
+  imageUrl?: string; 
   status: ConsoleStatus;
   totalHoursUsed: number;
   notes?: string;
-  currentSessionId?: string; // Link to active transaction
-  synced?: boolean; // Sync status
+  currentSessionId?: string; 
+  synced?: boolean; 
 }
 
 export interface Member {
   id: string;
   membershipId: MembershipTierId; 
-  membershipExpiryDate?: string | null; // ISO String, null for lifetime
-  name: string; // FULL NAME (Nama Lengkap)
-  nickname: string; // NEW: Display Name (Nama Panggilan)
-  photoUrl?: string; // Base64 or URL
+  membershipExpiryDate?: string | null; 
+  name: string; 
+  nickname: string; 
+  photoUrl?: string; 
   phone?: string; 
   address?: string; 
-  dateOfBirth?: string; // ISO String YYYY-MM-DD
-  lastBirthdayBonusYear?: number; // Year when bonus was last applied
-  joinDate: string; // ISO String
-  totalPlayTime: number; // in hours
-  totalAmountPaid: number; // To calculate effective rate (Total Paid / Total Play)
-  hoursProgressToNextBonus: number; // Accumulator based on tier rule
+  dateOfBirth?: string; 
+  lastBirthdayBonusYear?: number; 
+  joinDate: string; 
+  totalPlayTime: number; // This acts as Season XP
+  totalAmountPaid: number; 
+  hoursProgressToNextBonus: number; 
   freeHoursBalance: number;
   totalBonusHoursUsed: number; 
   status: MemberStatus;
   notes?: string;
-  synced?: boolean; // Sync status
+  synced?: boolean; 
 }
 
 export interface Transaction {
@@ -87,15 +89,15 @@ export interface Transaction {
   consoleName: string;
   memberId: string;
   memberName: string;
-  startTime: string; // ISO String
-  endTime?: string; // ISO String (Planned or Actual)
+  startTime: string; 
+  endTime?: string; 
   durationHours: number;
   cost: number;
-  discountApplied: number; // Value of free hours used
+  discountApplied: number; 
   paymentMethod: PaymentMethod;
   status: 'ACTIVE' | 'COMPLETED';
   operatorName: string;
-  synced?: boolean; // Sync status
+  synced?: boolean; 
 }
 
 export interface AppSettings {
@@ -107,8 +109,8 @@ export interface AppSettings {
 
   // Operational
   hourlyRate: number;
-  cloudRetentionDays: number; // 0 = Keep Forever (Risk full), 30/60/90 = Auto Prune
-  birthdayBonusHours: number; // Hours given for free on birthday
+  cloudRetentionDays: number; 
+  birthdayBonusHours: number; 
 }
 
 export interface DashboardStats {

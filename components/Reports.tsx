@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ListFilter, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet } from 'lucide-react';
+import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet, Receipt, DollarSign, Clock } from 'lucide-react';
 import { PaymentMethod, Transaction } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
@@ -13,7 +14,7 @@ type SortOption = 'DATE_DESC' | 'DATE_ASC' | 'COST_DESC' | 'COST_ASC';
 const Reports: React.FC = () => {
   const { transactions, settings } = useData();
   const { t, language } = useLanguage();
-  const { isConnected: isBtConnected, connect: connectBt, sendCommand } = useBluetooth();
+  const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
   const { addToast } = useToast();
   
   // Default Dates
@@ -37,12 +38,12 @@ const Reports: React.FC = () => {
   // Date Formatting Helper
   const formatDate = (dateString: string) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      return date.toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: '2-digit' });
   };
 
   const formatDateTime = (dateString: string) => {
       const date = new Date(dateString);
-      const datePart = date.toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US');
+      const datePart = date.toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
       const timePart = date.toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' });
       return { datePart, timePart };
   };
@@ -106,7 +107,6 @@ const Reports: React.FC = () => {
     if (!selectedTxForPrint) return;
 
     if (!isBtConnected) {
-        // Try to connect if not connected
         try {
             await connectBt();
         } catch (e) {
@@ -138,372 +138,295 @@ const Reports: React.FC = () => {
     ? filteredTransactions 
     : filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const groupedByDate = filteredTransactions.reduce((acc, tx) => {
-    const date = tx.startTime.split('T')[0];
-    if (!acc[date]) acc[date] = { count: 0, revenue: 0, hours: 0 };
-    acc[date].count += 1;
-    acc[date].revenue += tx.cost;
-    acc[date].hours += tx.durationHours;
-    return acc;
-  }, {} as Record<string, { count: number, revenue: number, hours: number }>);
-
-  const dates = Object.keys(groupedByDate).sort().reverse();
   const totalRevenuePeriod = filteredTransactions.reduce((acc, curr) => acc + curr.cost, 0);
 
-  // Pagination Render Helper
-  const renderPageButton = (page: number) => (
-    <button
-      key={page}
-      onClick={() => setCurrentPage(page)}
-      className={`w-8 h-8 rounded-lg font-bold text-xs transition-all ${
-        currentPage === page
-          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md scale-105'
-          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-      }`}
-    >
-      {page}
-    </button>
-  );
-
   return (
-    <div className="flex flex-col gap-6">
-      {/* 1. Header & Toolbar */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div className="mb-2 xl:mb-0">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('reports')}</h2>
-          <p className="text-slate-500 text-xs">{t('overview_subtitle')}</p>
+    <div className="flex flex-col gap-6 animate-fade-in">
+      {/* 1. Header & Financial Summary */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
+             <FileText className="text-palette-mustard" /> {t('reports')}
+          </h2>
+          <p className="text-slate-500 text-xs font-medium mt-1">Analisa performa bisnis & riwayat transaksi.</p>
         </div>
+
+        {/* Revenue Card (Compact) */}
+        <div className="w-full lg:w-auto bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-4 shadow-lg shadow-emerald-900/20 text-white flex items-center gap-4 border border-white/10 relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                <DollarSign size={24} className="text-emerald-200" />
+            </div>
+            <div>
+                <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-wider opacity-80">{t('gross_revenue')}</p>
+                <h3 className="text-2xl font-black tracking-tight">Rp {totalRevenuePeriod.toLocaleString()}</h3>
+            </div>
+        </div>
+      </div>
         
-        {/* RESPONSIVE FILTER GRID - OPTIMIZED FOR 320px MOBILE */}
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
+      {/* 2. Control Panel (Filters) - Modernized */}
+      <div className="bg-white dark:bg-[#0f1016] rounded-3xl p-4 border border-slate-200 dark:border-white/5 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-3 items-end">
            
-           {/* Date Picker Start - 1/2 on Mobile */}
-           <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input 
-                 type="date" 
-                 value={startDate} 
-                 onChange={(e) => setStartDate(e.target.value)}
-                 className="h-10 sm:h-11 pl-9 pr-1 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-[10px] sm:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
-              />
-           </div>
-           
-           {/* Date Picker End - 1/2 on Mobile */}
-           <div className="relative col-span-1 md:col-span-4 lg:w-auto lg:min-w-[130px]">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input 
-                 type="date" 
-                 value={endDate} 
-                 onChange={(e) => setEndDate(e.target.value)}
-                 className="h-10 sm:h-11 pl-9 pr-1 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-[10px] sm:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white"
-              />
+           {/* Date Range - Unified Label */}
+           <div className="col-span-2 md:col-span-4 flex gap-2 items-center bg-slate-50 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+              <div className="relative flex-1">
+                  <input 
+                     type="date" 
+                     value={startDate} 
+                     onChange={(e) => setStartDate(e.target.value)}
+                     className="w-full bg-transparent border-none text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
+                  />
+              </div>
+              <span className="text-slate-400">-</span>
+              <div className="relative flex-1">
+                  <input 
+                     type="date" 
+                     value={endDate} 
+                     onChange={(e) => setEndDate(e.target.value)}
+                     className="w-full bg-transparent border-none text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white focus:ring-0 px-3 py-2 [color-scheme:dark]"
+                  />
+              </div>
            </div>
 
-           {/* Search - Full on Mobile */}
-           <div className="relative col-span-2 md:col-span-4 lg:flex-grow lg:w-auto lg:min-w-[200px] xl:w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+           {/* Search */}
+           <div className="relative col-span-2 md:col-span-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input 
               type="text" 
-              placeholder={t('search_reports_placeholder')} 
+              placeholder="Cari Transaksi..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-xs w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
+              className="h-10 w-full pl-9 pr-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold focus:outline-none focus:border-palette-mustard transition-colors text-slate-900 dark:text-white placeholder:text-slate-500"
             />
           </div>
 
-          {/* Payment Filter - 1/2 on Mobile */}
-          <div className="relative col-span-1 md:col-span-6 lg:w-32">
-             <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select 
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | PaymentMethod)}
-                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
-             >
-                <option value="ALL">{t('all')}</option>
-                <option value="CASH">{t('pay_cash')}</option>
-                <option value="QRIS">QRIS</option>
-                <option value="BONUS">BONUS</option>
-             </select>
+          {/* Filters Row */}
+          <div className="col-span-1 md:col-span-2">
+             <div className="relative">
+                <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <select 
+                    value={paymentFilter}
+                    onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | PaymentMethod)}
+                    className="h-10 w-full pl-9 pr-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold focus:outline-none focus:border-palette-mustard appearance-none text-slate-700 dark:text-white cursor-pointer"
+                >
+                    <option value="ALL">{t('all')}</option>
+                    <option value="CASH">CASH</option>
+                    <option value="QRIS">QRIS</option>
+                    <option value="BONUS">BONUS</option>
+                </select>
+             </div>
           </div>
 
-          {/* Sort - 1/2 on Mobile */}
-          <div className="relative col-span-1 md:col-span-6 lg:w-40">
-             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select 
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none cursor-pointer truncate"
-             >
-                <option value="DATE_DESC">{t('sort_date_new')}</option>
-                <option value="DATE_ASC">{t('sort_date_old')}</option>
-                <option value="COST_DESC">{t('sort_cost_hi')}</option>
-                <option value="COST_ASC">{t('sort_cost_lo')}</option>
-             </select>
+          <div className="col-span-1 md:col-span-2">
+             <div className="relative">
+                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <select 
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                    className="h-10 w-full pl-9 pr-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold focus:outline-none focus:border-palette-mustard appearance-none text-slate-700 dark:text-white cursor-pointer"
+                >
+                    <option value="DATE_DESC">Baru - Lama</option>
+                    <option value="DATE_ASC">Lama - Baru</option>
+                    <option value="COST_DESC">Termahal</option>
+                    <option value="COST_ASC">Termurah</option>
+                </select>
+             </div>
           </div>
 
           {/* Export Button - Full on Mobile */}
           <button 
             onClick={handleExportCSV}
-            className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20 whitespace-nowrap active:scale-95"
+            className="col-span-2 md:col-span-1 h-10 w-full rounded-xl flex items-center justify-center bg-palette-mustard text-white hover:bg-palette-mustard/90 transition-all shadow-lg shadow-palette-mustard/20 active:scale-95"
+            title={t('export_csv')}
           >
-            <Download size={16} /> {t('export_csv')}
+            <Download size={16} />
           </button>
         </div>
       </div>
 
-      {/* 2. Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Transaction History Widget */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+      {/* 3. Modern Glass Table */}
+      <div className="bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
           
-          {/* Widget Header & Rows Per Page Filter */}
-          <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
-             <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400">
-                  <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
-                </div>
-                <div>
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                    {t('history_tx')}
-                    </h3>
-                </div>
-                <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                    Total: {totalItems}
-                </span>
-             </div>
-             
+          {/* Table Header */}
+          <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/[0.02]">
              <div className="flex items-center gap-2">
-                <ListFilter size={14} className="text-slate-400"/>
+                <Receipt size={16} className="text-slate-400" />
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('history_tx')}</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-slate-400">Show:</span>
                 <select 
                     value={itemsPerPage}
                     onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="bg-transparent border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-bold rounded-lg px-2 py-1 focus:outline-none"
                 >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
                     <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={-1}>{t('all')}</option>
+                    <option value={-1}>All</option>
                 </select>
              </div>
           </div>
 
-          {/* Table Content */}
-          <div className="flex-1 min-h-[400px]">
+          {/* List Content */}
+          <div className="flex-1 overflow-x-auto">
             {currentTransactions.length === 0 ? (
-               <div className="flex flex-col items-center justify-center py-12 md:py-20 text-slate-500">
-                  <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-800/50 rounded-full mb-3 md:mb-4">
-                     <FileText className="w-8 h-8 md:w-12 md:h-12 text-slate-400/80" />
-                  </div>
-                  <p className="font-medium text-sm md:text-base">{t('no_tx')}</p>
+               <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+                  <Search className="w-10 h-10 mb-3 opacity-20" />
+                  <p className="text-xs font-bold opacity-50">Tidak ada data ditemukan</p>
                </div>
             ) : (
-              <>
-                {/* Mobile / Tablet Portrait View: Stacked Cards (Hidden on Desktop/Landscape) */}
-                <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                   {currentTransactions.map(tx => {
-                     const { datePart, timePart } = formatDateTime(tx.startTime);
-                     return (
-                     <div key={tx.id} className="p-3 sm:p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-start">
-                           <span className="text-[9px] sm:text-[10px] font-medium text-slate-500">{datePart} • {timePart}</span>
-                           <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-md ${
-                             tx.status === 'ACTIVE' 
-                              ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' 
-                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                           }`}>
-                             {tx.status}
-                           </span>
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-transparent text-slate-400 text-[10px] font-bold uppercase border-b border-slate-100 dark:border-white/5">
+                  <tr>
+                    <th className="px-6 py-4">Waktu</th>
+                    <th className="px-6 py-4">Detail Member</th>
+                    <th className="px-6 py-4">Console</th>
+                    <th className="px-6 py-4 text-center">Metode</th>
+                    <th className="px-6 py-4 text-right">Total</th>
+                    <th className="px-6 py-4 text-center">Struk</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                  {currentTransactions.map(tx => {
+                    const { datePart, timePart } = formatDateTime(tx.startTime);
+                    return (
+                    <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                      {/* Time */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700 dark:text-slate-200 text-xs">{datePart}</span>
+                          <span className="text-[10px] text-slate-400 font-mono mt-0.5">{timePart}</span>
                         </div>
-                        <div>
-                          <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{tx.memberName}</h4>
-                          <div className="flex justify-between items-center mt-1">
-                             <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[150px]">{tx.consoleName}</span>
-                             <div className="flex items-center gap-2 shrink-0">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                                  tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600' : 
-                                  tx.paymentMethod === 'BONUS' ? 'bg-purple-100 text-purple-600' :
-                                  'bg-green-50 text-green-600'
-                                }`}>
-                                  {tx.paymentMethod || 'CASH'}
-                                </span>
-                                <span className="text-[10px] font-semibold text-slate-500">{tx.durationHours} {t('hour_short')}</span>
-                             </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-50 dark:border-slate-800/50">
-                           <button onClick={() => setSelectedTxForPrint(tx)} className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white active:scale-95">
-                              <Printer size={14} />
-                           </button>
-                           <span className="text-sm font-mono font-bold text-slate-900 dark:text-white">
-                              {tx.discountApplied > 0 && <span className="line-through text-[10px] text-slate-400 mr-2 decoration-red-400 font-sans">{tx.discountApplied + tx.cost}</span>}
-                              Rp {tx.cost.toLocaleString()}
-                           </span>
-                        </div>
-                     </div>
-                   );})}
-                </div>
+                      </td>
+                      
+                      {/* Member */}
+                      <td className="px-6 py-4">
+                         <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">{tx.memberName}</span>
+                            <span className="text-[10px] text-slate-500 font-mono tracking-wide">#{tx.id.substring(0,8).toUpperCase()}</span>
+                         </div>
+                      </td>
 
-                {/* Desktop View: Table (Hidden on Mobile/Tablet Portrait) */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase sticky top-0 border-b border-slate-200 dark:border-slate-800 z-10 backdrop-blur-sm tracking-wider">
-                      <tr>
-                        <th className="px-6 py-3">{t('join_date')}</th>
-                        <th className="px-6 py-3">{t('members')}</th>
-                        <th className="px-6 py-3">{t('consoles')}</th>
-                        <th className="px-6 py-3">{t('duration')}</th>
-                        <th className="px-6 py-3 text-center">Via</th>
-                        <th className="px-6 py-3 text-right">{t('cost')}</th>
-                        <th className="px-6 py-3 text-center">{t('status')}</th>
-                        <th className="px-6 py-3 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {currentTransactions.map(tx => {
-                        const { datePart, timePart } = formatDateTime(tx.startTime);
-                        return (
-                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
-                            <div className="flex flex-col">
-                              <span className="font-medium text-slate-700 dark:text-slate-300 text-xs">{datePart}</span>
-                              <span className="text-[10px] text-slate-400">{timePart}</span>
+                      {/* Console & Duration */}
+                      <td className="px-6 py-4">
+                         <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500">
+                                <Clock size={12} />
                             </div>
-                          </td>
-                          <td className="px-6 py-3 text-slate-900 dark:text-white font-medium text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs max-w-[120px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs">{tx.durationHours} {t('hour_short')}</td>
-                          <td className="px-6 py-3 text-center">
-                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg ${
-                                tx.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 
-                                tx.paymentMethod === 'BONUS' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' :
-                                'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                            }`}>
-                              {tx.paymentMethod || 'CASH'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 text-right font-mono text-slate-700 dark:text-slate-200 font-bold text-xs">
-                            {tx.discountApplied > 0 && <span className="line-through text-[10px] text-slate-400 mr-2 decoration-red-400">{tx.discountApplied + tx.cost}</span>}
-                            Rp {tx.cost.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-md ${
-                              tx.status === 'ACTIVE' 
-                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400' 
-                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                            }`}>
-                              {tx.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                             <button onClick={() => setSelectedTxForPrint(tx)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 hover:text-slate-900 dark:hover:text-white" title="Cetak Struk">
-                                <Printer size={14}/>
-                             </button>
-                          </td>
-                        </tr>
-                      );})}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+                            <div>
+                                <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">{tx.consoleName}</span>
+                                <span className="block text-[10px] text-slate-500">{tx.durationHours} Jam</span>
+                            </div>
+                         </div>
+                      </td>
+
+                      {/* Payment Method */}
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
+                            tx.paymentMethod === 'QRIS' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
+                            tx.paymentMethod === 'BONUS' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
+                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                        }`}>
+                          {tx.paymentMethod || 'CASH'}
+                        </span>
+                      </td>
+
+                      {/* Cost */}
+                      <td className="px-6 py-4 text-right">
+                        <span className="font-mono text-sm font-bold text-slate-800 dark:text-white">
+                           Rp {tx.cost.toLocaleString()}
+                        </span>
+                        {tx.discountApplied > 0 && (
+                            <div className="text-[10px] text-red-400 line-through decoration-red-500/50">
+                                Rp {(tx.cost + tx.discountApplied).toLocaleString()}
+                            </div>
+                        )}
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-6 py-4 text-center">
+                         <button 
+                            onClick={() => setSelectedTxForPrint(tx)} 
+                            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-95 shadow-sm hover:shadow-palette-mustard/30"
+                            title="Cetak Struk"
+                         >
+                            <Printer size={16}/>
+                         </button>
+                      </td>
+                    </tr>
+                  );})}
+                </tbody>
+              </table>
             )}
           </div>
 
-          {/* Pagination Footer */}
+          {/* Footer Pagination */}
           {totalPages > 1 && (
-             <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/50">
-                <div className="flex items-center gap-2">
+             <div className="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-center bg-slate-50/50 dark:bg-white/[0.02]">
+                <div className="flex items-center gap-3">
                    <button 
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-palette-mustard text-slate-500 hover:text-palette-mustard disabled:opacity-30 disabled:hover:border-transparent transition-all"
                    >
                       <ChevronLeft size={16} />
                    </button>
                    
-                   <span className="text-xs font-bold text-slate-500 mx-2">
-                      {currentPage} / {totalPages}
+                   <span className="text-xs font-black text-slate-500">
+                      HALAMAN {currentPage} / {totalPages}
                    </span>
 
                    <button 
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-palette-mustard text-slate-500 hover:text-palette-mustard disabled:opacity-30 disabled:hover:border-transparent transition-all"
                    >
                       <ChevronRight size={16} />
                    </button>
                 </div>
              </div>
           )}
-        </div>
-
-        {/* Daily Recap Widget */}
-        <div className="space-y-4 sm:space-y-6">
-           {/* Summary Card */}
-           <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-xl shadow-brand-500/20">
-              <p className="text-brand-100 font-medium text-xs mb-1">{t('gross_revenue')}</p>
-              <h3 className="text-xl sm:text-2xl font-bold">Rp {totalRevenuePeriod.toLocaleString()}</h3>
-              <p className="text-[10px] text-brand-200 mt-2 flex items-center gap-1 opacity-80">
-                 <Calendar size={12}/> {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
-              </p>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3 sm:p-4">
-             <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                <div className="p-1.5 bg-brand-100 dark:bg-brand-900/30 rounded-lg text-brand-600 dark:text-brand-400">
-                  <Calendar size={16} className="sm:w-[18px] sm:h-[18px]" />
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                  {t('daily_recap')}
-                </h3>
-             </div>
-             <div className="space-y-2 sm:space-y-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-               {dates.map(date => (
-                 <div key={date} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-brand-200 dark:hover:border-brand-800 transition-colors group">
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        {new Date(date).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">{groupedByDate[date].count} Tx</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                       <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rp {groupedByDate[date].revenue.toLocaleString()}</p>
-                       <p className="text-[10px] text-slate-500">{groupedByDate[date].hours} {t('hour_short')}</p>
-                    </div>
-                 </div>
-               ))}
-               {dates.length === 0 && <p className="text-center text-slate-400 text-xs py-4">{t('no_tx')}</p>}
-             </div>
-          </div>
-        </div>
       </div>
 
-      {/* PRINT OPTION MODAL */}
+      {/* PRINT OPTION MODAL - RESPONSIVE FIX */}
       {selectedTxForPrint && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3>
-              <p className="text-xs text-slate-500 mb-6">{t('receipt_for_tx', { name: selectedTxForPrint.memberName })}</p>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-fade-in">
+           <div className="bg-white dark:bg-[#0f1016] sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 border border-white/10 text-center relative overflow-hidden">
+              {/* Decorative Blur */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-palette-mustard to-transparent opacity-50"></div>
               
-              <div className="grid grid-cols-1 gap-3">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('select_print_method')}</h3>
+              <p className="text-xs text-slate-500 mb-6 font-medium">Struk untuk member <span className="text-palette-mustard">{selectedTxForPrint.memberName}</span></p>
+              
+              <div className="flex flex-col gap-3">
                  <button 
                     onClick={handlePrintWifi}
-                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                    className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-palette-mustard/50 hover:bg-palette-mustard/5 transition-all group"
                  >
-                    <Printer size={20} className="text-palette-mustard"/>
-                    <span className="text-sm">{t('print_wifi')}</span>
+                    <div className="p-3 bg-slate-100 dark:bg-white/5 rounded-xl text-slate-500 group-hover:text-palette-mustard group-hover:bg-palette-mustard/10 transition-colors">
+                        <Printer size={20} />
+                    </div>
+                    <div className="text-left">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-palette-mustard">Browser / Wi-Fi</h4>
+                        <p className="text-[10px] text-slate-500">Gunakan printer PC atau PDF</p>
+                    </div>
                  </button>
 
                  <button 
                     onClick={handlePrintBluetooth}
-                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
+                    className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group"
                  >
-                    <Bluetooth size={20} className="text-blue-500"/>
-                    <span className="text-sm">{t('print_bt')}</span>
+                    <div className="p-3 bg-slate-100 dark:bg-white/5 rounded-xl text-slate-500 group-hover:text-blue-500 group-hover:bg-blue-500/10 transition-colors">
+                        <Bluetooth size={20} />
+                    </div>
+                    <div className="text-left">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-500">Bluetooth Thermal</h4>
+                        <p className="text-[10px] text-slate-500">Koneksi langsung ke printer mobile</p>
+                    </div>
                  </button>
               </div>
 
-              <button onClick={() => setSelectedTxForPrint(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline">
+              <button onClick={() => setSelectedTxForPrint(null)} className="mt-6 text-xs font-bold text-slate-400 hover:text-white transition-colors">
                  {t('cancel')}
               </button>
            </div>

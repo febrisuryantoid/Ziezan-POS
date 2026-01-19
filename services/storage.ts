@@ -1,39 +1,89 @@
+
 import { Console, Member, Transaction, AppSettings, User, Role, MembershipConfig } from '../types';
 
 // Initial Data Seeding - CLEARED FOR PRODUCTION
 const DEFAULT_CONSOLES: Console[] = [];
 
-// Default Membership Tiers Configuration
+// New 7-Tier "Kid-Friendly Progression" Configuration
+// Philosophy: Fast rank-up early game, generous bonuses for loyalty.
+// Warrior (0h) -> Elite (10h) -> Master (25h) -> GM (50h) -> Epic (85h) -> Legend (120h) -> Mythic (160h)
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
-    id: 'BASIC', 
-    name: 'Basic', 
-    price: 5000, 
-    durationDays: 30, 
-    bonusThreshold: 6, 
-    bonusReward: 1,    
+    id: 'WARRIOR', 
+    name: 'Warrior', 
+    minHours: 0,
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 6, // START: Main 6 Jam -> Gratis 1
+    bonusReward: 1,     
     isActive: true,
-    color: 'BASIC'
+    color: 'slate'
   },
   { 
-    id: 'PLUS', 
-    name: 'Plus', 
-    price: 25000, 
-    durationDays: 30, 
+    id: 'ELITE', 
+    name: 'Elite', 
+    minHours: 10, // Cepat naik pangkat (sekitar 5x main)
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 6, // Masih 6:1, tapi status naik
+    bonusReward: 1,    
+    isActive: true,
+    color: 'zinc'
+  },
+  { 
+    id: 'MASTER', 
+    name: 'Master', 
+    minHours: 25, // Target 2-3 Minggu
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 5, // UPGRADE 1: Jadi Main 5 Jam -> Gratis 1
+    bonusReward: 1,    
+    isActive: true,
+    color: 'amber'
+  },
+  { 
+    id: 'GRANDMASTER', 
+    name: 'Grandmaster', 
+    minHours: 50, // Target 1 Bulan
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 5, 
+    bonusReward: 1,    
+    isActive: true,
+    color: 'emerald'
+  },
+  { 
+    id: 'EPIC', 
+    name: 'Epic', 
+    minHours: 85, // Target 1.5 Bulan
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 4, // UPGRADE 2: Jadi Main 4 Jam -> Gratis 1
+    bonusReward: 1,    
+    isActive: true,
+    color: 'cyan'
+  },
+  { 
+    id: 'LEGEND', 
+    name: 'Legend', 
+    minHours: 120, // Target 2 Bulan
+    price: 0, 
+    durationDays: 0, 
     bonusThreshold: 4, 
     bonusReward: 1,    
     isActive: true,
-    color: 'PLUS'
+    color: 'violet'
   },
   { 
-    id: 'VIP', 
-    name: 'VIP', 
-    price: 50000, 
-    durationDays: 30, 
-    bonusThreshold: 3, 
+    id: 'MYTHIC', 
+    name: 'Mythic', 
+    minHours: 160, // Target Akhir Season (±3 Bulan)
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 3, // JACKPOT: Main 3 Jam -> Gratis 1
     bonusReward: 1,    
     isActive: true,
-    color: 'VIP'
+    color: 'rose'
   }
 ];
 
@@ -70,7 +120,16 @@ export const getMemberships = (): MembershipConfig[] => {
   const data = localStorage.getItem(K_MEMBERSHIPS);
   if (data) {
       const parsed = JSON.parse(data);
-      return parsed.length > 0 ? parsed : DEFAULT_MEMBERSHIPS; 
+      // Ensure we always have the 7 tiers even if local storage is old
+      // We map over default and merge preserved fields (isActive)
+      const merged = DEFAULT_MEMBERSHIPS.map(def => {
+          const existing = parsed.find((p: any) => p.id === def.id);
+          if (existing) {
+             return { ...def, isActive: existing.isActive }; 
+          }
+          return def;
+      });
+      return merged;
   }
   return DEFAULT_MEMBERSHIPS;
 };
@@ -85,24 +144,24 @@ export const getMembers = (): Member[] => {
   
   let members: Member[] = JSON.parse(data);
   
-  // --- DATA CLEANUP & DEDUPLICATION LOGIC ---
-  // Fix data integrity issues automatically on load
+  // Clean Data & Migration
   const nameMap = new Map<string, Member>();
   let hasChanges = false;
 
   members.forEach(m => {
-      // 1. Skip invalid records
-      if (!m.id || !m.name) {
-          hasChanges = true;
-          return;
-      }
+      if (!m.id || !m.name) { hasChanges = true; return; }
 
-      // 2. Normalize and Fix structure (Migration Logic v1.1.0)
+      // Name Migration for old tiers to new schema
+      let tier = m.membershipId;
+      if (tier as any === 'BASIC') tier = 'WARRIOR';
+      if (tier as any === 'PLUS') tier = 'GRANDMASTER'; // Mid-tier mapping
+      if (tier as any === 'VIP') tier = 'LEGEND'; // High-tier mapping
+
       const cleaned: Member = {
         ...m,
         name: m.name.trim(),
         nickname: m.nickname || m.name.split(' ')[0], 
-        membershipId: m.membershipId || 'BASIC',
+        membershipId: tier,
         address: m.address || 'Nyomplong', 
         totalAmountPaid: m.totalAmountPaid || 0,
         membershipExpiryDate: m.membershipExpiryDate || null,
@@ -112,28 +171,19 @@ export const getMembers = (): Member[] => {
         notes: m.notes || ''
       };
 
-      // 3. Smart Deduplication by Name (Case Insensitive)
       const key = cleaned.name.toLowerCase();
-      
       if (nameMap.has(key)) {
           const existing = nameMap.get(key)!;
-          // Keep the one with better stats (Higher Playtime OR Higher Tier)
-          const isBetter = cleaned.totalPlayTime > existing.totalPlayTime || 
-                           (cleaned.totalPlayTime === existing.totalPlayTime && cleaned.membershipId !== 'BASIC');
-          
-          if (isBetter) {
-              nameMap.set(key, cleaned);
-          }
+          const isBetter = cleaned.totalPlayTime > existing.totalPlayTime;
+          if (isBetter) nameMap.set(key, cleaned);
           hasChanges = true; 
       } else {
           nameMap.set(key, cleaned);
       }
   });
 
-  // Convert Map back to Array
   if (hasChanges || nameMap.size !== members.length) {
       const cleanList = Array.from(nameMap.values());
-      console.log(`[Storage] Cleaned members v1.1: Reduced from ${members.length} to ${cleanList.length}`);
       saveMembers(cleanList);
       return cleanList;
   }
@@ -158,11 +208,9 @@ export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
   if (data) {
       const parsed = JSON.parse(data);
-      // Ensure all fields from DEFAULT_SETTINGS exist (Migration for new fields like birthdayBonusHours)
       return { 
         ...DEFAULT_SETTINGS, 
         ...parsed,
-        // Enforce defaults if undefined in storage
         birthdayBonusHours: parsed.birthdayBonusHours ?? DEFAULT_SETTINGS.birthdayBonusHours,
         cloudRetentionDays: parsed.cloudRetentionDays ?? DEFAULT_SETTINGS.cloudRetentionDays,
         businessName: parsed.businessName || DEFAULT_SETTINGS.businessName,

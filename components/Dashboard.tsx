@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus } from '../types';
@@ -31,25 +32,25 @@ const Dashboard: React.FC = () => {
   }));
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="bg-white dark:bg-palette-navyLight p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div className="bg-white dark:bg-[#0f1016] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
       {/* Decorative background blob */}
-      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
+      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
       
       <div className="flex justify-between items-start relative z-10">
         <div className="min-w-0 pr-2">
-          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wide truncate">{title}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-wide truncate opacity-70">{title}</p>
           <h3 className={`text-xl sm:text-2xl font-black mt-1 sm:mt-2 ${colorClass} truncate`}>{value}</h3>
         </div>
-        <div className={`p-2.5 sm:p-3 rounded-full shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+        <div className={`p-2.5 sm:p-3 rounded-2xl shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
           <Icon size={18} className="sm:w-5 sm:h-5" />
         </div>
       </div>
-      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-medium truncate">{sub}</p>
+      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-bold truncate">{sub}</p>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in">
       {/* 1. Header Section */}
       <div className="flex flex-col gap-1">
         <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
@@ -57,7 +58,6 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* 2. Stats Grid Widget - USING PALETTE COLORS */}
-      {/* Improved Grid: 1 Col on tiny screens (<400px), 2 Cols on standard phones, 4 on desktop */}
       <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard 
           title={t('active_consoles')}
@@ -96,8 +96,8 @@ const Dashboard: React.FC = () => {
       {/* 3. Main Content Widgets (Table & Chart) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Active Rentals Table / List */}
-        <div className="lg:col-span-2 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
+        <div className="lg:col-span-2 bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+          <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
             <h3 className="font-bold text-sm text-palette-navy dark:text-white flex items-center gap-2">
               <Activity size={16} className="text-palette-mustard" /> {t('recent_tx')}
             </h3>
@@ -105,8 +105,8 @@ const Dashboard: React.FC = () => {
           <div className="flex-1 p-0">
             {recentTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-slate-500">
-                <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-full mb-3">
-                   <Activity className="w-6 h-6 text-slate-400/80" />
+                <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-full mb-3 opacity-50">
+                   <Activity className="w-6 h-6" />
                 </div>
                 <p className="font-medium text-xs">{t('no_tx')}</p>
               </div>
@@ -115,61 +115,60 @@ const Dashboard: React.FC = () => {
                 {/* Mobile View: Vertical Stack */}
                 <div className="md:hidden">
                    {recentTransactions.map(tx => (
-                     <div key={tx.id} className="p-3 sm:p-4 border-b border-slate-100 dark:border-white/5 last:border-0">
+                     <div key={tx.id} className="p-4 border-b border-slate-100 dark:border-white/5 last:border-0 bg-white dark:bg-transparent">
                        <div className="flex justify-between items-start mb-2 gap-2">
                          <div className="min-w-0 flex-1">
-                            <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 block mb-0.5">{t('members')}</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">{t('members')}</span>
                             <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName}</span>
                          </div>
-                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+                         <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 border ${
                             tx.status === 'ACTIVE' 
-                              ? 'bg-palette-green/10 text-palette-green' 
-                              : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400'
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                              : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 border-transparent'
                           }`}>
                             {tx.status}
                           </span>
                        </div>
-                       <div className="flex justify-between items-end mt-1">
+                       <div className="flex justify-between items-end mt-2 pt-2 border-t border-dashed border-slate-100 dark:border-white/5">
                          <div className="min-w-0 flex-1">
-                           <div className="text-[9px] text-slate-500 mb-0.5">{t('consoles')}</div>
-                           <div className="text-xs text-slate-700 dark:text-slate-300 truncate">{tx.consoleName}</div>
+                           <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t('consoles')}</div>
+                           <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{tx.consoleName}</div>
                          </div>
                          <div className="text-right shrink-0 ml-2">
-                           <div className="text-[9px] text-slate-500 mb-0.5">{t('duration')}</div>
-                           <div className="text-xs font-semibold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
+                           <div className="text-xs font-mono font-bold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
                          </div>
                        </div>
                      </div>
                    ))}
                 </div>
 
-                {/* Desktop View: Table */}
+                {/* Desktop View: Table (Styled) */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm text-left whitespace-nowrap">
-                    <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 tracking-wider">
+                    <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5 tracking-wider">
                       <tr>
-                        <th className="px-6 py-3 font-semibold">{t('members')}</th>
-                        <th className="px-6 py-3 font-semibold">{t('consoles')}</th>
-                        <th className="px-6 py-3 font-semibold">{t('status')}</th>
-                        <th className="px-6 py-3 font-semibold text-right">{t('duration')}</th>
+                        <th className="px-6 py-4">{t('members')}</th>
+                        <th className="px-6 py-4">{t('consoles')}</th>
+                        <th className="px-6 py-4">{t('status')}</th>
+                        <th className="px-6 py-4 text-right">{t('duration')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                       {recentTransactions.map(tx => (
-                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-3 font-medium text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
-                          <td className="px-6 py-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
                               tx.status === 'ACTIVE' 
-                                ? 'bg-palette-green/10 text-palette-green' 
-                                : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400'
+                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                                : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 border-transparent'
                             }`}>
-                              {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-palette-green mr-1.5 animate-pulse"/>}
+                              {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"/>}
                               {tx.status}
                             </span>
                           </td>
-                          <td className="px-6 py-3 text-slate-600 dark:text-slate-300 text-right text-xs">{tx.durationHours} {t('hour_short')}</td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-right text-xs font-mono font-bold">{tx.durationHours} {t('hour_short')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -181,18 +180,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Charts Widget - Using Palette Colors */}
-        <div className="bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-4 sm:p-5 flex flex-col">
+        <div className="bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
           <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-4 flex items-center gap-2">
             <MonitorPlay size={16} className="text-palette-mustard" /> {t('console_util')}
           </h3>
           
-          {/* FIX: Explicit Inline Style Height. Reduce height on mobile for visibility. */}
-          {/* Mobile height: 200px, Desktop height: 300px */}
           <div className="w-full h-[200px] sm:h-[300px]">
              {consoleUsageData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={consoleUsageData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} strokeOpacity={0.3} />
                     <XAxis 
                       dataKey="name" 
                       stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
@@ -208,27 +205,28 @@ const Dashboard: React.FC = () => {
                       axisLine={false} 
                     />
                     <Tooltip 
-                      cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.4 }}
+                      cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.2 }}
                       contentStyle={{ 
                         backgroundColor: theme === 'dark' ? '#181825' : '#ffffff', 
-                        borderColor: theme === 'dark' ? '#334155' : '#e2e8f0',
+                        borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
                         color: theme === 'dark' ? '#f8fafc' : '#0f172a',
                         borderRadius: '16px',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                        fontSize: '12px'
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        fontSize: '12px',
+                        padding: '12px'
                       }}
                     />
-                    <Bar dataKey="hours" radius={[4, 4, 0, 0]}>
+                    <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
                        {consoleUsageData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#D98D28' : '#F4CD46'} /> // Mustard & Yellow from Palette
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#facc15'} /> // Mustard & Yellow from Palette
                         ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
              ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                    <MonitorPlay size={32} className="mb-2 opacity-50"/>
-                    <span className="text-xs">{t('no_data_consoles')}</span>
+                    <MonitorPlay size={32} className="mb-2 opacity-30"/>
+                    <span className="text-xs opacity-50">{t('no_data_consoles')}</span>
                 </div>
              )}
           </div>

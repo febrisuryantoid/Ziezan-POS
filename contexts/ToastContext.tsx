@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { ToastMessage, ToastType } from '../types';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
@@ -14,7 +15,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addToast = useCallback((type: ToastType, title: string, message?: string) => {
     const id = Math.random().toString(36).substr(2, 9);
-    setToasts((prev) => [...prev, { id, type, title, message }]);
+    // Add to START of array so new toasts appear at the TOP of the stack visually
+    setToasts((prev) => [{ id, type, title, message }, ...prev]);
 
     // Auto remove after 4 seconds
     setTimeout(() => {
@@ -30,12 +32,12 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
       
-      {/* Toast Container - Fixed Position */}
-      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-3 max-w-[90vw] w-96 pointer-events-none">
+      {/* Toast Container - MOVED TO TOP (Below Header) */}
+      <div className="fixed top-24 right-0 left-0 sm:left-auto sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-3 px-4 sm:px-0 pointer-events-none">
         {toasts.map((toast) => (
           <div 
             key={toast.id}
-            className={`pointer-events-auto transform transition-all duration-300 animate-slide-in flex items-start gap-3 p-4 rounded-xl shadow-2xl border backdrop-blur-md ${
+            className={`pointer-events-auto w-full sm:w-96 transform transition-all duration-300 animate-slide-in flex items-start gap-3 p-4 rounded-xl shadow-2xl border backdrop-blur-md ${
               toast.type === 'success' ? 'bg-white/95 dark:bg-palette-navy/95 border-palette-green/20 dark:border-palette-green/30 text-slate-800 dark:text-white' :
               toast.type === 'error' ? 'bg-white/95 dark:bg-palette-navy/95 border-palette-red/20 dark:border-palette-red/30 text-slate-800 dark:text-white' :
               toast.type === 'warning' ? 'bg-white/95 dark:bg-palette-navy/95 border-palette-copper/20 dark:border-palette-copper/30 text-slate-800 dark:text-white' :
@@ -67,7 +69,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                <X size={16} />
              </button>
              
-             {/* Progress Bar Animation (Visual flair) */}
+             {/* Progress Bar Animation */}
              <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                 <div className={`h-full w-full origin-left animate-[shimmer_4s_linear_forwards] ${
                    toast.type === 'success' ? 'bg-palette-green' :

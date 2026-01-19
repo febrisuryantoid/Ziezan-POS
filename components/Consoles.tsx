@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ConsoleStatus, PaymentMethod, Console, Transaction, MemberStatus } from '../types';
@@ -373,10 +374,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID SYSTEM - Optimized for 320px screens */}
+        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
            
-           {/* Search - Full Width on Mobile */}
+           {/* Search */}
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
@@ -388,7 +389,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             />
           </div>
 
-          {/* Sort - Half Width on Mobile */}
+          {/* Sort */}
           <div className="relative col-span-1 md:col-span-6 lg:w-48">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
@@ -403,7 +404,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
              </select>
           </div>
 
-          {/* Filter Status - Half Width on Mobile */}
+          {/* Filter Status */}
           <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
              <select 
@@ -417,7 +418,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
              </select>
           </div>
 
-          {/* Add Button - Full Width on Mobile */}
+          {/* Add Button */}
           <button 
             onClick={() => setIsAdding(true)}
             className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
@@ -437,14 +438,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <h3 className="text-lg font-bold text-palette-navy dark:text-white">
             {t('active_consoles')}
           </h3>
-          {/* FIX TEXT COLOR CONTRAST: dark:text-slate-300 */}
           <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
-            Total Console: {filteredConsoles.length}
+            Total: {filteredConsoles.length}
           </span>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+        {/* Grid - RESPONSIVE TWEAK HERE */}
+        {/* min-[350px] handles iPhone 6 upwards to have 2 columns. Below that (320px iPhone 5S) stays 1 column */}
+        <div className="grid grid-cols-1 min-[350px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
           {currentConsoles.map(console => {
             const isActive = console.status === ConsoleStatus.IN_USE;
             const isMaintenance = console.status === ConsoleStatus.MAINTENANCE;
@@ -492,7 +493,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
                   {/* Status Badge */}
                   <div className="absolute top-3 left-3 z-20">
-                     <span className={`px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${
+                     <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${
                         isActive ? 'bg-palette-mustard/90 text-white animate-pulse' :
                         isMaintenance ? 'bg-palette-copper/90 text-white' :
                         'bg-palette-green/90 text-white'
@@ -503,8 +504,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                 </div>
 
                 {/* Content Body */}
-                <div className="p-4 sm:p-5 flex flex-col flex-1 relative">
-                   <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
+                <div className="p-3 sm:p-5 flex flex-col flex-1 relative">
+                   <h3 className="font-bold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
                    
                    {isActive && session ? (
                       <div className="mt-2 space-y-3">
@@ -513,13 +514,13 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{session.formattedRemaining}</span>
                          </div>
                          {/* Progress Bar */}
-                         <div className="h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                         <div className="h-1.5 sm:h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                             <div 
                               className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-palette-mustard'}`} 
                               style={{ width: `${session.progress}%` }}
                             ></div>
                          </div>
-                         <div className="flex justify-between text-[9px] sm:text-[10px] font-bold uppercase text-slate-400">
+                         <div className="flex justify-between text-[8px] sm:text-[10px] font-bold uppercase text-slate-400">
                             <span>{t('elapsed')}</span>
                             <span>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
                          </div>
@@ -534,19 +535,19 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                    )}
 
                    {/* Footer Action */}
-                   <div className="mt-4 sm:mt-5 pt-4 border-t border-slate-100 dark:border-white/5">
+                   <div className="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 dark:border-white/5">
                       {isActive && session ? (
                          <button 
                            onClick={() => initiateCheckout(session.tx)}
-                           className="w-full py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+                           className="w-full py-2.5 sm:py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-xs sm:text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
                          >
-                            <Power size={16} /> Checkout / Stop
+                            <Power size={14} className="sm:w-4 sm:h-4" /> Stop
                          </button>
                       ) : (
                          <button 
                            onClick={() => setSelectedConsoleId(console.id)}
                            disabled={isMaintenance}
-                           className={`w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${
+                           className={`w-full py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${
                                isMaintenance 
                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' 
                                : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-slate-900/10'
@@ -555,7 +556,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             {isMaintenance ? (
                                 <span className="text-[10px]">UNDER MAINTENANCE</span>
                             ) : (
-                                <><Play size={16} fill="currentColor" /> {t('start_session')}</>
+                                <><Play size={14} className="sm:w-4 sm:h-4" fill="currentColor" /> {t('start_session')}</>
                             )}
                          </button>
                       )}
@@ -814,10 +815,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       )}
 
-      {/* 3. ADD / EDIT CONSOLE MODAL */}
+      {/* 3. ADD / EDIT CONSOLE MODAL - RESPONSIVE LAYOUT FIX */}
       {(isAdding || editingConsole) && (
-         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm rounded-3xl shadow-2xl p-6">
+         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
+            <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6">
                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                   {isAdding ? <PlusCircle size={20} className="text-palette-mustard"/> : <Edit2 size={20} className="text-palette-mustard"/>}
                   {isAdding ? t('add_unit') : t('edit_unit')}
@@ -858,10 +859,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
          </div>
       )}
 
-      {/* 4. DELETE CONFIRMATION */}
+      {/* 4. DELETE CONFIRMATION - RESPONSIVE LAYOUT FIX */}
       {deletingConsole && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-white dark:bg-palette-navyLight rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+          <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
+              <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">
                   <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
                       <AlertTriangle size={32} />
                   </div>
@@ -875,10 +876,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           </div>
       )}
 
-      {/* 5. PRINT SELECTION MODAL */}
+      {/* 5. PRINT SELECTION MODAL - RESPONSIVE LAYOUT FIX */}
       {printTx && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-palette-navy/80 backdrop-blur-sm p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-palette-navy/80 backdrop-blur-sm sm:p-4 animate-fade-in">
+           <div className="bg-white dark:bg-palette-navyLight sm:rounded-2xl rounded-t-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3>
               
               <div className="grid grid-cols-1 gap-3">

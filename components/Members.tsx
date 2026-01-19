@@ -4,8 +4,9 @@ import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Calendar, FileText, User } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Calendar, FileText, User, MoreVertical, Copy } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
+import { getTierTheme } from './PublicMemberCard';
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
@@ -28,7 +29,6 @@ const Members: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
-  const [viewingMember, setViewingMember] = useState<Member | null>(null);
 
   // Form State (New Member)
   const [newName, setNewName] = useState('');
@@ -38,9 +38,9 @@ const Members: React.FC = () => {
   const [newPhoto, setNewPhoto] = useState('');
   const [newDob, setNewDob] = useState('');
   const [newJoinDate, setNewJoinDate] = useState(new Date().toISOString().split('T')[0]); // Default Today
-  const [newTier, setNewTier] = useState<MembershipTierId>('BASIC'); // Default Basic
+  const [newTier, setNewTier] = useState<MembershipTierId>('WARRIOR'); // Default Basic
   const [newNotes, setNewNotes] = useState('');
-  const [newBonusBalance, setNewBonusBalance] = useState<number>(0); // Added for consistency
+  const [newBonusBalance, setNewBonusBalance] = useState<number>(0); 
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
 
   // Refs
@@ -97,7 +97,7 @@ const Members: React.FC = () => {
         default: return 0;
       }
     });
-  }, [members, transactions, searchTerm, sortOption, filterTier, now]); // Added transactions & now to dependency
+  }, [members, transactions, searchTerm, sortOption, filterTier, now]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -130,7 +130,7 @@ const Members: React.FC = () => {
     setNewAddress('Nyomplong'); // Default Value
     setNewPhoto(''); setNewDob(''); 
     setNewJoinDate(new Date().toISOString().split('T')[0]);
-    setNewTier('BASIC'); // Default Value
+    setNewTier('WARRIOR'); // Default Value
     setNewNotes('');
     setNewBonusBalance(0);
     setIsAdding(false);
@@ -150,7 +150,6 @@ const Members: React.FC = () => {
         status: MemberStatus.ACTIVE,
         joinDate: newJoinDate ? new Date(newJoinDate).toISOString() : new Date().toISOString(),
         notes: newNotes,
-        // Optional: initialize with bonus if needed, though usually starts at 0
         freeHoursBalance: newBonusBalance 
       });
       addToast('success', 'Member Ditambahkan', `Selamat datang, ${newName}!`);
@@ -184,50 +183,6 @@ const Members: React.FC = () => {
       });
   };
 
-  // --- STYLE HELPERS ---
-  const getTierStyle = (id: string) => {
-    switch(id) {
-      case 'VIP':
-        return {
-          card: 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 border-yellow-400',
-          text: 'text-amber-950',
-          subText: 'text-amber-900/80',
-          badgeBg: 'bg-white/30 text-amber-950',
-          iconColor: 'text-amber-900',
-          shineOpacity: 'opacity-30',
-          btnText: 'text-amber-900 hover:bg-white/20'
-        };
-      case 'PLUS':
-        return {
-          card: 'bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 border-purple-500',
-          text: 'text-white',
-          subText: 'text-white/80',
-          badgeBg: 'bg-white/20 text-white',
-          iconColor: 'text-white',
-          shineOpacity: 'opacity-20',
-          btnText: 'text-white hover:bg-white/20'
-        };
-      default: // BASIC
-        return {
-          card: 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 border-slate-300 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 dark:border-slate-600',
-          text: 'text-slate-800 dark:text-white',
-          subText: 'text-slate-600 dark:text-slate-300',
-          badgeBg: 'bg-slate-400/20 text-slate-700 dark:text-slate-200',
-          iconColor: 'text-slate-600 dark:text-slate-300',
-          shineOpacity: 'opacity-40',
-          btnText: 'text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'
-        };
-    }
-  };
-
-  const getIcon = (id: string, colorClass: string) => {
-    switch(id) {
-      case 'VIP': return <Crown size={20} className={colorClass} />;
-      case 'PLUS': return <Star size={20} className={colorClass} />;
-      default: return <Shield size={20} className={colorClass} />;
-    }
-  };
-
   // --- PAGINATION RENDERER ---
   const renderPagination = () => {
     if (totalPages <= 1) return null;
@@ -249,13 +204,13 @@ const Members: React.FC = () => {
     };
 
     return (
-        <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in">
+        <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in pb-8">
             <button 
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} />
             </button>
 
             {getPageNumbers().map((page, idx) => (
@@ -263,7 +218,7 @@ const Members: React.FC = () => {
                     key={idx}
                     onClick={() => typeof page === 'number' && setCurrentPage(page)}
                     disabled={typeof page !== 'number'}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                         page === currentPage 
                         ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' 
                         : typeof page === 'number'
@@ -278,16 +233,16 @@ const Members: React.FC = () => {
             <button 
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} />
             </button>
         </div>
     );
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* HEADER & FILTERS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
@@ -363,90 +318,100 @@ const Members: React.FC = () => {
           </span>
         </div>
 
-        {/* MEMBER GRID */}
+        {/* MEMBER GRID - SLIMMER & RESPONSIVE (1 Col Mobile, 2 Col Tablet, 3 Col Desktop) */}
         {filteredMembers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
                 <Users size={48} className="text-slate-300 mb-4" />
                 <p className="text-slate-500 font-medium">{t('no_data_members')}</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {currentMembers.map(member => {
-                    const style = getTierStyle(member.membershipId);
+                    const theme = getTierTheme(member.membershipId);
                     const realtimePlaytime = getRealtimePlaytime(member);
                     const isPlaying = transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE');
+                    const TierIcon = theme.icon;
 
                     return (
-                    <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card} ${isPlaying ? 'ring-2 ring-palette-green/50' : ''}`}>
+                    <div key={member.id} className={`group relative rounded-2xl border ${theme.borderInner} bg-white dark:bg-[#0f1016] overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg dark:hover:shadow-none hover:-translate-y-0.5`}>
                         
-                        {/* Background Shimmer Effect */}
-                        <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
+                        {/* Subtle Header Gradient based on Tier */}
+                        <div className={`absolute top-0 inset-x-0 h-16 bg-gradient-to-b ${theme.conic} opacity-10 dark:opacity-20`}></div>
 
-                        {/* Header Section */}
-                        <div className="relative z-10 p-4 sm:p-5 flex justify-between items-start">
-                            <div className="flex gap-3 min-w-0">
-                                {/* MEMBER PHOTO */}
-                                <div className="relative shrink-0" onClick={() => setViewingMember(member)}>
+                        {/* Card Content - Slim Layout */}
+                        <div className="relative p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+                            
+                            {/* Avatar Section */}
+                            <div className="relative shrink-0">
+                                <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-br ${theme.conic}`}>
                                     <img 
                                         src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
                                         alt={member.name} 
-                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-white/20 shadow-md cursor-pointer border-2 border-white/10"
+                                        className="w-full h-full rounded-full object-cover bg-black border border-black/50"
                                     />
-                                    <div className={`absolute -bottom-1 -right-1 p-1 sm:p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
-                                        {getIcon(member.membershipId, style.iconColor)}
-                                    </div>
                                     {isPlaying && (
-                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-palette-green rounded-full border-2 border-white animate-pulse"></div>
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-black animate-pulse z-20"></div>
                                     )}
                                 </div>
-                                <div className="min-w-0 flex flex-col justify-center flex-1">
-                                    <h3 className={`font-bold text-base sm:text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
+                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${theme.badge} border border-white dark:border-black shadow-sm`}>
+                                    <TierIcon size={10} fill="currentColor" />
+                                </div>
+                            </div>
+
+                            {/* Identity Section */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <h3 className={`font-bold text-sm sm:text-base leading-tight truncate ${theme.text}`}>
                                         {member.name}
                                     </h3>
-                                    <p className={`text-[10px] sm:text-xs font-medium ${style.subText} truncate`}>@{member.nickname}</p>
+                                    {member.membershipId === 'MYTHIC' && <span className="text-[9px] font-black text-red-500 animate-pulse">GOD</span>}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                                    <span className="font-bold truncate">@{member.nickname}</span>
+                                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                    <span className={`font-black uppercase ${theme.text}`}>{member.membershipId}</span>
                                 </div>
                             </div>
-                            
-                            {/* Actions Dropdown / Buttons */}
-                            <div className="flex flex-col gap-1 shrink-0 ml-1">
-                                <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} className={`p-1.5 sm:p-2 rounded-full transition-colors ${style.btnText}`}>
-                                    <Edit2 size={16} />
+
+                            {/* Action Buttons (Compact) */}
+                            <div className="flex flex-col gap-1 shrink-0">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} 
+                                    className="p-1.5 rounded-lg bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-palette-mustard hover:bg-palette-mustard/10 transition-colors"
+                                >
+                                    <Edit2 size={14} />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} className={`p-1.5 sm:p-2 rounded-full transition-colors ${style.btnText} hover:text-red-500 hover:bg-red-500/10`}>
-                                    <Trash2 size={16} />
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); handleCopyLink(member.nickname); }} 
+                                    className="p-1.5 rounded-lg bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
+                                >
+                                    <Copy size={14} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Stats Section */}
-                        <div className="relative z-10 px-4 sm:px-5 pb-2 flex-1">
-                            <div className={`grid grid-cols-2 gap-2 p-2 sm:p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
-                                <div className="flex flex-col items-center">
-                                    <span className={`text-[9px] sm:text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
-                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text} ${isPlaying ? 'text-palette-green' : ''}`}>
-                                        <Clock size={12} className={isPlaying ? 'animate-pulse' : ''} /> 
-                                        {/* Use parseFloat to remove decimals if whole number, cleaner UI for 3 vs 3.0 */}
-                                        <span>{parseFloat(realtimePlaytime.toFixed(1))}h</span>
+                        {/* Slim Stats Grid */}
+                        <div className="px-3 pb-3 sm:px-4 sm:pb-4 mt-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-2 flex items-center justify-between border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                        <Clock size={12} />
+                                        <span className="text-[9px] font-bold uppercase">Main</span>
                                     </div>
+                                    <span className={`text-xs font-black ${theme.text}`}>
+                                        {parseFloat(realtimePlaytime.toFixed(1))}h
+                                    </span>
                                 </div>
-                                <div className="flex flex-col items-center border-l border-white/10">
-                                    <span className={`text-[9px] sm:text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('bonus_balance')}</span>
-                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text}`}>
-                                        <Gift size={12} /> 
-                                        <span>{member.freeHoursBalance}h</span>
+                                <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-2 flex items-center justify-between border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                        <Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} />
+                                        <span className="text-[9px] font-bold uppercase">Bonus</span>
                                     </div>
+                                    <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                                        {member.freeHoursBalance}h
+                                    </span>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Footer Info */}
-                        <div className="relative z-10 px-4 sm:px-5 py-3 border-t border-black/5 dark:border-white/5 flex justify-between items-center backdrop-blur-sm">
-                            <span className={`text-[9px] sm:text-[10px] font-mono font-medium opacity-80 ${style.subText}`}>
-                                {member.phone || '-'}
-                            </span>
-                            <button onClick={() => handleCopyLink(member.nickname)} className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 opacity-90 hover:opacity-100 ${style.text} hover:underline`}>
-                                <ExternalLink size={10} /> Kartu
-                            </button>
                         </div>
                     </div>
                 );})}
@@ -650,10 +615,10 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* DELETE CONFIRMATION */}
+      {/* DELETE CONFIRMATION - RESPONSIVE LAYOUT */}
       {deletingMemberId && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-white dark:bg-palette-navyLight rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+          <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
+              <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">
                   <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
                       <AlertTriangle size={32} />
                   </div>

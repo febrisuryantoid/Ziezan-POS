@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -20,6 +21,7 @@ const Members = React.lazy(() => import('./components/Members'));
 const Reports = React.lazy(() => import('./components/Reports'));
 const Settings = React.lazy(() => import('./components/Settings'));
 const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
+const Leaderboard = React.lazy(() => import('./components/Leaderboard')); // NEW
 
 const App: React.FC = () => {
   // 1. Initialize Route/Platform State IMMEDIATELY (Lazy Initializer)
@@ -33,13 +35,18 @@ const App: React.FC = () => {
      return null;
   });
 
+  // NEW: Detect Rank Page
+  const [isRankPage] = useState<boolean>(() => {
+      return window.location.pathname === '/rank' || window.location.pathname === '/rank/';
+  });
+
   const [isTvMode, setIsTvMode] = useState<boolean>(() => isTV());
 
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // 2. Only show splash if NOT a public page AND NOT TV mode
-  const [showSplash, setShowSplash] = useState(() => !publicMemberNickname && !isTvMode);
+  const [showSplash, setShowSplash] = useState(() => !publicMemberNickname && !isTvMode && !isRankPage);
 
   useEffect(() => {
     // 3. Platform Check (Double check for resizing events) & Session Restore
@@ -95,6 +102,17 @@ const App: React.FC = () => {
              </Suspense>
          </DataProvider>
        );
+    }
+
+    // NEW: Leaderboard Page (Priority 1.5)
+    if (isRankPage) {
+        return (
+            <DataProvider>
+                <Suspense fallback={<div className="h-screen w-full bg-[#020205] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
+                    <Leaderboard />
+                </Suspense>
+            </DataProvider>
+        );
     }
 
     // 2. TV Mode (Priority 2 - Skip Splash)
