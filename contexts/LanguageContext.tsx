@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'id' | 'en';
@@ -193,6 +194,16 @@ const dictionary = {
     export_csv: "Export CSV",
     search_reports_placeholder: "Cari member / console...",
     total_data_count: "Total: {count} Data",
+
+    // Leaderboard & Public
+    leaderboard_title: "Papan Juara",
+    season_label: "Musim",
+    search_player: "Cari Teman...",
+    challengers_title: "Penantang",
+    active_count: "Aktif",
+    hours_played: "Jam Main",
+    live_status: "LAGI MAIN",
+    no_other_players: "Belum ada pemain lain",
 
     // --- NEWLY ADDED FOR AUDIT ---
     since: "Terdaftar",
@@ -405,6 +416,16 @@ const dictionary = {
     export_csv: "Export CSV",
     search_reports_placeholder: "Search member / console...",
     total_data_count: "Total: {count} Records",
+
+    // Leaderboard & Public
+    leaderboard_title: "Champion Board",
+    season_label: "Season",
+    search_player: "Search Friend...",
+    challengers_title: "Challengers",
+    active_count: "Active",
+    hours_played: "Play Hours",
+    live_status: "PLAYING",
+    no_other_players: "No other players yet",
 
     // --- NEWLY ADDED FOR AUDIT ---
     since: "Member Since",

@@ -1,12 +1,14 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme, GamingBackground } from './PublicMemberCard';
 import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, ChevronUp, Hexagon } from 'lucide-react';
 import { Member } from '../types';
 
 const Leaderboard: React.FC = () => {
   const { members, transactions, refreshData } = useData();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -73,39 +75,39 @@ const Leaderboard: React.FC = () => {
       let height = 'h-32'; // Base pedestal height
       let colorClass = 'from-slate-700 to-slate-900';
       let borderClass = 'border-slate-600';
-      let shadowClass = 'shadow-slate-500/20';
       let glowColor = 'bg-slate-500';
       let iconColor = 'text-slate-400';
       let scale = 'scale-90';
       let zIndex = 'z-10';
+      let shineColor = '#64748b';
 
       if (isFirst) {
           height = 'h-48';
           colorClass = 'from-yellow-600/80 via-yellow-500/20 to-transparent';
           borderClass = 'border-yellow-400';
-          shadowClass = 'shadow-yellow-500/50';
           glowColor = 'bg-yellow-400';
           iconColor = 'text-yellow-300';
           scale = 'scale-110 -translate-y-4';
           zIndex = 'z-30';
+          shineColor = '#facc15'; // Gold
       } else if (isSecond) {
           height = 'h-36';
           colorClass = 'from-slate-400/60 via-slate-400/20 to-transparent';
           borderClass = 'border-slate-300';
-          shadowClass = 'shadow-slate-400/50';
           glowColor = 'bg-slate-300';
           iconColor = 'text-slate-200';
           scale = 'scale-100';
           zIndex = 'z-20';
+          shineColor = '#cbd5e1'; // Silver
       } else if (isThird) {
           height = 'h-28';
           colorClass = 'from-orange-700/60 via-orange-600/20 to-transparent';
           borderClass = 'border-orange-500';
-          shadowClass = 'shadow-orange-500/50';
           glowColor = 'bg-orange-500';
           iconColor = 'text-orange-400';
           scale = 'scale-95 translate-y-2';
           zIndex = 'z-10';
+          shineColor = '#f97316'; // Bronze
       }
 
       if (!member) {
@@ -118,8 +120,19 @@ const Leaderboard: React.FC = () => {
       }
 
       return (
-          <div className={`flex flex-col items-center justify-end w-1/3 transition-all duration-700 ${scale} ${zIndex}`}>
+          <div className={`flex flex-col items-center justify-end w-1/3 transition-all duration-700 ${scale} ${zIndex} relative`}>
               
+              {/* === NEW: SHINING GOD-RAY ANIMATION === */}
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] -z-10 opacity-30 pointer-events-none">
+                  <div 
+                    className="w-full h-full animate-[spin_8s_linear_infinite]"
+                    style={{
+                        background: `conic-gradient(from 0deg, transparent 0deg, ${shineColor} 20deg, transparent 40deg, transparent 180deg, ${shineColor} 200deg, transparent 220deg)`,
+                        filter: 'blur(20px)'
+                    }}
+                  ></div>
+              </div>
+
               {/* Avatar Section */}
               <div className="relative mb-3 group cursor-pointer">
                   {isFirst && (
@@ -169,11 +182,13 @@ const Leaderboard: React.FC = () => {
                   <span className="font-mono text-2xl sm:text-3xl font-black text-white drop-shadow-lg">
                       {score.toFixed(0)}
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Hours</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">{t('hours_played')}</span>
               </div>
           </div>
       );
   };
+
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="min-h-screen w-full bg-[#020205] text-white font-sans relative flex flex-col items-center overflow-x-hidden">
@@ -186,10 +201,10 @@ const Leaderboard: React.FC = () => {
             <div className="pt-8 pb-4 px-6 text-center shrink-0">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-4 backdrop-blur-md">
                     <Trophy size={14} className="text-yellow-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">Season 2026</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">{t('season_label')} {currentYear}</span>
                 </div>
                 <h1 className="text-4xl font-black uppercase tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-500 drop-shadow-sm">
-                    Leaderboard
+                    {t('leaderboard_title')}
                 </h1>
                 
                 {/* Search */}
@@ -199,7 +214,7 @@ const Leaderboard: React.FC = () => {
                         <Search className="text-slate-400 mr-3" size={18} />
                         <input 
                             type="text" 
-                            placeholder="Cari Player..." 
+                            placeholder={t('search_player')} 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="bg-transparent border-none outline-none text-sm font-bold text-white placeholder-slate-500 w-full"
@@ -229,9 +244,9 @@ const Leaderboard: React.FC = () => {
                 
                 <div className="px-6 pb-4 flex justify-between items-end border-b border-white/5">
                     <h3 className="font-bold text-slate-400 text-xs uppercase tracking-widest flex items-center gap-2">
-                        <Flame size={14} className="text-orange-500" /> Challengers
+                        <Flame size={14} className="text-orange-500" /> {t('challengers_title')}
                     </h3>
-                    <span className="text-[10px] font-mono text-slate-600">{challengers.length} Active</span>
+                    <span className="text-[10px] font-mono text-slate-600">{challengers.length} {t('active_count')}</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 pb-20">
@@ -279,13 +294,13 @@ const Leaderboard: React.FC = () => {
                                         <div className="font-mono font-black text-white text-base">
                                             {score.toFixed(0)}
                                         </div>
-                                        <div className="text-[10px] font-bold text-slate-600 uppercase">Hours</div>
+                                        <div className="text-[10px] font-bold text-slate-600 uppercase">{t('hours_short')}</div>
                                     </div>
                                     
                                     {/* Playing Indicator Text */}
                                     {isPlaying && (
                                         <div className="absolute right-3 top-2 text-[8px] font-bold text-emerald-400 animate-pulse tracking-widest uppercase">
-                                            Live
+                                            {t('live_status')}
                                         </div>
                                     )}
                                 </div>
@@ -294,7 +309,7 @@ const Leaderboard: React.FC = () => {
                     ) : (
                         <div className="py-10 text-center flex flex-col items-center text-slate-600">
                             <Search size={24} className="mb-2 opacity-50"/>
-                            <p className="text-xs">Tidak ada player lain</p>
+                            <p className="text-xs">{t('no_other_players')}</p>
                         </div>
                     )}
                 </div>
