@@ -67,53 +67,39 @@ const Leaderboard: React.FC = () => {
       const isThird = rank === 3;
 
       const score = member ? getRealtimeScore(member) : 0;
+      // THEME from MEMBER TIER (Dynamic Color Request)
       const theme = member ? getTierTheme(member.membershipId) : null;
       const isPlaying = member ? transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE') : false;
 
-      // Visual Config
+      // Visual Config (Geometry)
       let pillarHeight = 'h-40'; // Base height
       let avatarSize = 'w-20 h-20';
-      let gradientBar = 'from-slate-800/80 to-slate-900/0';
-      let borderColors = 'border-slate-600';
-      let glowColor = 'shadow-slate-500/20';
-      let textColor = 'text-slate-300';
-      let rankBadgeColor = 'bg-slate-700';
       let zIndex = 'z-10';
       let translateY = 'translate-y-0';
+      
+      // Dynamic Colors from Tier Theme (or fallback if empty)
+      const borderGradient = theme ? `bg-gradient-to-b ${theme.conic}` : 'bg-slate-700';
+      const textClass = theme ? theme.text : 'text-slate-400';
+      const badgeColor = theme ? theme.badge : 'bg-slate-700 text-white';
 
       if (isFirst) {
           pillarHeight = 'h-56'; // Tallest
           avatarSize = 'w-28 h-28';
-          gradientBar = 'from-yellow-500/20 via-yellow-600/10 to-transparent';
-          borderColors = 'border-yellow-400/50';
-          glowColor = 'shadow-[0_0_40px_-10px_rgba(250,204,21,0.5)]';
-          textColor = 'text-yellow-400';
-          rankBadgeColor = 'bg-yellow-500';
           zIndex = 'z-30';
           translateY = '-translate-y-6';
       } else if (isSecond) {
           pillarHeight = 'h-44';
           avatarSize = 'w-20 h-20';
-          gradientBar = 'from-slate-400/20 via-slate-500/10 to-transparent';
-          borderColors = 'border-slate-300/50';
-          glowColor = 'shadow-[0_0_30px_-10px_rgba(148,163,184,0.3)]';
-          textColor = 'text-slate-300';
-          rankBadgeColor = 'bg-slate-400';
           zIndex = 'z-20';
           translateY = 'translate-y-0';
       } else if (isThird) {
           pillarHeight = 'h-36';
           avatarSize = 'w-20 h-20';
-          gradientBar = 'from-orange-700/20 via-orange-800/10 to-transparent';
-          borderColors = 'border-orange-500/50';
-          glowColor = 'shadow-[0_0_30px_-10px_rgba(249,115,22,0.3)]';
-          textColor = 'text-orange-400';
-          rankBadgeColor = 'bg-orange-600';
           zIndex = 'z-10';
           translateY = 'translate-y-4';
       }
 
-      if (!member) {
+      if (!member || !theme) {
           return (
               <div className={`flex flex-col items-center justify-end w-1/3 ${translateY} opacity-10`}>
                   <div className={`${avatarSize} rounded-full bg-white/5 border-2 border-dashed border-white/20 mb-4`}></div>
@@ -125,10 +111,10 @@ const Leaderboard: React.FC = () => {
       return (
           <div className={`flex flex-col items-center justify-end w-1/3 transition-all duration-700 ${translateY} ${zIndex} relative group`}>
               
-              {/* GOD RAY EFFECT (First Place Only) */}
+              {/* DYNAMIC GOD RAY EFFECT (Uses Tier Color) */}
               {isFirst && (
-                  <div className="absolute top-[-50px] left-1/2 -translate-x-1/2 w-[200%] h-[150%] -z-10 pointer-events-none opacity-40">
-                      <div className="w-full h-full animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(250,204,21,0.3)_30deg,transparent_60deg,transparent_180deg,rgba(250,204,21,0.3)_210deg,transparent_240deg)] blur-xl rounded-full"></div>
+                  <div className="absolute top-[-50px] left-1/2 -translate-x-1/2 w-[250%] h-[180%] -z-10 pointer-events-none opacity-40">
+                      <div className={`w-full h-full animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,currentColor_20deg,transparent_60deg,transparent_180deg,currentColor_200deg,transparent_240deg)] ${textClass} blur-2xl rounded-full`}></div>
                   </div>
               )}
 
@@ -138,13 +124,13 @@ const Leaderboard: React.FC = () => {
                   {isFirst && (
                       <Crown 
                         size={40} 
-                        fill="gold" 
-                        className="text-yellow-300 absolute -top-10 animate-bounce drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] z-20" 
+                        fill="currentColor" 
+                        className={`${textClass} absolute -top-10 animate-bounce drop-shadow-[0_0_15px_currentColor] z-20`} 
                       />
                   )}
 
-                  {/* Image Ring */}
-                  <div className={`relative rounded-full p-[3px] bg-gradient-to-b ${isFirst ? 'from-yellow-300 to-yellow-600' : isSecond ? 'from-white to-slate-500' : 'from-orange-300 to-orange-700'} ${glowColor}`}>
+                  {/* Image Ring with Tier Gradient */}
+                  <div className={`relative rounded-full p-[3px] bg-gradient-to-tr ${theme.conic} shadow-[0_0_20px_-5px_currentColor] ${textClass}`}>
                       <div className={`${avatarSize} rounded-full overflow-hidden bg-black relative`}>
                           <img 
                             src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
@@ -159,37 +145,40 @@ const Leaderboard: React.FC = () => {
                           )}
                       </div>
                       
-                      {/* Rank Badge - Posisi menempel di cincin bawah */}
-                      <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-black ${rankBadgeColor} border-2 border-[#020205] shadow-lg z-20`}>
+                      {/* Rank Badge */}
+                      <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-[#020205] shadow-lg z-20 ${badgeColor}`}>
                           {rank}
                       </div>
                   </div>
                   
-                  {/* Name & Tier - Floating slightly below avatar */}
+                  {/* Name & Tier */}
                   <div className="mt-4 text-center">
-                      <h3 className={`font-black text-sm sm:text-base leading-tight truncate max-w-[100px] drop-shadow-md ${isFirst ? 'text-white' : 'text-slate-200'}`}>
+                      <h3 className={`font-black text-sm sm:text-base leading-tight truncate max-w-[100px] drop-shadow-md text-white`}>
                           {member.nickname}
                       </h3>
-                      <div className={`text-[8px] font-bold uppercase tracking-wider opacity-80 mt-0.5 ${theme?.text}`}>
-                          {theme?.id}
+                      <div className={`text-[8px] font-bold uppercase tracking-wider opacity-80 mt-0.5 ${theme.text}`}>
+                          {theme.id}
                       </div>
                   </div>
               </div>
 
-              {/* Pillar (Score Box) */}
-              <div className={`w-full ${pillarHeight} rounded-t-3xl border-t border-x ${borderColors} bg-gradient-to-b ${gradientBar} backdrop-blur-sm relative overflow-hidden flex flex-col items-center justify-start pt-3 pb-10`}>
-                  {/* Inner shine */}
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+              {/* Pillar (Score Box) with Dynamic Border */}
+              <div className={`w-full ${pillarHeight} rounded-t-3xl border-x border-t border-white/10 bg-gradient-to-b from-[#1a1a2e]/80 to-[#020205] backdrop-blur-md relative overflow-hidden flex flex-col items-center justify-start pt-3 pb-10`}>
                   
-                  <span className={`font-mono text-3xl sm:text-4xl font-black tracking-tighter drop-shadow-lg ${textColor}`}>
+                  {/* Animated Border Top specific to Tier */}
+                  <div className={`absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r ${theme.conic} opacity-80`}></div>
+                  {/* Subtle Glow inside pillar */}
+                  <div className={`absolute top-0 inset-x-0 h-20 bg-gradient-to-b ${theme.conic} opacity-10 pointer-events-none`}></div>
+                  
+                  <span className={`font-mono text-3xl sm:text-4xl font-black tracking-tighter drop-shadow-lg ${textClass}`}>
                       {score.toFixed(0)}
                   </span>
-                  <span className={`text-[9px] font-bold uppercase tracking-[0.2em] ${isFirst ? 'text-yellow-200/60' : 'text-slate-400/60'}`}>
-                      {t('hours_played').split(' ')[0]} {/* Ambil kata pertama 'JAM' */}
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                      {t('hour_short')}
                   </span>
                   
                   {/* Decorative Elements inside pillar */}
-                  {isFirst && <div className="mt-4 w-1 bg-gradient-to-b from-yellow-400/50 to-transparent h-full rounded-full blur-[1px]"></div>}
+                  {isFirst && <div className={`mt-4 w-0.5 h-full bg-gradient-to-b ${theme.conic} opacity-50`}></div>}
               </div>
           </div>
       );
@@ -198,11 +187,12 @@ const Leaderboard: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="h-screen w-full bg-[#020205] text-white font-sans relative flex flex-col items-center overflow-hidden">
+    // FIX: h-[100dvh] ensures it fits mobile screens perfectly without browser bar issues
+    <div className="h-[100dvh] w-full bg-[#020205] text-white font-sans relative flex flex-col items-center overflow-hidden">
         <GamingBackground />
         
-        {/* --- MAIN CONTAINER (Mobile Centered) --- */}
-        <div className="w-full max-w-md h-full relative z-10 flex flex-col bg-gradient-to-b from-[#0f1016]/80 to-[#020205] backdrop-blur-sm shadow-2xl overflow-hidden">
+        {/* --- MAIN CONTAINER --- */}
+        <div className="w-full max-w-md h-full relative z-10 flex flex-col bg-gradient-to-b from-[#0f1016]/30 to-[#020205] backdrop-blur-[2px] shadow-2xl overflow-hidden">
             
             {/* Header Area */}
             <div className="pt-6 pb-2 px-6 text-center shrink-0 relative z-20">
@@ -216,7 +206,6 @@ const Leaderboard: React.FC = () => {
                 
                 {/* Search Bar - Modern Glass */}
                 <div className="mt-4 relative mx-auto w-full max-w-[280px]">
-                    <div className="absolute inset-0 bg-palette-mustard/20 blur-xl rounded-full opacity-30"></div>
                     <div className="relative flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2.5 focus-within:border-palette-mustard/50 focus-within:bg-black/40 transition-all shadow-inner">
                         <Search className="text-slate-400 mr-2 shrink-0" size={16} />
                         <input 
@@ -231,11 +220,8 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {/* --- PODIUM SECTION --- */}
-            {/* This section takes fixed space and aligns items to bottom */}
-            <div className="flex-1 flex items-end justify-center px-4 pb-0 pt-4 relative shrink-0 min-h-[320px]">
-                {/* Background Glow behind Podium */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-t from-palette-mustard/20 via-purple-500/10 to-transparent blur-3xl rounded-full -z-10"></div>
-                
+            {/* Flex-1 ensures this section takes available space, pushing list down */}
+            <div className="flex-1 flex items-end justify-center px-4 pb-0 pt-4 relative shrink-0 min-h-[300px]">
                 {/* Podium Arrangement: 2 - 1 - 3 */}
                 <div className="flex items-end justify-center gap-2 w-full max-w-sm mb-[-20px] z-10">
                     <PodiumPillar member={filledTop3[1]} rank={2} />
@@ -246,7 +232,7 @@ const Leaderboard: React.FC = () => {
 
             {/* --- LIST SECTION (Sliding Sheet) --- */}
             {/* Creates a "Card" effect that slides up over the bottom of the pillars */}
-            <div className="flex-1 bg-[#0f1016] rounded-t-[35px] border-t border-white/10 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col z-20 mt-[-10px]">
+            <div className="flex-1 bg-[#0f1016]/90 rounded-t-[35px] border-t border-white/10 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col z-20 mt-[-10px] backdrop-blur-xl">
                 
                 {/* Sheet Handle */}
                 <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mt-3 mb-2 shrink-0"></div>
@@ -280,9 +266,7 @@ const Leaderboard: React.FC = () => {
                                             <img src={m.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black" alt={m.nickname}/>
                                         </div>
                                         {isPlaying && (
-                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-black rounded-full flex items-center justify-center border border-emerald-500 shadow-sm z-10">
-                                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                            </div>
+                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border border-black animate-pulse z-10"></div>
                                         )}
                                     </div>
 
