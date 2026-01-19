@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
@@ -9,7 +10,7 @@ import { optimizeImage } from '../utils/imageOptimizer';
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
 const Members: React.FC = () => {
-  const { members, membershipConfigs, addMember, deleteMember, updateMember } = useData();
+  const { members, transactions, membershipConfigs, addMember, deleteMember, updateMember } = useData();
   const { t } = useLanguage();
   const { addToast } = useToast();
 
@@ -17,6 +18,7 @@ const Members: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   const [filterTier, setFilterTier] = useState<string>('ALL');
+  const [now, setNow] = useState(new Date()); // For Realtime updates
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,10 +47,32 @@ const Members: React.FC = () => {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
 
+  // Realtime Tick (Update every 1 minute to refresh playtime stats in list)
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterTier, sortOption]);
+
+  // -- HELPER: Calculate Realtime Playtime --
+  const getRealtimePlaytime = (member: Member) => {
+     // 1. Get stored historical time
+     let total = member.totalPlayTime;
+     
+     // 2. Find ACTIVE transaction
+     const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
+     
+     // 3. Add FULL DURATION of active transaction (Projected Total)
+     if (activeTx) {
+         total += activeTx.durationHours;
+     }
+
+     return total;
+  };
 
   // -- FILTER & SORT LOGIC --
   const filteredMembers = useMemo(() => {
@@ -66,12 +90,14 @@ const Members: React.FC = () => {
       switch (sortOption) {
         case 'NAME_ASC': return a.name.localeCompare(b.name);
         case 'NAME_DESC': return b.name.localeCompare(a.name);
-        case 'PLAYTIME_DESC': return b.totalPlayTime - a.totalPlayTime;
+        case 'PLAYTIME_DESC': 
+            // Sort by REALTIME playtime
+            return getRealtimePlaytime(b) - getRealtimePlaytime(a);
         case 'JOIN_DATE_ASC': return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
         default: return 0;
       }
     });
-  }, [members, searchTerm, sortOption, filterTier]);
+  }, [members, transactions, searchTerm, sortOption, filterTier, now]); // Added transactions & now to dependency
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -261,7 +287,7 @@ const Members: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-20">
+    <div className="flex flex-col gap-6">
       {/* HEADER & FILTERS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
@@ -347,8 +373,11 @@ const Members: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 {currentMembers.map(member => {
                     const style = getTierStyle(member.membershipId);
+                    const realtimePlaytime = getRealtimePlaytime(member);
+                    const isPlaying = transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE');
+
                     return (
-                    <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card}`}>
+                    <div key={member.id} className={`group relative rounded-3xl border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${style.card} ${isPlaying ? 'ring-2 ring-palette-green/50' : ''}`}>
                         
                         {/* Background Shimmer Effect */}
                         <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none z-0 ${style.shineOpacity}`} style={{ width: '200%' }}></div>
@@ -366,6 +395,9 @@ const Members: React.FC = () => {
                                     <div className={`absolute -bottom-1 -right-1 p-1 sm:p-1.5 rounded-full shadow-sm backdrop-blur-md border border-white/20 ${style.badgeBg}`}>
                                         {getIcon(member.membershipId, style.iconColor)}
                                     </div>
+                                    {isPlaying && (
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-palette-green rounded-full border-2 border-white animate-pulse"></div>
+                                    )}
                                 </div>
                                 <div className="min-w-0 flex flex-col justify-center flex-1">
                                     <h3 className={`font-bold text-base sm:text-lg leading-tight truncate ${style.text} cursor-pointer hover:underline decoration-1`} onClick={() => setViewingMember(member)}>
@@ -391,9 +423,10 @@ const Members: React.FC = () => {
                             <div className={`grid grid-cols-2 gap-2 p-2 sm:p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner ${style.badgeBg} bg-opacity-40`}>
                                 <div className="flex flex-col items-center">
                                     <span className={`text-[9px] sm:text-[10px] uppercase font-bold opacity-70 ${style.text}`}>{t('total_play')}</span>
-                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text}`}>
-                                        <Clock size={12} /> 
-                                        <span>{member.totalPlayTime}h</span>
+                                    <div className={`flex items-center gap-1 font-bold text-xs sm:text-sm ${style.text} ${isPlaying ? 'text-palette-green' : ''}`}>
+                                        <Clock size={12} className={isPlaying ? 'animate-pulse' : ''} /> 
+                                        {/* Use parseFloat to remove decimals if whole number, cleaner UI for 3 vs 3.0 */}
+                                        <span>{parseFloat(realtimePlaytime.toFixed(1))}h</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center border-l border-white/10">
@@ -509,7 +542,7 @@ const Members: React.FC = () => {
                                <div className="relative">
                                   <FileText className="absolute left-3 top-3 text-slate-400" size={16} />
                                   <textarea rows={2} value={newNotes} onChange={e => setNewNotes(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white resize-none" placeholder={t('notes_placeholder')} />
-                               </div>
+                                </div>
                                <p className="text-[9px] text-slate-400">*Catatan ini akan otomatis terisi riwayat bonus ulang tahun.</p>
                           </div>
                       </form>

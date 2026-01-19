@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { LayoutDashboard, Gamepad2, Users, Settings, LogOut, FileBarChart, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -194,9 +195,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         </header>
 
         {/* Content Scroll Area */}
-        {/* FIX: Optimized padding for 320px devices (p-3) */}
-        <main className="flex-1 overflow-y-auto scroll-smooth pb-32 md:pb-8 overscroll-contain bg-slate-50/50 dark:bg-black/20">
-          <div className="w-full h-full p-3 sm:p-6 lg:p-8 animate-fade-in">
+        {/* FIX: Removed pb-40 from main and moved to inner div with min-h-full to ensure content clears the floating nav properly */}
+        <main className="flex-1 overflow-y-auto scroll-smooth overscroll-contain bg-slate-50/50 dark:bg-black/20">
+          <div className="w-full min-h-full p-3 sm:p-6 lg:p-8 pb-32 md:pb-8 animate-fade-in">
             {children}
           </div>
         </main>

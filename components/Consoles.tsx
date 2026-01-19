@@ -365,7 +365,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-20">
+    <div className="flex flex-col gap-6">
       {/* 1. Header & Toolbar */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">

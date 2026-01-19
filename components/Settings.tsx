@@ -259,7 +259,7 @@ const Settings: React.FC = () => {
                         </button>
                         <input type="file" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
                     </div>
-                    {/* Fixed: Use flex-1 to prevent overflow in flex container */}
+                    {/* Fixed: Use flex-1 instead of w-full to prevent overflow in flex container */}
                     <div className="flex-1 min-w-0 space-y-2">
                         <label className="text-[10px] text-slate-400 block truncate">{t('or_use_url')}</label>
                         <div className="relative w-full">
@@ -763,7 +763,8 @@ const Settings: React.FC = () => {
                 {content}
                 
                 {/* STATIC SAVE BUTTON AT BOTTOM OF SCROLL AREA */}
-                <div className="mt-8 mb-safe pb-8">
+                {/* FIX: Increased padding bottom (pb-12) to ensure button is not cut off by safe area */}
+                <div className="mt-8 mb-safe pb-12">
                     <button 
                         onClick={handleSave}
                         disabled={isSaving}
