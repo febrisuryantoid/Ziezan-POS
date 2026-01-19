@@ -294,7 +294,7 @@ const Leaderboard: React.FC = () => {
                                         <div className="font-mono font-black text-white text-base">
                                             {score.toFixed(0)}
                                         </div>
-                                        <div className="text-[10px] font-bold text-slate-600 uppercase">{t('hours_short')}</div>
+                                        <div className="text-[10px] font-bold text-slate-600 uppercase">{t('hour_short')}</div>
                                     </div>
                                     
                                     {/* Playing Indicator Text */}
