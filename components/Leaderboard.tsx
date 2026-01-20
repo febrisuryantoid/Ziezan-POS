@@ -48,7 +48,7 @@ const Leaderboard: React.FC = () => {
   }, [members, transactions]);
 
   const filteredRankings = useMemo(() => {
-      return allRankings.filter(m => m.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
+      return allRankings.filter(m => (m.nickname || '').toLowerCase().includes(searchTerm.toLowerCase()));
   }, [allRankings, searchTerm]);
 
   // Split into Podium (Top 3) and Challengers (Rest)

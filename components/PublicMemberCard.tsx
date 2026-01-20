@@ -10,15 +10,20 @@ interface PublicMemberCardProps {
 }
 
 // --- BACKGROUND PATTERNS ---
-const DragonPattern = ({ color }: { color: string }) => (
-  <div 
-    className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
-    style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-        maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
-    }}
-  ></div>
-);
+const DragonPattern = ({ color }: { color: string }) => {
+  // Safe color encoding for SVG data URI
+  const safeColor = color ? color.replace('#', '%23') : '%23ffffff';
+  
+  return (
+    <div 
+        className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
+        style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${safeColor}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+            maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
+        }}
+    ></div>
+  );
+};
 
 export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string }) => (
   <div className="fixed inset-0 z-0 pointer-events-none bg-[#020205] overflow-hidden">
@@ -46,7 +51,6 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
     ></div>
 
     {/* SEAMLESS GRID PATTERN */}
-    {/* Micro-grid technology look: Connected lines, no gaps */}
     <div 
         className="absolute inset-0 opacity-[0.08]"
         style={{
@@ -59,7 +63,7 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
         }}
     ></div>
 
-    {/* Scanline Overlay for Retro Tech Feel */}
+    {/* Scanline Overlay */}
     <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20"></div>
   </div>
 );
@@ -67,10 +71,10 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
 // --- LUXURY TIER THEME CONFIGURATION (9 RANKS) ---
 export const getTierTheme = (id: string) => {
   switch(id) {
-    case 'MYTHICAL_IMMORTAL': // ULTIMATE GOD TIER (Red/Gold/Fiery)
+    case 'MYTHICAL_IMMORTAL': 
       return {
         id: 'MYTHICAL_IMMORTAL',
-        conic: 'from-[#facc15] via-[#ef4444] to-[#7f1d1d]', // Gold to Red to Dark Red
+        conic: 'from-[#facc15] via-[#ef4444] to-[#7f1d1d]',
         shadow: 'shadow-[0_0_90px_-10px_rgba(239,68,68,0.9)]', 
         text: 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-red-500 to-rose-400',
         textGlow: 'drop-shadow-[0_0_20px_rgba(220,38,38,1)]',
@@ -81,7 +85,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-red-900 to-black text-red-100 border border-red-500',
         particleColor: '#ef4444'
       };
-    case 'MYTHICAL_GLORY': // PINK/RED GLOW
+    case 'MYTHICAL_GLORY': 
       return {
         id: 'MYTHICAL_GLORY',
         conic: 'from-[#ec4899] via-[#be185d] to-[#831843]',
@@ -95,7 +99,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-pink-900 to-rose-900 text-pink-100 border border-pink-600',
         particleColor: '#f472b6'
       };
-    case 'MYTHICAL_HONOR': // BLUE/PURPLE
+    case 'MYTHICAL_HONOR':
       return {
         id: 'MYTHICAL_HONOR',
         conic: 'from-[#3b82f6] via-[#6366f1] to-[#4338ca]',
@@ -109,7 +113,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-blue-900 to-indigo-900 text-blue-100 border border-indigo-500',
         particleColor: '#60a5fa'
       };
-    case 'MYTHIC': // GOLD/BLACK/BLUE MIX
+    case 'MYTHIC': 
       return {
         id: 'MYTHIC',
         conic: 'from-[#eab308] via-[#3b82f6] to-[#a855f7]',
@@ -123,7 +127,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-yellow-800 to-amber-900 text-yellow-100 border border-yellow-500/50',
         particleColor: '#facc15'
       };
-    case 'LEGEND': // BRIGHT GOLD/HOLY
+    case 'LEGEND': 
       return {
         id: 'LEGEND',
         conic: 'from-[#fef08a] via-[#fde047] to-[#eab308]', 
@@ -137,7 +141,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-yellow-700 to-amber-700 text-white shadow-yellow-500/40',
         particleColor: '#fef08a'
       };
-    case 'EPIC': // GREEN/TEAL
+    case 'EPIC': 
       return {
         id: 'EPIC',
         conic: 'from-[#059669] via-[#34d399] to-[#06b6d4]', 
@@ -151,7 +155,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/50',
         particleColor: '#34d399'
       };
-    case 'GRANDMASTER': // GOLD/AMBER
+    case 'GRANDMASTER': 
       return {
         id: 'GRANDMASTER',
         conic: 'from-[#d97706] via-[#f59e0b] to-[#b45309]', 
@@ -165,7 +169,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-amber-700 to-orange-700 text-white shadow-amber-500/40',
         particleColor: '#fbbf24'
       };
-    case 'ELITE': // SILVER/BLUE-ISH
+    case 'ELITE': 
       return {
         id: 'ELITE',
         conic: 'from-[#64748b] via-[#94a3b8] to-[#cbd5e1]', 
@@ -179,7 +183,7 @@ export const getTierTheme = (id: string) => {
         badge: 'bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-slate-500/30',
         particleColor: '#cbd5e1'
       };
-    default: // WARRIOR (BRONZE/BROWN)
+    default: // WARRIOR
       return {
         id: 'WARRIOR',
         conic: 'from-[#451a03] via-[#7c2d12] to-[#b45309]', 
@@ -213,13 +217,16 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
     refreshData();
   }, [refreshData]);
 
+  // CRITICAL FIX: Safe Member Search
   useEffect(() => {
     let checkInterval: ReturnType<typeof setInterval>;
     
     const findMember = () => {
-        if (members.length > 0) {
+        if (members && members.length > 0) {
+            // FIX: Ensure nickname exists before calling toLowerCase
+            const searchNick = (nickname || '').toLowerCase();
             const found = members.find(m => 
-                m.nickname.toLowerCase() === nickname.toLowerCase() || 
+                (m.nickname && m.nickname.toLowerCase() === searchNick) || 
                 m.id === nickname
             );
             if (found) {
@@ -276,9 +283,12 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
     const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours);
     const config = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
     
+    // Fallback if config is missing
+    const safeBonusThreshold = config?.bonusThreshold || 10; 
+    
     const currentProgressTotal = member.hoursProgressToNextBonus + projectedHours;
-    const effectiveProgress = currentProgressTotal % config.bonusThreshold;
-    const progressPercent = Math.min(100, (effectiveProgress / config.bonusThreshold) * 100);
+    const effectiveProgress = currentProgressTotal % safeBonusThreshold;
+    const progressPercent = Math.min(100, (effectiveProgress / safeBonusThreshold) * 100);
 
     const nextRankConfig = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours).find(c => c.minHours > member.totalPlayTime);
     // Display playtime as INTEGER (toFixed(0))
@@ -293,7 +303,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         config,
         progressPercent,
         joinDate: new Date(member.joinDate).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
-        hoursToNextBonus: Math.max(0, config.bonusThreshold - effectiveProgress).toFixed(0),
+        hoursToNextBonus: Math.max(0, safeBonusThreshold - effectiveProgress).toFixed(0),
         hoursToNextRank,
         nextRankName
     };
