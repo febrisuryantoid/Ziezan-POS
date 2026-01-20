@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import * as Storage from './storage';
 import { Member, Console, Transaction } from '../types';
@@ -5,12 +6,36 @@ import { Member, Console, Transaction } from '../types';
 class SyncService {
   private isSyncing = false;
   private isCleaning = false;
+  private channel: any = null;
+
+  constructor() {
+    this.initializeRealtime();
+  }
+
+  // --- REALTIME SUBSCRIPTION ---
+  private initializeRealtime() {
+    if (this.channel) return;
+
+    this.channel = supabase.channel('db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public' },
+        (payload) => {
+          console.log('[Realtime] Change received:', payload);
+          // When any change happens in DB, trigger a pull to stay updated
+          // Debounce this slightly in a real app, but direct call is fine for now
+          this.pullFromCloud().then(() => {
+             window.dispatchEvent(new Event('external-data-change'));
+          });
+        }
+      )
+      .subscribe();
+  }
 
   // --- DELETE ACTIONS (Direct to Cloud) ---
   public async deleteMember(id: string) {
     if (!navigator.onLine) {
       console.warn("Offline: Cannot delete member from cloud immediately.");
-      // In a more complex app, queue this. For now, rely on manual cleanup if offline.
       return;
     }
     const { error } = await supabase.from('members').delete().eq('id', id);
@@ -42,7 +67,10 @@ class SyncService {
       // 2. OPTIMIZE: Clean old data
       this.runSmartCloudOptimizer();
 
-      console.log('Cloud Sync (Push) completed');
+      // 3. PULL: Ensure we have latest data after push
+      await this.pullFromCloud();
+
+      console.log('Cloud Sync completed');
     } catch (error) {
       console.error('Cloud Sync failed:', error);
     } finally {
@@ -51,8 +79,7 @@ class SyncService {
     }
   }
 
-  // --- PULL FUNCTION (RESTORE DATA) ---
-  // Call this on app mount to get data from Cloud if Local is missing/stale
+  // --- PULL FUNCTION (RESTORE DATA & RESOLVE CONFLICTS) ---
   public async pullFromCloud() {
       if (!navigator.onLine) return false;
       console.log('[Sync] Starting Pull from Cloud...');
@@ -82,10 +109,11 @@ class SyncService {
                   status: m.status || 'ACTIVE',
                   notes: m.notes,
                   photoUrl: m.photo_url,
-                  synced: true
+                  synced: true,
+                  updatedAt: m.updated_at
               }));
-              // Merge: Prefer Local if it has unsynced changes, otherwise Cloud
-              const merged = this.mergeDatasets(currentLocal, mappedMembers);
+              
+              const merged = this.mergeMembers(currentLocal, mappedMembers);
               Storage.saveMembers(merged);
           }
 
@@ -99,13 +127,14 @@ class SyncService {
                   status: c.status,
                   totalHoursUsed: c.total_hours_used || 0,
                   currentSessionId: c.current_session_id,
-                  synced: true
+                  synced: true,
+                  updatedAt: c.updated_at
               }));
-              const merged = this.mergeDatasets(currentLocal, mappedConsoles);
+              const merged = this.mergeGeneric(currentLocal, mappedConsoles);
               Storage.saveConsoles(merged);
           }
 
-          // 3. Pull Transactions (Limit to recent 500 to save bandwidth)
+          // 3. Pull Transactions (Limit to recent 500)
           const { data: cloudTx, error: txErr } = await supabase
             .from('transactions')
             .select('*')
@@ -128,14 +157,15 @@ class SyncService {
                   paymentMethod: t.payment_method,
                   status: t.status,
                   operatorName: t.operator_name,
-                  synced: true
+                  synced: true,
+                  updatedAt: t.updated_at
               }));
-              // For transactions, we usually just want to fill gaps
-              const merged = this.mergeDatasets(currentLocal, mappedTx);
+              // For transactions, we prioritize Cloud as source of truth for completed ones
+              const merged = this.mergeGeneric(currentLocal, mappedTx);
               Storage.saveTransactions(merged);
           }
 
-          console.log('[Sync] Pull complete. Data restored from Cloud.');
+          console.log('[Sync] Pull complete.');
           return true;
 
       } catch (e) {
@@ -146,25 +176,76 @@ class SyncService {
       }
   }
 
-  // Helper to merge Cloud data into Local data
-  private mergeDatasets<T extends { id: string, synced?: boolean }>(local: T[], cloud: T[]): T[] {
-      const mergedMap = new Map<string, T>();
+  // --- SMART MERGE LOGIC FOR MEMBERS ---
+  // Fixes "Aldi 5 jam reset jadi 1 jam" issue
+  private mergeMembers(local: Member[], cloud: Member[]): Member[] {
+      const mergedMap = new Map<string, Member>();
 
-      // 1. Put Cloud data first
+      // Start with Cloud data as baseline
       cloud.forEach(item => mergedMap.set(item.id, item));
 
-      // 2. Overlay Local data ONLY if it hasn't been synced yet (pending changes)
-      local.forEach(item => {
-          if (item.synced === false) {
-              mergedMap.set(item.id, item);
-          } else if (!mergedMap.has(item.id)) {
-              // If it exists locally but not in cloud, it means it was deleted in cloud or created locally.
-              // Since we don't have a deleted log, we assume local creation for now.
-              // Ideally, we'd check if it was created recently.
-              mergedMap.set(item.id, item);
+      local.forEach(localItem => {
+          const cloudItem = mergedMap.get(localItem.id);
+
+          if (!cloudItem) {
+              // Exists locally but not in cloud.
+              // If localItem.synced is false, it's a new item waiting to be pushed. Keep it.
+              if (localItem.synced === false) {
+                  mergedMap.set(localItem.id, localItem);
+              }
+              // If synced is true but missing in cloud, it might have been deleted remotely. 
+              // For safety in offline-first, we keep it but mark for re-check? 
+              // No, let's assume if it was synced before but gone now, it's deleted.
+          } else {
+              // Conflict Resolution
+              if (localItem.synced === false) {
+                  // Local has changes.
+                  // CRITICAL CHECK: Playtime shouldn't decrease.
+                  // If Cloud has significantly more playtime, local state is likely stale 
+                  // (e.g. opened an old device that hadn't synced yet).
+                  if (cloudItem.totalPlayTime > localItem.totalPlayTime) {
+                      // Cloud wins because progress > stale local edit
+                      mergedMap.set(cloudItem.id, cloudItem);
+                  } else {
+                      // Local wins (it's a genuine new update)
+                      mergedMap.set(localItem.id, localItem);
+                  }
+              } else {
+                  // Local thinks it's synced.
+                  // If Cloud is newer (by updatedAt) or has more playtime, trust Cloud.
+                  // Generally just trust Cloud here.
+                  mergedMap.set(cloudItem.id, cloudItem);
+              }
           }
       });
 
+      return Array.from(mergedMap.values());
+  }
+
+  // Generic Merge for Consoles/Transactions
+  private mergeGeneric<T extends { id: string, synced?: boolean, updatedAt?: string }>(local: T[], cloud: T[]): T[] {
+      const mergedMap = new Map<string, T>();
+      cloud.forEach(item => mergedMap.set(item.id, item));
+
+      local.forEach(localItem => {
+          const cloudItem = mergedMap.get(localItem.id);
+          if (!cloudItem) {
+              if (localItem.synced === false) mergedMap.set(localItem.id, localItem);
+          } else {
+              // If local has unsynced changes, verify timestamps if available
+              if (localItem.synced === false) {
+                  const localTime = localItem.updatedAt ? new Date(localItem.updatedAt).getTime() : 0;
+                  const cloudTime = cloudItem.updatedAt ? new Date(cloudItem.updatedAt).getTime() : 0;
+                  
+                  // If Cloud is newer despite local "unsynced" flag (rare race condition), take cloud
+                  if (cloudTime > localTime + 1000) { 
+                      mergedMap.set(cloudItem.id, cloudItem);
+                  } else {
+                      mergedMap.set(localItem.id, localItem);
+                  }
+              }
+          }
+      });
       return Array.from(mergedMap.values());
   }
 
@@ -201,9 +282,10 @@ class SyncService {
 
   private async syncConsolesToCloud() {
     const consoles = Storage.getConsoles();
-    if (consoles.length === 0) return;
+    const unsynced = consoles.filter(c => !c.synced);
+    if (unsynced.length === 0) return;
 
-    const payload = consoles.map(c => ({
+    const payload = unsynced.map(c => ({
         id: c.id,
         name: c.name,
         status: c.status,
@@ -213,12 +295,14 @@ class SyncService {
     }));
 
     const { error } = await supabase.from('consoles').upsert(payload);
-    if (error) console.error('Error syncing consoles:', error);
+    if (!error) {
+       const updated = consoles.map(c => unsynced.find(u => u.id === c.id) ? { ...c, synced: true, updatedAt: new Date().toISOString() } : c);
+       Storage.saveConsoles(updated);
+    }
   }
 
   private async syncMembersToCloud() {
     const members = Storage.getMembers();
-    // Only upsert unsynced members to save bandwidth
     const unsyncedMembers = members.filter(m => !m.synced);
     if (unsyncedMembers.length === 0) return;
 
@@ -248,11 +332,9 @@ class SyncService {
 
     if (!error) {
       const updatedMembers = members.map(m => 
-        unsyncedMembers.find(um => um.id === m.id) ? { ...m, synced: true } : m
+        unsyncedMembers.find(um => um.id === m.id) ? { ...m, synced: true, updatedAt: new Date().toISOString() } : m
       );
       Storage.saveMembers(updatedMembers);
-    } else {
-      console.error('Error syncing members:', error);
     }
   }
 
@@ -282,18 +364,15 @@ class SyncService {
 
     if (!error) {
       const updatedTx = transactions.map(t => 
-        unsyncedTx.find(ut => ut.id === t.id) ? { ...t, synced: true } : t
+        unsyncedTx.find(ut => ut.id === t.id) ? { ...t, synced: true, updatedAt: new Date().toISOString() } : t
       );
       Storage.saveTransactions(updatedTx);
-    } else {
-      console.error('Error syncing transactions:', error);
     }
   }
 }
 
 export const syncService = new SyncService();
 
-// Auto-sync listener
 window.addEventListener('online', () => {
   console.log('Network Online. Triggering sync...');
   syncService.syncNow();

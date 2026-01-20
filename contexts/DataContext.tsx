@@ -45,6 +45,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [transactions, setTransactions] = useState<Transaction[]>(() => Storage.getTransactions());
   const [settings, setSettings] = useState<AppSettings>(() => Storage.getSettings());
   
+  // Flag to ensure we don't run auto-logic (like rank updates) on stale local data
+  const [isInitialSyncComplete, setIsInitialSyncComplete] = useState(false);
+
   const { sendCommand, isConnected: isBtConnected } = useBluetooth();
 
   const refreshData = useCallback(() => {
@@ -55,30 +58,48 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSettings(Storage.getSettings());
   }, []);
 
+  // Initial Data Load & Sync
   useEffect(() => {
     const initData = async () => {
-        refreshData();
         if (navigator.onLine) {
             try {
-               const success = await syncService.pullFromCloud();
-               if (success) refreshData(); 
+               await syncService.pullFromCloud();
+               refreshData();
                await syncService.syncNow();
             } catch (e) {
                console.error("Sync init failed:", e);
             }
         }
+        setIsInitialSyncComplete(true);
     };
     initData();
+
+    // Listen to local storage changes (multi-tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key && e.key.startsWith('ziezan_')) refreshData();
     };
+    
+    // Listen to external data changes (from Realtime Supabase via syncService)
+    const handleExternalChange = () => {
+        console.log("External data change detected, refreshing context...");
+        refreshData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('external-data-change', handleExternalChange);
+    
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('external-data-change', handleExternalChange);
+    };
   }, [refreshData]);
 
   // --- AUTOMATIC MEMBERSHIP & BIRTHDAY CHECK ---
   useEffect(() => {
-    if (members.length === 0 || membershipConfigs.length === 0) return;
+    // CRITICAL FIX: Only run this AFTER initial sync is done.
+    // This prevents stale local data (e.g. 1 hour playtime) from overwriting fresh cloud data (5 hours)
+    // by falsely marking the stale data as "synced: false".
+    if (!isInitialSyncComplete || members.length === 0 || membershipConfigs.length === 0) return;
     
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -125,6 +146,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (changed) {
             hasUpdates = true;
             updatedMember.synced = false;
+            updatedMember.updatedAt = new Date().toISOString();
         }
         
         return updatedMember;
@@ -135,7 +157,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMembers(updatedMembers);
         syncService.syncNow();
     }
-  }, [members.length, membershipConfigs, settings.birthdayBonusHours]); 
+  }, [isInitialSyncComplete, members.length, membershipConfigs, settings.birthdayBonusHours]); 
 
   const safeSave = (fn: () => void) => {
     try { fn(); } 
@@ -158,23 +180,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...data,
       id: Math.random().toString(36).substr(2, 9),
       status: ConsoleStatus.AVAILABLE,
-      totalHoursUsed: 0
+      totalHoursUsed: 0,
+      updatedAt: new Date().toISOString(),
+      synced: false
     };
     const updated = [...consoles, newConsole];
     safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
+    syncService.syncNow();
   };
 
   const updateConsole = (id: string, name: string, imageUrl?: string) => {
-    const updated = consoles.map(c => c.id === id ? { ...c, name, imageUrl } : c);
+    const updated = consoles.map(c => c.id === id ? { ...c, name, imageUrl, updatedAt: new Date().toISOString(), synced: false } : c);
     safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
+    syncService.syncNow();
   };
 
   const updateConsoleStatus = (id: string, status: ConsoleStatus) => {
-    const updated = consoles.map(c => c.id === id ? { ...c, status } : c);
+    const updated = consoles.map(c => c.id === id ? { ...c, status, updatedAt: new Date().toISOString(), synced: false } : c);
     safeSave(() => Storage.saveConsoles(updated));
     setConsoles(updated);
+    syncService.syncNow();
   };
 
   const deleteConsole = (id: string) => {
@@ -201,7 +228,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalBonusHoursUsed: 0,
       membershipExpiryDate: null,
       joinDate: data.joinDate || new Date().toISOString(),
-      synced: false 
+      synced: false,
+      updatedAt: new Date().toISOString()
     };
     
     const updated = [...members, newMember];
@@ -212,7 +240,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateMember = (member: Member) => {
-    const updated = members.map(m => m.id === member.id ? { ...member, synced: false } : m);
+    const updated = members.map(m => m.id === member.id ? { ...member, synced: false, updatedAt: new Date().toISOString() } : m);
     safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
     syncService.syncNow();
@@ -236,7 +264,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateMember({
         ...member,
         membershipId: newTierId,
-        hoursProgressToNextBonus: 0 
+        hoursProgressToNextBonus: 0,
+        updatedAt: new Date().toISOString()
     });
   };
 
@@ -256,7 +285,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ...m,
               totalPlayTime: 0,
               membershipId: newTier,
-              synced: false
+              synced: false,
+              updatedAt: new Date().toISOString()
           };
       });
       safeSave(() => Storage.saveMembers(updatedMembers));
@@ -274,7 +304,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let freeHoursUsed = 0;
     let finalPaymentMethod = paymentMethod;
 
-    // FIX: Only use bonus if payment method is explicitly set to BONUS
     if (paymentMethod === 'BONUS') {
         if (member.freeHoursBalance >= duration) {
             freeHoursUsed = duration;
@@ -301,15 +330,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       paymentMethod: finalPaymentMethod,
       status: 'ACTIVE',
       operatorName: operator || 'Unknown', 
-      synced: false
+      synced: false,
+      updatedAt: new Date().toISOString()
     };
 
-    // Update member balance immediately if using Bonus
     const updatedMember = {
         ...member,
         freeHoursBalance: member.freeHoursBalance - freeHoursUsed,
         totalBonusHoursUsed: member.totalBonusHoursUsed + freeHoursUsed,
-        synced: false
+        synced: false,
+        updatedAt: new Date().toISOString()
     };
     const newMembers = members.map(m => m.id === member.id ? updatedMember : m);
     setMembers(newMembers);
@@ -318,7 +348,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedConsole = { 
         ...consoleUnit, 
         status: ConsoleStatus.IN_USE, 
-        currentSessionId: transaction.id 
+        currentSessionId: transaction.id,
+        synced: false,
+        updatedAt: new Date().toISOString()
     };
     const newConsoles = consoles.map(c => c.id === consoleId ? updatedConsole : c);
     setConsoles(newConsoles);
@@ -340,21 +372,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const safeExtraCost = Math.max(0, extraCost);
     const member = members.find(m => m.id === tx.memberId);
     
-    // --- LATE BONUS REDEMPTION LOGIC ---
-    // If the session wasn't already paid by bonus, but now they want to pay with BONUS
     let additionalDiscount = 0;
     let cost = tx.cost;
     let freeHoursDeductedNow = 0;
 
-    // Check if switching to BONUS payment at checkout
     if (finalPaymentMethod === 'BONUS' && tx.paymentMethod !== 'BONUS' && member) {
-        // Calculate how much bonus covers
         if (member.freeHoursBalance >= tx.durationHours) {
             freeHoursDeductedNow = tx.durationHours;
-            additionalDiscount = cost; // Discount entire rental cost
+            additionalDiscount = cost; 
             cost = 0; 
         } else {
-            // Partial
             freeHoursDeductedNow = member.freeHoursBalance;
             additionalDiscount = freeHoursDeductedNow * settings.hourlyRate;
             cost = cost - additionalDiscount;
@@ -368,7 +395,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         paymentMethod: finalPaymentMethod || tx.paymentMethod,
         status: 'COMPLETED', 
         endTime: new Date().toISOString(),
-        synced: false 
+        synced: false,
+        updatedAt: new Date().toISOString()
     };
     
     const newTransactions = transactions.map(t => t.id === transactionId ? updatedTx : t);
@@ -381,7 +409,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...consoleUnit, 
             status: ConsoleStatus.AVAILABLE, 
             currentSessionId: undefined,
-            totalHoursUsed: consoleUnit.totalHoursUsed + tx.durationHours 
+            totalHoursUsed: consoleUnit.totalHoursUsed + tx.durationHours,
+            synced: false,
+            updatedAt: new Date().toISOString()
         };
         const newConsoles = consoles.map(c => c.id === consoleUnit.id ? updatedConsole : c);
         setConsoles(newConsoles);
@@ -390,13 +420,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (member) {
         const currentConfig = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
-        
         const isBonusSession = updatedTx.paymentMethod === 'BONUS';
         
         let newProgress = member.hoursProgressToNextBonus;
-        let newFreeBalance = member.freeHoursBalance - freeHoursDeductedNow; // Deduct if used at checkout
+        let newFreeBalance = member.freeHoursBalance - freeHoursDeductedNow; 
 
-        // Only accrue progress if PAID by CASH/QRIS
         if (!isBonusSession) {
             newProgress += tx.durationHours;
             if (newProgress >= currentConfig.bonusThreshold && currentConfig.bonusThreshold > 0) {
@@ -423,7 +451,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hoursProgressToNextBonus: newProgress,
             freeHoursBalance: newFreeBalance,
             totalBonusHoursUsed: member.totalBonusHoursUsed + freeHoursDeductedNow,
-            synced: false
+            synced: false,
+            updatedAt: new Date().toISOString()
         };
         const newMembers = members.map(m => m.id === member.id ? updatedMember : m);
         setMembers(newMembers);

@@ -69,6 +69,7 @@ export interface Console {
   notes?: string;
   currentSessionId?: string; 
   synced?: boolean; 
+  updatedAt?: string; // Timestamp for sync conflict resolution
 }
 
 export interface Member {
@@ -91,6 +92,7 @@ export interface Member {
   status: MemberStatus;
   notes?: string;
   synced?: boolean; 
+  updatedAt?: string; // Timestamp for sync conflict resolution
 }
 
 export interface Transaction {
@@ -108,6 +110,7 @@ export interface Transaction {
   status: 'ACTIVE' | 'COMPLETED';
   operatorName: string;
   synced?: boolean; 
+  updatedAt?: string; // Timestamp for sync conflict resolution
 }
 
 export interface AppSettings {

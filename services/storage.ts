@@ -209,12 +209,14 @@ export const getMembers = (): Member[] => {
           photoUrl: m.photoUrl || undefined,
           dateOfBirth: m.dateOfBirth || undefined,
           lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
-          notes: m.notes || ''
+          notes: m.notes || '',
+          updatedAt: m.updatedAt || new Date().toISOString() // Ensure updatedAt exists
         };
 
         const key = cleaned.name.toLowerCase();
         if (nameMap.has(key)) {
             const existing = nameMap.get(key)!;
+            // Prefer the one with more playtime or newer update
             const isBetter = cleaned.totalPlayTime > existing.totalPlayTime;
             if (isBetter) nameMap.set(key, cleaned);
             hasChanges = true; 
@@ -249,7 +251,8 @@ export const getTransactions = (): Transaction[] => {
     return txs.map(t => ({
         ...t,
         memberName: t.memberName || 'Unknown',
-        consoleName: t.consoleName || 'Unknown Console'
+        consoleName: t.consoleName || 'Unknown Console',
+        updatedAt: t.updatedAt || new Date().toISOString()
     }));
   } catch (e) {
     return [];

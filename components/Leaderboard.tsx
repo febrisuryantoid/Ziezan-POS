@@ -128,9 +128,9 @@ const Leaderboard: React.FC = () => {
                   <div className={`relative rounded-full p-[3px] bg-gradient-to-tr ${theme.conic} shadow-[0_0_20px_-5px_currentColor] ${textClass} group-hover:scale-105 transition-transform duration-300`}>
                       <div className={`${avatarSizeClass} rounded-full overflow-hidden bg-black relative`}>
                           <img 
-                            src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
-                            className="w-full h-full object-cover" 
-                            alt={member.nickname}
+                            src={theme.iconUrl} 
+                            className="w-full h-full object-contain p-1" 
+                            alt={member.membershipId}
                           />
                           {/* Live Indicator */}
                           {isPlaying && (
@@ -275,7 +275,7 @@ const Leaderboard: React.FC = () => {
                                         {/* Avatar */}
                                         <div className="relative shrink-0">
                                             <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-[1.5px] bg-gradient-to-br ${theme.conic}`}>
-                                                <img src={m.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black" alt={m.nickname}/>
+                                                <img src={theme.iconUrl} className="w-full h-full rounded-full object-contain p-1 bg-black" alt={m.membershipId}/>
                                             </div>
                                             {isPlaying && (
                                                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f1016] animate-pulse z-10"></div>
