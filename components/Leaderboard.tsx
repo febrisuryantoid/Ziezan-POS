@@ -53,7 +53,7 @@ const Leaderboard: React.FC = () => {
   
   if (loading) {
       return (
-        <div className="min-h-screen bg-[#020205] flex items-center justify-center">
+        <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
             <Loader2 className="w-10 h-10 animate-spin text-palette-mustard" />
         </div>
       );
@@ -189,9 +189,9 @@ const Leaderboard: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="h-[100dvh] w-full bg-[#020205] text-white font-sans relative flex flex-col overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[#050b14] text-white font-sans relative flex flex-col overflow-hidden">
         {/* Pass Gold Color for Leaderboard background glow */}
-        <GamingBackground glowColor="#fbbf24" />
+        <GamingBackground />
         
         {/* === SCROLLABLE CONTENT WRAPPER === */}
         <div className="flex-1 w-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col items-center">

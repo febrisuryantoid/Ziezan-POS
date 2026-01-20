@@ -4,6 +4,7 @@ import { User, Lock, LogIn, Globe } from 'lucide-react';
 import { User as UserType } from '../types';
 import * as Storage from '../services/storage';
 import { useLanguage } from '../contexts/LanguageContext';
+import { GamingBackground } from './PublicMemberCard';
 
 interface LoginProps {
   onLogin: (user: UserType) => void;
@@ -29,52 +30,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     // h-[100dvh] forces full viewport height, overflow-hidden prevents scrolling
-    <div className="h-[100dvh] w-full bg-[#020205] flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[#050b14] flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
       
-      {/* --- HEXAGONAL BACKGROUND (Copied style from GamingBackground) --- */}
-      <style>{`
-        @keyframes float-light {
-          0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-          33% { transform: translate(30%, 20%) scale(1.2); opacity: 0.5; }
-          66% { transform: translate(-20%, 40%) scale(0.9); opacity: 0.4; }
-          100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-        }
-        @keyframes pulse-hex {
-          0% { opacity: 0.03; }
-          50% { opacity: 0.08; }
-          100% { opacity: 0.03; }
-        }
-      `}</style>
-      
-      {/* Base Dark Gradient */}
-      <div className="absolute inset-0 bg-radial-gradient from-[#0f1020] via-[#020205] to-black"></div>
-
-      {/* Moving Glow Blob (Behind the mesh) */}
-      <div 
-          className="absolute top-[-20%] left-[-20%] w-[120vw] h-[120vw] rounded-full blur-[150px] mix-blend-screen transition-colors duration-1000 ease-in-out"
-          style={{ 
-              backgroundColor: '#7c3aed', // Purple/Mustard mix for Login
-              animation: 'float-light 15s infinite ease-in-out'
-          }}
-      ></div>
-
-      {/* Hexagon Mesh Pattern */}
-      <div 
-          className="absolute inset-0 z-0"
-          style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ffffff' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E")`,
-              backgroundSize: '60px 60px',
-              maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)',
-              animation: 'pulse-hex 4s infinite ease-in-out'
-          }}
-      ></div>
+      {/* Use shared background for consistency */}
+      <GamingBackground />
 
       {/* Main Container - Scalable */}
       <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full">
         
         {/* Animated Border */}
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
-             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#06b6d4,#f43f5e,#7c3aed,#06b6d4,#f43f5e,#7c3aed)] animate-spin-slow"></div>
+             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#06b6d4,#ef4444,#06b6d4,#ef4444,#06b6d4)] animate-spin-slow"></div>
         </div>
 
         {/* Card Content - Flex column with scaling gaps */}
@@ -83,7 +49,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Lang Switcher */}
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-cyan-500 transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
           >
             <Globe size={12} />
             {language.toUpperCase()}
@@ -92,7 +58,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Header Section: Logo & Titles */}
           <div className="text-center mb-4 sm:mb-6 shrink-0">
             <div className="relative inline-block">
-              <div className="absolute inset-0 bg-palette-mustard blur-xl opacity-20 rounded-full"></div>
+              <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full"></div>
               {/* Responsive Logo Size - Smaller on very short screens if needed */}
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
@@ -116,7 +82,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_username')}
                 />
               </div>
@@ -130,21 +96,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_password')}
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-palette-red/10 border border-palette-red/20 text-palette-red p-3 rounded-xl text-xs text-center font-bold animate-pulse flex items-center justify-center gap-2">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-xs text-center font-bold animate-pulse flex items-center justify-center gap-2">
                 <Lock size={14} /> {error}
               </div>
             )}
 
             <button 
               type="submit" 
-              className="w-full bg-palette-mustard hover:bg-palette-purple text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-600/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <LogIn size={18} /> {t('sign_in')}
             </button>
