@@ -14,25 +14,53 @@ const DragonPattern = ({ color }: { color: string }) => (
   <div 
     className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
     style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${color.replace('#', '%23')}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
         maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
     }}
   ></div>
 );
 
-export const GamingBackground = () => (
-  <div className="fixed inset-0 z-0 pointer-events-none bg-[#050505]">
-    <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#0a0a12] to-black"></div>
+export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string }) => (
+  <div className="fixed inset-0 z-0 pointer-events-none bg-[#020205] overflow-hidden">
+    
+    {/* CSS Animation for Floating Light */}
+    <style>{`
+      @keyframes float-light {
+        0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+        33% { transform: translate(30%, 20%) scale(1.1); opacity: 0.6; }
+        66% { transform: translate(-20%, 40%) scale(0.9); opacity: 0.5; }
+        100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+      }
+    `}</style>
+
+    {/* Base Vignette */}
+    <div className="absolute inset-0 bg-radial-gradient from-[#1a1a2e] via-[#020205] to-black opacity-80"></div>
+
+    {/* DYNAMIC FLOATING GLOW ORB */}
     <div 
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%23ffffff' fill-opacity='1' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '30px 60px'
+        className="absolute top-[-20%] left-[-20%] w-[140vw] h-[140vw] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000 ease-in-out"
+        style={{ 
+            backgroundColor: glowColor,
+            animation: 'float-light 20s infinite ease-in-out'
         }}
     ></div>
-    <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_10px)]"></div>
-    <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slow opacity-10 bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(255,255,255,0.1)_10deg,transparent_20deg)] blur-3xl"></div>
-    <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/90"></div>
+
+    {/* SEAMLESS GRID PATTERN */}
+    {/* Micro-grid technology look: Connected lines, no gaps */}
+    <div 
+        className="absolute inset-0 opacity-[0.08]"
+        style={{
+            backgroundImage: `
+                linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+            maskImage: 'radial-gradient(circle at center, black 0%, transparent 100%)'
+        }}
+    ></div>
+
+    {/* Scanline Overlay for Retro Tech Feel */}
+    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20"></div>
   </div>
 );
 
@@ -301,7 +329,8 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans p-4 overflow-hidden">
-      <GamingBackground />
+      {/* Pass the dynamic tier color to the background glow */}
+      <GamingBackground glowColor={theme.dragonColor || '#7c3aed'} />
 
       {/* --- CARD WRAPPER --- */}
       <div className={`relative w-full max-w-sm aspect-[9/16] z-10 animate-fade-in perspective-1000 ${isMythic ? 'scale-105' : ''}`}>

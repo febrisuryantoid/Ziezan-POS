@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme, GamingBackground } from './PublicMemberCard';
-import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, Search, Loader2, Flame, Gamepad2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Member } from '../types';
 
 const Leaderboard: React.FC = () => {
@@ -71,25 +71,25 @@ const Leaderboard: React.FC = () => {
       const isPlaying = member ? transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE') : false;
 
       // Visual Config (Geometry)
-      // REDUCED HEIGHTS to prevent crown overlap with title
       let pillarHeightClass = 'h-24 sm:h-32'; 
       let avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
       let zIndex = 'z-10';
       let translateY = 'translate-y-0';
       let numberSize = 'w-6 h-6 text-xs';
       
-      // Fallback text class if no member
       const textClass = theme ? theme.text : 'text-slate-600';
       const badgeColor = theme ? theme.badge : 'bg-slate-800 text-slate-400';
+      const particleColor = theme ? theme.particleColor : '#94a3b8';
 
       if (isFirst) {
-          pillarHeightClass = 'h-36 sm:h-48'; // Reduced from h-52
+          // Increased height to ensure it touches the list below
+          pillarHeightClass = 'h-44 sm:h-56'; 
           avatarSizeClass = 'w-24 h-24 sm:w-28 sm:h-28';
           zIndex = 'z-30';
           translateY = '-translate-y-4 sm:-translate-y-6';
           numberSize = 'w-8 h-8 text-sm';
       } else if (isSecond) {
-          pillarHeightClass = 'h-28 sm:h-36'; // Reduced
+          pillarHeightClass = 'h-28 sm:h-36'; 
           avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
           zIndex = 'z-20';
           translateY = 'translate-y-0';
@@ -112,14 +112,7 @@ const Leaderboard: React.FC = () => {
               
               {/* Avatar Container */}
               <div className="relative mb-3 flex flex-col items-center">
-                  {/* Crown for #1 */}
-                  {isFirst && (
-                      <Crown 
-                        size={isFirst ? 36 : 24} 
-                        fill="currentColor" 
-                        className={`${textClass} absolute -top-10 sm:-top-12 animate-bounce drop-shadow-[0_0_15px_currentColor] z-20`} 
-                      />
-                  )}
+                  {/* CROWN REMOVED as requested */}
 
                   {/* Image Ring */}
                   <div className={`relative rounded-full p-[3px] bg-gradient-to-tr ${theme.conic} shadow-[0_0_20px_-5px_currentColor] ${textClass} group-hover:scale-105 transition-transform duration-300`}>
@@ -158,7 +151,10 @@ const Leaderboard: React.FC = () => {
               <div className="w-full relative px-0.5">
                   {/* Moving Border Animation */}
                   <div className={`absolute -inset-[2px] rounded-t-[24px] overflow-hidden`}>
-                      <div className={`absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(transparent_0deg,transparent_90deg,currentColor_180deg,transparent_270deg,transparent_360deg)] ${textClass} opacity-80 blur-[2px]`}></div>
+                      <div 
+                        className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(transparent_0deg,transparent_90deg,currentColor_180deg,transparent_270deg,transparent_360deg)] opacity-80 blur-[2px]"
+                        style={{ color: particleColor }}
+                      ></div>
                   </div>
 
                   {/* The Inner Box (Main Pillar) */}
@@ -175,8 +171,17 @@ const Leaderboard: React.FC = () => {
                           {t('hour_short')}
                       </span>
                       
-                      {/* Center Glow Line for #1 */}
-                      {isFirst && <div className={`mt-2 w-[1px] h-full bg-gradient-to-b ${theme.conic} opacity-50 blur-[1px]`}></div>}
+                      {/* Animated Center Line for #1 - Scan from top to bottom */}
+                      {isFirst && (
+                          <div className="absolute inset-0 z-0 flex justify-center">
+                              <div className="w-[1px] h-full relative overflow-hidden bg-white/5">
+                                  <div 
+                                    className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-transparent via-white to-transparent opacity-80 shadow-[0_0_10px_white]"
+                                    style={{ animation: 'scanline 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
+                                  ></div>
+                              </div>
+                          </div>
+                      )}
                   </div>
               </div>
           </div>
@@ -187,7 +192,18 @@ const Leaderboard: React.FC = () => {
 
   return (
     <div className="h-[100dvh] w-full bg-[#020205] text-white font-sans relative flex flex-col overflow-hidden">
-        <GamingBackground />
+        {/* Pass Gold Color for Leaderboard */}
+        <GamingBackground glowColor="#fbbf24" />
+        
+        {/* CSS for Scanline Animation */}
+        <style>{`
+            @keyframes scanline {
+                0% { transform: translateY(-150%); opacity: 0; }
+                20% { opacity: 1; }
+                80% { opacity: 1; }
+                100% { transform: translateY(250%); opacity: 0; }
+            }
+        `}</style>
         
         {/* === SCROLLABLE CONTENT WRAPPER === */}
         <div className="flex-1 w-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col items-center">
@@ -206,7 +222,8 @@ const Leaderboard: React.FC = () => {
                 </div>
 
                 {/* --- PODIUM SECTION --- */}
-                <div className="flex-none px-4 pt-4 pb-2 relative w-full mb-[-10px] sm:mb-[-20px] z-0">
+                {/* Increased negative margin to ensure Podium 1 touches the list */}
+                <div className="flex-none px-4 pt-4 pb-2 relative w-full mb-[-20px] sm:mb-[-30px] z-0">
                     <div className="flex items-end justify-center gap-2 w-full max-w-lg mx-auto">
                         <PodiumPillar member={filledTop3[1]} rank={2} />
                         <PodiumPillar member={filledTop3[0]} rank={1} />
@@ -248,50 +265,63 @@ const Leaderboard: React.FC = () => {
                     </div>
 
                     {/* List Items */}
-                    <div className="p-3 sm:p-4 space-y-2 pb-10">
+                    <div className="p-3 sm:p-4 space-y-3 pb-10">
                         {challengers.length > 0 ? (
                             challengers.map((m, idx) => {
                                 const actualRank = idx + 4;
                                 const score = getRealtimeScore(m);
                                 const theme = getTierTheme(m.membershipId);
                                 const isPlaying = transactions.some(t => t.memberId === m.id && t.status === 'ACTIVE');
+                                const particleColor = theme.particleColor || '#ffffff';
 
                                 return (
-                                    <div key={m.id} className="group relative flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-200 active:scale-[0.99] cursor-default">
+                                    <div key={m.id} className="group relative flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-2xl transition-all duration-200 active:scale-[0.99] cursor-default overflow-hidden">
                                         
-                                        {/* Rank Number */}
-                                        <div className="w-8 shrink-0 text-center font-black text-slate-600 text-sm sm:text-base group-hover:text-white transition-colors">
-                                            {actualRank}
+                                        {/* Animated Border Background */}
+                                        <div className="absolute inset-0 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
+                                            <div className="absolute inset-[-50%] w-[200%] h-[200%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,currentColor_100%)] blur-md" style={{ color: particleColor }}></div>
                                         </div>
+                                        
+                                        {/* Inner Background Mask */}
+                                        <div className="absolute inset-[1px] rounded-[15px] bg-[#0f1016] z-0"></div>
 
-                                        {/* Avatar */}
-                                        <div className="relative shrink-0">
-                                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-[1.5px] bg-gradient-to-br ${theme.conic}`}>
-                                                <img src={m.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black" alt={m.nickname}/>
+                                        {/* Content Wrapper */}
+                                        <div className="relative z-10 flex items-center gap-3 sm:gap-4 w-full">
+                                            
+                                            {/* Rank Number */}
+                                            <div className="w-8 shrink-0 text-center font-black text-slate-600 text-sm sm:text-base group-hover:text-white transition-colors">
+                                                {actualRank}
                                             </div>
-                                            {isPlaying && (
-                                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f1016] animate-pulse z-10"></div>
-                                            )}
-                                        </div>
 
-                                        {/* Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-bold text-slate-200 text-sm truncate group-hover:text-white transition-colors">{m.nickname}</h4>
-                                                {m.membershipId.includes('MYTHIC') && <Sparkles size={12} className="text-yellow-500 animate-pulse" />}
+                                            {/* Avatar */}
+                                            <div className="relative shrink-0">
+                                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-[1.5px] bg-gradient-to-br ${theme.conic}`}>
+                                                    <img src={m.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black" alt={m.nickname}/>
+                                                </div>
+                                                {isPlaying && (
+                                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f1016] animate-pulse z-10"></div>
+                                                )}
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
-                                                <img src={theme.iconUrl} alt={m.membershipId} className="w-4 h-4 object-contain opacity-80" />
-                                                <span className={`${theme.text} font-bold opacity-80`}>{m.membershipId.replace('MYTHICAL_', 'M.')}</span>
-                                            </div>
-                                        </div>
 
-                                        {/* Score */}
-                                        <div className="text-right shrink-0 px-2 sm:px-3 bg-black/20 py-1.5 rounded-lg border border-white/5 min-w-[70px]">
-                                            <div className="font-mono font-black text-white text-sm sm:text-base tracking-tight leading-none">
-                                                {score.toFixed(0)}
+                                            {/* Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-slate-200 text-sm truncate group-hover:text-white transition-colors">{m.nickname}</h4>
+                                                    {m.membershipId.includes('MYTHIC') && <Sparkles size={12} className="text-yellow-500 animate-pulse" />}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                                    <img src={theme.iconUrl} alt={m.membershipId} className="w-4 h-4 object-contain opacity-80" />
+                                                    <span className={`${theme.text} font-bold opacity-80`}>{m.membershipId.replace('MYTHICAL_', 'M.')}</span>
+                                                </div>
                                             </div>
-                                            <div className="text-[8px] font-bold text-slate-600 uppercase tracking-wide leading-none mt-1">{t('hour_short')}</div>
+
+                                            {/* Score */}
+                                            <div className="text-right shrink-0 px-2 sm:px-3 bg-black/20 py-1.5 rounded-lg border border-white/5 min-w-[70px]">
+                                                <div className="font-mono font-black text-white text-sm sm:text-base tracking-tight leading-none">
+                                                    {score.toFixed(0)}
+                                                </div>
+                                                <div className="text-[8px] font-bold text-slate-600 uppercase tracking-wide leading-none mt-1">{t('hour_short')}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
