@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme, GamingBackground } from './PublicMemberCard';
-import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, Sparkles, ChevronUp } from 'lucide-react';
+import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Member } from '../types';
 
 const Leaderboard: React.FC = () => {
@@ -71,24 +71,25 @@ const Leaderboard: React.FC = () => {
       const isPlaying = member ? transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE') : false;
 
       // Visual Config (Geometry)
-      // Compact heights to ensure list is visible
-      let pillarHeightClass = 'h-28 sm:h-36'; 
+      // REDUCED HEIGHTS to prevent crown overlap with title
+      let pillarHeightClass = 'h-24 sm:h-32'; 
       let avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
       let zIndex = 'z-10';
       let translateY = 'translate-y-0';
       let numberSize = 'w-6 h-6 text-xs';
       
-      const textClass = theme ? theme.text : 'text-slate-400';
-      const badgeColor = theme ? theme.badge : 'bg-slate-700 text-white';
+      // Fallback text class if no member
+      const textClass = theme ? theme.text : 'text-slate-600';
+      const badgeColor = theme ? theme.badge : 'bg-slate-800 text-slate-400';
 
       if (isFirst) {
-          pillarHeightClass = 'h-40 sm:h-52'; // Slightly taller for #1
+          pillarHeightClass = 'h-36 sm:h-48'; // Reduced from h-52
           avatarSizeClass = 'w-24 h-24 sm:w-28 sm:h-28';
           zIndex = 'z-30';
           translateY = '-translate-y-4 sm:-translate-y-6';
           numberSize = 'w-8 h-8 text-sm';
       } else if (isSecond) {
-          pillarHeightClass = 'h-32 sm:h-40';
+          pillarHeightClass = 'h-28 sm:h-36'; // Reduced
           avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
           zIndex = 'z-20';
           translateY = 'translate-y-0';
@@ -96,9 +97,10 @@ const Leaderboard: React.FC = () => {
           translateY = 'translate-y-3 sm:translate-y-4';
       }
 
+      // Empty State
       if (!member || !theme) {
           return (
-              <div className={`flex flex-col items-center justify-end w-1/3 ${translateY} opacity-10 px-1`}>
+              <div className={`flex flex-col items-center justify-end w-1/3 ${translateY} opacity-20 px-1`}>
                   <div className={`${avatarSizeClass} rounded-full bg-white/5 border-2 border-dashed border-white/20 mb-4`}></div>
                   <div className={`w-full ${pillarHeightClass} rounded-t-2xl border-t border-x border-white/5 bg-gradient-to-b from-white/5 to-transparent`}></div>
               </div>
@@ -109,13 +111,13 @@ const Leaderboard: React.FC = () => {
           <div className={`flex flex-col items-center justify-end w-1/3 transition-all duration-700 ${translateY} ${zIndex} relative group px-1 sm:px-2`}>
               
               {/* Avatar Container */}
-              <div className="relative mb-2 flex flex-col items-center">
+              <div className="relative mb-3 flex flex-col items-center">
                   {/* Crown for #1 */}
                   {isFirst && (
                       <Crown 
-                        size={isFirst ? 32 : 24} 
+                        size={isFirst ? 36 : 24} 
                         fill="currentColor" 
-                        className={`${textClass} absolute -top-8 animate-bounce drop-shadow-[0_0_15px_currentColor] z-20`} 
+                        className={`${textClass} absolute -top-10 sm:-top-12 animate-bounce drop-shadow-[0_0_15px_currentColor] z-20`} 
                       />
                   )}
 
@@ -142,30 +144,40 @@ const Leaderboard: React.FC = () => {
                   </div>
                   
                   {/* Name & Tier */}
-                  <div className="mt-4 text-center flex flex-col items-center">
+                  <div className="mt-5 text-center flex flex-col items-center">
                       <h3 className={`font-black text-xs sm:text-base leading-tight truncate max-w-[100px] sm:max-w-[140px] drop-shadow-md text-white mb-1`}>
                           {member.nickname}
                       </h3>
-                      {/* Tier Icon Image */}
                       <div className="relative group/tier">
                           <img src={theme.iconUrl} alt={theme.id} className="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-md" />
                       </div>
                   </div>
               </div>
 
-              {/* Pillar (Score Box) */}
-              <div className={`w-full ${pillarHeightClass} rounded-t-3xl border-x border-t border-white/10 bg-gradient-to-b from-[#1a1a2e]/90 to-[#020205] backdrop-blur-xl relative overflow-hidden flex flex-col items-center justify-start pt-3 pb-2 shadow-2xl`}>
-                  <div className={`absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r ${theme.conic} opacity-100`}></div>
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+              {/* === ANIMATED PODIUM PILLAR === */}
+              <div className="w-full relative px-0.5">
+                  {/* Moving Border Animation */}
+                  <div className={`absolute -inset-[2px] rounded-t-[24px] overflow-hidden`}>
+                      <div className={`absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(transparent_0deg,transparent_90deg,currentColor_180deg,transparent_270deg,transparent_360deg)] ${textClass} opacity-80 blur-[2px]`}></div>
+                  </div>
 
-                  <span className={`font-mono text-xl sm:text-3xl font-black tracking-tighter drop-shadow-lg ${textClass} mt-2`}>
-                      {score.toFixed(0)}
-                  </span>
-                  <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 mt-0.5">
-                      {t('hour_short')}
-                  </span>
-                  
-                  {isFirst && <div className={`mt-4 w-1 h-full bg-gradient-to-b ${theme.conic} opacity-40 blur-[1px]`}></div>}
+                  {/* The Inner Box (Main Pillar) */}
+                  <div className={`w-full ${pillarHeightClass} rounded-t-[22px] bg-[#0f1016] relative z-10 flex flex-col items-center justify-start pt-3 pb-2 overflow-hidden`}>
+                      
+                      {/* Inner Shine */}
+                      <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r ${theme.conic} opacity-50`}></div>
+                      <div className={`absolute bottom-0 inset-x-0 h-2/3 bg-gradient-to-t ${theme.conic} opacity-5`}></div>
+
+                      <span className={`font-mono text-xl sm:text-3xl font-black tracking-tighter drop-shadow-lg ${textClass} mt-2 relative z-10`}>
+                          {score.toFixed(0)}
+                      </span>
+                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 mt-0.5 relative z-10">
+                          {t('hour_short')}
+                      </span>
+                      
+                      {/* Center Glow Line for #1 */}
+                      {isFirst && <div className={`mt-2 w-[1px] h-full bg-gradient-to-b ${theme.conic} opacity-50 blur-[1px]`}></div>}
+                  </div>
               </div>
           </div>
       );
@@ -178,10 +190,8 @@ const Leaderboard: React.FC = () => {
         <GamingBackground />
         
         {/* === SCROLLABLE CONTENT WRAPPER === */}
-        {/* We use a single column flex container that centers content */}
         <div className="flex-1 w-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col items-center">
             
-            {/* CONTAINER MAX-WIDTH CONTROL FOR DESKTOP (Keeps it single col but not stretched) */}
             <div className="w-full max-w-3xl flex flex-col min-h-full">
 
                 {/* --- HEADER --- */}
@@ -205,16 +215,14 @@ const Leaderboard: React.FC = () => {
                 </div>
 
                 {/* --- LIST SECTION (The "Sheet") --- */}
-                {/* Designed to look like a connected sheet coming from the bottom of the podium */}
-                <div className="flex-1 bg-[#0f1016]/90 rounded-t-[35px] border-t border-white/10 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.8)] relative flex flex-col z-20 backdrop-blur-xl w-full">
+                <div className="flex-1 bg-[#0f1016]/95 rounded-t-[35px] border-t border-white/10 shadow-[0_-10px_60px_-15px_rgba(0,0,0,1)] relative flex flex-col z-20 backdrop-blur-xl w-full">
                     
-                    {/* Sheet Handle / Decorator */}
+                    {/* Sheet Handle */}
                     <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-3 mb-2 shrink-0"></div>
                     
-                    {/* Control Bar (Search & Count) */}
+                    {/* Control Bar */}
                     <div className="px-4 sm:px-6 py-3 flex flex-col sm:flex-row gap-3 items-center justify-between border-b border-white/5 shrink-0 bg-[#0f1016]/50 rounded-t-[30px]">
                         
-                        {/* Title */}
                         <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                             <h3 className="font-bold text-slate-400 text-xs uppercase tracking-widest flex items-center gap-2">
                                 <Flame size={14} className="text-orange-500" /> {t('challengers_title')}

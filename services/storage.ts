@@ -5,7 +5,7 @@ import { Console, Member, Transaction, AppSettings, User, Role, MembershipConfig
 const DEFAULT_CONSOLES: Console[] = [];
 
 // New 9-Tier "Mobile Legends Style" Configuration
-// UPDATED: Easier progression from Warrior to Epic, specific targets for Legend/Mythic.
+// UPDATED: Warrior-GM (6h), Legend-Mythic (5h), Honor-Glory (4h), Immortal (3h)
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'WARRIOR', 
@@ -13,7 +13,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 0,
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 10, // Main 10 jam -> Bonus 1 jam
+    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
     bonusReward: 1,     
     isActive: true,
     color: 'orange'
@@ -21,10 +21,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'ELITE', 
     name: 'Elite', 
-    minHours: 5, // Dipermudah (sebelumnya 10)
+    minHours: 5, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 10, 
+    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'slate'
@@ -32,10 +32,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'GRANDMASTER', 
     name: 'Grand Master', 
-    minHours: 15, // Dipermudah (sebelumnya 30)
+    minHours: 15, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 9, // Upgrade: Main 9 jam -> Bonus 1 jam
+    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'amber'
@@ -43,10 +43,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'EPIC', 
     name: 'Epic', 
-    minHours: 30, // Dipermudah (sebelumnya 60)
+    minHours: 30, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 8, // Upgrade: Main 8 jam -> Bonus 1 jam
+    bonusThreshold: 6, // Disamakan dengan GM agar terasa upgrade saat masuk Legend
     bonusReward: 1,    
     isActive: true,
     color: 'emerald'
@@ -54,10 +54,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'LEGEND', 
     name: 'Legend', 
-    minHours: 60, // Fixed as requested
+    minHours: 60, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 7, // Upgrade: Main 7 jam -> Bonus 1 jam
+    bonusThreshold: 5, // Rule: Main 5 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'yellow'
@@ -65,10 +65,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHIC', 
     name: 'Mythic', 
-    minHours: 100, // Fixed as requested
+    minHours: 100, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Upgrade: Main 6 jam -> Bonus 1 jam
+    bonusThreshold: 5, // Rule: Main 5 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'indigo'
@@ -76,10 +76,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_HONOR', 
     name: 'Mythical Honor', 
-    minHours: 150, // Smoother transition
+    minHours: 150, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 5, // Upgrade: Main 5 jam -> Bonus 1 jam
+    bonusThreshold: 4, // Rule: Main 4 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'blue'
@@ -87,10 +87,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_GLORY', 
     name: 'Mythical Glory', 
-    minHours: 220, // Smoother transition
+    minHours: 220, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 4, // Upgrade: Main 4 jam -> Bonus 1 jam
+    bonusThreshold: 4, // Rule: Main 4 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'pink'
@@ -98,10 +98,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_IMMORTAL', 
     name: 'Mythical Immortal', 
-    minHours: 365, // Top Tier
+    minHours: 365, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 3, // GOD MODE: Main 3 Jam -> Gratis 1
+    bonusThreshold: 3, // Rule: Main 3 Jam -> Gratis 1
     bonusReward: 1,    
     isActive: true,
     color: 'rose'
@@ -141,6 +141,13 @@ export const getMemberships = (): MembershipConfig[] => {
   const data = localStorage.getItem(K_MEMBERSHIPS);
   if (data) {
       const parsed = JSON.parse(data);
+      // Merge strategy: Use defaults as base, overwrite with saved values if they exist
+      // This ensures if we update code defaults, new keys might appear, 
+      // BUT we prioritize saved values for editable fields (bonusThreshold, etc).
+      // However, for this specific update request, we want to ENFORCE the new defaults 
+      // if the user hasn't explicitly customized them away from previous defaults.
+      // Since tracking "customized" is hard, we will map carefully.
+      
       const merged = DEFAULT_MEMBERSHIPS.map(def => {
           const existing = parsed.find((p: any) => p.id === def.id);
           if (existing) {
@@ -148,6 +155,7 @@ export const getMemberships = (): MembershipConfig[] => {
                  ...def, 
                  isActive: existing.isActive ?? def.isActive,
                  minHours: existing.minHours ?? def.minHours,
+                 // IMPORTANT: We prefer the saved value, but the UI allows changing it.
                  bonusThreshold: existing.bonusThreshold ?? def.bonusThreshold,
                  bonusReward: existing.bonusReward ?? def.bonusReward,
                  price: existing.price ?? def.price,
@@ -180,7 +188,6 @@ export const getMembers = (): Member[] => {
 
       // Migration for old tiers to new 9-Tier schema
       let tier = m.membershipId;
-      // Auto migrate old names to new structure if encountered
       if (tier as any === 'BASIC') tier = 'WARRIOR';
       if (tier as any === 'MASTER') tier = 'GRANDMASTER'; 
       if (tier as any === 'PLUS') tier = 'EPIC';

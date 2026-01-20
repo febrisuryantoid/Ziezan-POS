@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2, LayoutGrid } from 'lucide-react';
+import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2, LayoutGrid, Edit3 } from 'lucide-react';
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
@@ -346,7 +346,7 @@ const Settings: React.FC = () => {
             {localMemberships.map(m => {
             const theme = getTierTheme(m.id);
             return (
-            <div key={m.id} className="relative group rounded-3xl bg-[#0f1016] border border-white/5 hover:border-white/10 overflow-hidden transition-all duration-300">
+            <div key={m.id} className="relative group rounded-3xl bg-[#0f1016] border border-white/5 hover:border-white/10 overflow-hidden transition-all duration-300 hover:shadow-lg">
                 <div className={`relative p-4 flex justify-between items-center bg-gradient-to-r ${theme.conic} bg-opacity-20 border-b border-white/5`}>
                     <div className="absolute inset-0 bg-black/60"></div>
                     <div className="relative z-10 flex items-center gap-3">
@@ -365,28 +365,49 @@ const Settings: React.FC = () => {
                         </label>
                     </div>
                 </div>
-                <div className="p-5 space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Syarat Rank</span>
-                        <div className="flex items-center gap-2">
-                            <input type="number" value={m.minHours} onChange={e => handleMembershipChange(m.id, 'minHours', e.target.value)} className="w-14 text-center bg-transparent border-b border-slate-600 focus:border-white text-white font-mono font-bold focus:outline-none text-sm" />
+                <div className="p-5 space-y-4 relative z-10">
+                    <div className="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/10">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1"><Trophy size={12}/> Syarat Rank</span>
+                        <div className="flex items-center gap-2 group/input">
+                            <input 
+                                type="number" 
+                                min="0" 
+                                value={m.minHours} 
+                                onFocus={(e) => e.target.select()}
+                                onChange={e => handleMembershipChange(m.id, 'minHours', e.target.value)} 
+                                className="w-16 text-center bg-transparent border-b border-slate-600 group-hover/input:border-white text-white font-mono font-bold focus:outline-none text-sm focus:border-palette-mustard transition-colors" 
+                            />
                             <span className="text-[10px] font-bold text-slate-500">JAM</span>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <label className="text-[9px] font-bold uppercase text-slate-500 pl-1">{t('bonus_target')}</label>
-                            <div className="flex items-center gap-2 bg-black/20 p-2 rounded-xl border border-white/5">
-                                <Zap size={12} className="text-yellow-500"/>
-                                <input type="number" value={m.bonusThreshold} onChange={e => handleMembershipChange(m.id, 'bonusThreshold', e.target.value)} className="w-full bg-transparent text-xs font-bold text-white focus:outline-none text-center" />
+                            <div className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-white/10 hover:border-white/20 transition-colors group/input">
+                                <Zap size={14} className="text-yellow-500"/>
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    value={m.bonusThreshold} 
+                                    onFocus={(e) => e.target.select()}
+                                    onChange={e => handleMembershipChange(m.id, 'bonusThreshold', e.target.value)} 
+                                    className="w-full bg-transparent text-sm font-bold text-white focus:outline-none text-center" 
+                                />
                                 <span className="text-[9px] font-bold text-slate-500">H</span>
                             </div>
                         </div>
                         <div className="space-y-1">
                             <label className="text-[9px] font-bold uppercase text-slate-500 pl-1">{t('reward')}</label>
-                            <div className="flex items-center gap-2 bg-black/20 p-2 rounded-xl border border-white/5">
-                                <Gift size={12} className="text-emerald-500"/>
-                                <input type="number" value={m.bonusReward} onChange={e => handleMembershipChange(m.id, 'bonusReward', e.target.value)} className="w-full bg-transparent text-xs font-bold text-white focus:outline-none text-center" />
+                            <div className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-white/10 hover:border-white/20 transition-colors group/input">
+                                <Gift size={14} className="text-emerald-500"/>
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    value={m.bonusReward} 
+                                    onFocus={(e) => e.target.select()}
+                                    onChange={e => handleMembershipChange(m.id, 'bonusReward', e.target.value)} 
+                                    className="w-full bg-transparent text-sm font-bold text-white focus:outline-none text-center" 
+                                />
                                 <span className="text-[9px] font-bold text-slate-500">H</span>
                             </div>
                         </div>
