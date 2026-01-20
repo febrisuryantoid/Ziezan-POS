@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, Lock, LogIn, Globe } from 'lucide-react';
 import { User as UserType } from '../types';
@@ -28,13 +29,45 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     // h-[100dvh] forces full viewport height, overflow-hidden prevents scrolling
-    <div className="h-[100dvh] w-full bg-slate-50 dark:bg-palette-navy flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[#020205] flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
       
-      {/* Background Ambience */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-30 dark:opacity-20 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-palette-mustard dark:bg-palette-purple rounded-full blur-[100px]"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-palette-green dark:bg-blue-600 rounded-full blur-[100px]"></div>
-      </div>
+      {/* --- HEXAGONAL BACKGROUND (Copied style from GamingBackground) --- */}
+      <style>{`
+        @keyframes float-light {
+          0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+          33% { transform: translate(30%, 20%) scale(1.2); opacity: 0.5; }
+          66% { transform: translate(-20%, 40%) scale(0.9); opacity: 0.4; }
+          100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+        }
+        @keyframes pulse-hex {
+          0% { opacity: 0.03; }
+          50% { opacity: 0.08; }
+          100% { opacity: 0.03; }
+        }
+      `}</style>
+      
+      {/* Base Dark Gradient */}
+      <div className="absolute inset-0 bg-radial-gradient from-[#0f1020] via-[#020205] to-black"></div>
+
+      {/* Moving Glow Blob (Behind the mesh) */}
+      <div 
+          className="absolute top-[-20%] left-[-20%] w-[120vw] h-[120vw] rounded-full blur-[150px] mix-blend-screen transition-colors duration-1000 ease-in-out"
+          style={{ 
+              backgroundColor: '#7c3aed', // Purple/Mustard mix for Login
+              animation: 'float-light 15s infinite ease-in-out'
+          }}
+      ></div>
+
+      {/* Hexagon Mesh Pattern */}
+      <div 
+          className="absolute inset-0 z-0"
+          style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ffffff' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E")`,
+              backgroundSize: '60px 60px',
+              maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)',
+              animation: 'pulse-hex 4s infinite ease-in-out'
+          }}
+      ></div>
 
       {/* Main Container - Scalable */}
       <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full">
@@ -45,7 +78,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         {/* Card Content - Flex column with scaling gaps */}
-        <div className="relative z-10 bg-white/95 dark:bg-palette-navyLight/95 backdrop-blur-xl rounded-[22px] px-6 py-6 sm:py-8 shadow-xl dark:shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden">
+        <div className="relative z-10 bg-white/95 dark:bg-[#0f1016]/95 backdrop-blur-xl rounded-[22px] px-6 py-6 sm:py-8 shadow-xl dark:shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-white/5">
           
           {/* Lang Switcher */}
           <button
@@ -64,7 +97,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-3 sm:mb-4 shadow-lg relative z-10 object-cover"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-3 sm:mb-4 shadow-lg relative z-10 object-cover bg-black"
               />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('welcome')}</h1>

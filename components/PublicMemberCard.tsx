@@ -9,53 +9,64 @@ interface PublicMemberCardProps {
   nickname: string;
 }
 
-// --- BACKGROUND PATTERNS ---
-const DragonPattern = ({ color }: { color: string }) => {
-  const safeColor = color ? color.replace('#', '%23') : '%23ffffff';
-  
-  return (
-    <div 
-        className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
-        style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828-.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${safeColor}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-            maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
-        }}
-    ></div>
-  );
-};
+// --- BACKGROUND COMPONENTS ---
 
 export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string }) => (
   <div className="fixed inset-0 z-0 pointer-events-none bg-[#020205] overflow-hidden">
     <style>{`
       @keyframes float-light {
-        0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-        33% { transform: translate(30%, 20%) scale(1.1); opacity: 0.6; }
-        66% { transform: translate(-20%, 40%) scale(0.9); opacity: 0.5; }
-        100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+        0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+        33% { transform: translate(30%, 20%) scale(1.2); opacity: 0.5; }
+        66% { transform: translate(-20%, 40%) scale(0.9); opacity: 0.4; }
+        100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+      }
+      @keyframes pulse-hex {
+        0% { opacity: 0.03; }
+        50% { opacity: 0.08; }
+        100% { opacity: 0.03; }
       }
     `}</style>
-    <div className="absolute inset-0 bg-radial-gradient from-[#1a1a2e] via-[#020205] to-black opacity-80"></div>
+    
+    {/* Base Dark Gradient */}
+    <div className="absolute inset-0 bg-radial-gradient from-[#0f1020] via-[#020205] to-black"></div>
+
+    {/* Moving Glow Blob (Behind the mesh) */}
     <div 
-        className="absolute top-[-20%] left-[-20%] w-[140vw] h-[140vw] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000 ease-in-out"
+        className="absolute top-[-20%] left-[-20%] w-[120vw] h-[120vw] rounded-full blur-[150px] mix-blend-screen transition-colors duration-1000 ease-in-out"
         style={{ 
             backgroundColor: glowColor,
-            animation: 'float-light 20s infinite ease-in-out'
+            animation: 'float-light 15s infinite ease-in-out'
         }}
     ></div>
+
+    {/* Hexagon Mesh Pattern */}
     <div 
-        className="absolute inset-0 opacity-[0.08]"
+        className="absolute inset-0 z-10"
         style={{
-            backgroundImage: `
-                linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)
-            `,
-            backgroundSize: '40px 40px',
-            maskImage: 'radial-gradient(circle at center, black 0%, transparent 100%)'
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ffffff' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E")`,
+            backgroundSize: '60px 60px',
+            maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)',
+            animation: 'pulse-hex 4s infinite ease-in-out'
         }}
     ></div>
-    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20"></div>
+
+    {/* Additional Decorative Lines */}
+    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.4)_100%)] z-20"></div>
   </div>
 );
+
+const DragonPattern = ({ color }: { color: string }) => {
+    const safeColor = color ? color.replace('#', '%23') : '%23ffffff';
+    return (
+      <div 
+          className="absolute inset-0 opacity-30 pointer-events-none mix-blend-overlay"
+          style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='${safeColor}' stroke-width='1' stroke-opacity='0.4'/%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+          }}
+      ></div>
+    );
+};
 
 export const getTierTheme = (id: string | undefined) => {
   const safeId = id || 'WARRIOR';
@@ -317,9 +328,15 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050510] flex flex-col gap-4 items-center justify-center relative z-50">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-        <p className="text-white/50 text-xs font-mono animate-pulse">SYNCING DATA...</p>
+      <div className="min-h-screen bg-[#020205] flex flex-col gap-4 items-center justify-center relative z-50 overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%237c3aed' stroke-width='0.5'/%3E%3C/svg%3E")`,
+          }}
+        ></div>
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500 relative z-10" />
+        <p className="text-white/50 text-xs font-mono animate-pulse relative z-10">SYNCING DATA...</p>
       </div>
     );
   }
@@ -327,23 +344,26 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   // Ensure this error screen has high z-index and explicit background
   if (!member || !stats) {
     return (
-      <div className="min-h-screen bg-[#050510] flex flex-col items-center justify-center text-slate-400 p-8 text-center font-sans relative z-50">
-        <AlertCircle size={48} className="mb-4 text-red-500" />
-        <h1 className="text-2xl font-bold text-white mb-2">Member Tidak Ditemukan</h1>
-        <p className="mb-6">Pastikan link atau nickname yang Anda masukkan benar.</p>
-        <div className="flex flex-col gap-2">
-           <button 
-              onClick={handleManualRefresh}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
-           >
-              <RefreshCw size={18} /> Refresh Data
-           </button>
-           <a 
-             href="/"
-             className="px-6 py-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl font-bold text-sm transition-colors"
-           >
-             Kembali ke Home
-           </a>
+      <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center text-slate-400 p-8 text-center font-sans relative z-50">
+        <GamingBackground glowColor="#ef4444" />
+        <div className="relative z-10 flex flex-col items-center">
+            <AlertCircle size={48} className="mb-4 text-red-500" />
+            <h1 className="text-2xl font-bold text-white mb-2">Member Tidak Ditemukan</h1>
+            <p className="mb-6">Pastikan link atau nickname yang Anda masukkan benar.</p>
+            <div className="flex flex-col gap-2">
+            <button 
+                onClick={handleManualRefresh}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
+            >
+                <RefreshCw size={18} /> Refresh Data
+            </button>
+            <a 
+                href="/"
+                className="px-6 py-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl font-bold text-sm transition-colors"
+            >
+                Kembali ke Home
+            </a>
+            </div>
         </div>
       </div>
     );
