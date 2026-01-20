@@ -18,32 +18,26 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   const { t, language, setLanguage } = useLanguage();
   const { settings } = useData();
   
-  // DYNAMIC ADDRESS BAR COLOR LOGIC
   useEffect(() => {
     const metaThemeColor = document.querySelector("meta[name=theme-color]");
     if (metaThemeColor) {
-      // Dark: #030712 (Deep Void), Light: #f5f3ff
       metaThemeColor.setAttribute("content", theme === 'dark' ? '#030712' : '#f5f3ff');
     }
   }, [theme]);
   
-  // Desktop Sidebar Item (Minimized with Tooltip)
   const NavItemDesktop = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => {
     const isActive = currentTab === id;
     return (
       <div 
         onClick={() => setTab(id)} 
-        className={`group relative flex items-center justify-center w-12 h-12 mx-auto rounded-2xl cursor-pointer transition-all duration-300 mb-4
+        className={`group relative flex items-center justify-center w-14 h-14 mx-auto rounded-[1.2rem] cursor-pointer transition-all duration-500 mb-4
         ${isActive 
-          ? 'bg-gradient-to-br from-palette-mustard to-palette-purple text-white shadow-[0_0_20px_-5px_rgba(124,58,237,0.5)] scale-110 border border-white/20' 
+          ? 'bg-palette-mustard text-white shadow-2xl shadow-palette-mustard/40 scale-110 border border-white/20 backdrop-blur-md' 
           : 'text-slate-400 hover:bg-white/10 hover:text-white hover:scale-105'}`}
       >
-        <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-        
-        {/* Tooltip (Cyberpunk Style) */}
-        <div className="absolute left-full ml-5 px-3 py-1.5 bg-[#0f1016] border border-white/10 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-200 pointer-events-none whitespace-nowrap z-[100] shadow-xl backdrop-blur-md">
+        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+        <div className="absolute left-full ml-5 px-3 py-1.5 bg-[#0f1016]/90 border border-white/10 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-lg opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-[100] shadow-2xl backdrop-blur-xl">
           {label}
-          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#0f1016] rotate-45 border-l border-b border-white/10"></div>
         </div>
       </div>
     );
@@ -57,30 +51,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     };
 
     return (
-      <button 
-        onClick={handleClick}
-        className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-95 transition-transform duration-100 min-w-0"
-      >
-        <div className={`
-           transition-all duration-300 ease-out flex items-center justify-center rounded-xl mb-1 relative
-           ${isActive 
-             ? 'w-10 h-10 sm:w-12 sm:h-10 bg-palette-mustard/20 text-palette-mustard' 
-             : 'w-auto h-auto text-slate-500'
-           }
-        `}>
-           {isActive && <div className="absolute inset-0 bg-palette-mustard/20 blur-lg rounded-full"></div>}
+      <button onClick={handleClick} className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-90 transition-transform duration-100 min-w-0">
+        <div className={`transition-all duration-500 ease-out flex items-center justify-center rounded-2xl mb-1 relative ${isActive ? 'w-12 h-10 bg-palette-mustard/20 text-palette-mustard' : 'w-auto h-auto text-slate-500'}`}>
+           {isActive && <div className="absolute inset-0 bg-palette-mustard/20 blur-xl rounded-full"></div>}
            <Icon size={isActive ? 22 : 24} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
         </div>
-        
-        <span className={`
-            text-[9px] font-bold leading-none tracking-wide transition-all duration-300 truncate w-full text-center uppercase
-            ${isActive 
-                ? 'text-palette-mustard scale-100' 
-                : 'text-slate-500 scale-90'
-            }
-        `}>
-            {label}
-        </span>
+        <span className={`text-[8px] font-black leading-none tracking-[0.1em] transition-all duration-500 truncate w-full text-center uppercase ${isActive ? 'text-palette-mustard scale-105' : 'text-slate-500 scale-90 opacity-60'}`}>{label}</span>
       </button>
     );
   };
@@ -89,121 +65,70 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   const appName = settings.businessName || "Ziezan Station";
 
   return (
-    // MAIN WRAPPER: Deep Void Background for Gaming Feel
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-200 overflow-hidden font-sans transition-colors duration-300 fixed inset-0 supports-[height:100dvh]:h-[100dvh]">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-200 overflow-hidden font-sans transition-colors duration-300 fixed inset-0">
       
-      {/* Sidebar - Desktop (Glass HUD) */}
-      <aside className="hidden md:flex w-24 bg-white/80 dark:bg-[#0f1016]/60 backdrop-blur-2xl border-r border-slate-200/50 dark:border-white/5 flex-col items-center py-8 z-50 shadow-2xl transition-colors duration-300 overflow-visible shrink-0 relative">
-        
-        {/* Glow Line */}
-        <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-palette-mustard/50 to-transparent opacity-50"></div>
+      {/* Sidebar - Enhanced Glassmorphism */}
+      <aside className="hidden md:flex w-28 bg-white/40 dark:bg-[#0f1016]/40 backdrop-blur-3xl border-r border-white/20 dark:border-white/5 flex-col items-center py-10 z-50 shadow-2xl transition-all duration-500 overflow-visible shrink-0 relative">
+        <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-palette-mustard/30 to-transparent opacity-40"></div>
 
-        {/* App Logo */}
-        <div className="mb-10 w-14 h-14 relative group">
-           <div className="absolute inset-0 bg-palette-mustard/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="mb-12 w-16 h-16 relative group">
+           <div className="absolute inset-0 bg-palette-mustard/30 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
            <img 
              src={appLogo} 
              alt={appName} 
-             className="w-full h-full object-cover cursor-pointer hover:rotate-6 transition-transform rounded-2xl shadow-lg bg-black border border-white/10 relative z-10"
-             title={appName}
+             className="w-full h-full object-cover cursor-pointer group-hover:scale-110 transition-all rounded-[1.5rem] shadow-2xl bg-black border border-white/20 relative z-10"
              onClick={() => setTab('dashboard')}
              onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
            />
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 w-full flex flex-col items-center">
             <NavItemDesktop id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
             <NavItemDesktop id="consoles" icon={Gamepad2} label={t('consoles')} />
             <NavItemDesktop id="members" icon={Users} label={t('members')} />
-            
-            <div className="w-10 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent my-6"></div>
-            
+            <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent my-8"></div>
             <NavItemDesktop id="reports" icon={FileBarChart} label={t('reports')} />
-            {user.role === 'ADMIN' && (
-              <NavItemDesktop id="settings" icon={Settings} label={t('settings')} />
-            )}
+            {user.role === 'ADMIN' && <NavItemDesktop id="settings" icon={Settings} label={t('settings')} />}
         </nav>
 
-        {/* Footer Actions */}
-        <div className="mt-auto flex flex-col items-center gap-6">
-           <button 
-            onClick={onLogout}
-            className="group relative flex items-center justify-center w-10 h-10 rounded-xl text-slate-500 hover:text-white hover:bg-red-500/20 transition-all border border-transparent hover:border-red-500/50"
-            title={t('logout')}
-          >
-            <LogOut size={20} />
-          </button>
+        <div className="mt-auto flex flex-col items-center gap-6 pb-2">
+           <button onClick={onLogout} className="group relative flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500 hover:text-white hover:bg-red-500/20 transition-all border border-transparent hover:border-red-500/40 backdrop-blur-md shadow-inner" title={t('logout')}><LogOut size={20} /></button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
         
-        {/* Top Header (Glassmorphism) */}
-        <header className="bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 h-20 flex justify-between items-center px-6 md:px-10 sticky top-0 z-10 transition-colors duration-300 shrink-0">
-          
-          {/* Mobile Logo */}
-          <div className="flex items-center gap-3 md:hidden">
-             <div className="w-10 h-10 rounded-xl shadow-lg border border-white/10 overflow-hidden shrink-0 bg-black">
-                <img 
-                  src={appLogo} 
-                  alt={appName} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
-                />
+        {/* Header - Transparent Glass */}
+        <header className="bg-white/30 dark:bg-transparent backdrop-blur-xl border-b border-white/20 dark:border-white/5 h-20 flex justify-between items-center px-6 md:px-10 sticky top-0 z-40 transition-all duration-500 shrink-0">
+          <div className="flex items-center gap-4 md:hidden">
+             <div className="w-11 h-11 rounded-[1rem] shadow-xl border border-white/20 overflow-hidden shrink-0 bg-black animate-zoom-in">
+                <img src={appLogo} alt={appName} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")} />
              </div>
-             <span className="hidden min-[360px]:inline-block font-black text-lg text-white tracking-wide truncate max-w-[120px]">
-                ZIEZAN<span className="text-palette-mustard">.</span>
-             </span>
+             <span className="font-black text-xl text-slate-900 dark:text-white tracking-tighter uppercase">ZIEZAN<span className="text-palette-mustard">.</span></span>
           </div>
           
-          {/* Desktop Title */}
           <div className="hidden md:block">
-            <h2 className="text-2xl font-black uppercase tracking-wide text-slate-900 dark:text-white flex items-center gap-4">
-                <span className="flex h-3 w-3 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-palette-mustard opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-palette-mustard shadow-[0_0_10px_#7c3aed]"></span>
-                </span>
+            <h2 className="text-xl font-black uppercase tracking-[0.1em] text-slate-900 dark:text-white flex items-center gap-4 animate-fade-in">
+                <div className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-palette-mustard opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-palette-mustard shadow-[0_0_15px_#7c3aed]"></span></div>
                 {t(currentTab as any)}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-               onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-               className="h-10 px-4 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white font-bold text-[10px] flex items-center gap-2 hover:bg-white/10 hover:border-palette-mustard transition-all active:scale-95"
-            >
-               <Languages size={16} />
-               <span className="mt-0.5">{language.toUpperCase()}</span>
-            </button>
-            <button 
-              onClick={toggleTheme}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-palette-yellow transition-all hover:border-palette-mustard active:scale-95"
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button 
-              onClick={onLogout} 
-              className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 active:scale-95 transition-all"
-            >
-              <LogOut size={18} />
-            </button>
+            <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} className="h-10 px-4 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-slate-900 dark:text-white font-black text-[10px] tracking-widest flex items-center gap-2 hover:bg-white/60 transition-all active:scale-95 shadow-sm backdrop-blur-md uppercase"><Languages size={16} /> {language}</button>
+            <button onClick={toggleTheme} className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-slate-900 dark:text-palette-yellow transition-all hover:scale-105 active:scale-90 shadow-sm backdrop-blur-md">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
+            <button onClick={onLogout} className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 active:scale-90 transition-all backdrop-blur-md"><LogOut size={18} /></button>
           </div>
         </header>
 
-        {/* Content Scroll Area */}
-        <main className="flex-1 overflow-y-auto scroll-smooth overscroll-contain bg-slate-100 dark:bg-transparent relative">
-          {/* Decorative Grid Background for Dark Mode */}
-          <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-          
-          <div className="w-full min-h-full p-4 sm:p-6 lg:p-10 pb-32 md:pb-10 relative">
+        <main className="flex-1 overflow-y-auto scroll-smooth overscroll-contain relative custom-scrollbar">
+          <div className="w-full min-h-full p-4 sm:p-6 lg:p-10 pb-32 md:pb-12 relative z-10">
             {children}
           </div>
         </main>
 
-        {/* Bottom Navigation - Mobile (Premium Glassmorphism) */}
-        <nav className="md:hidden fixed bottom-6 left-6 right-6 bg-[#0f1016]/90 backdrop-blur-2xl border border-white/10 flex justify-between items-center px-2 pb-safe z-50 shadow-2xl rounded-2xl h-[72px]">
+        {/* Mobile Bottom Nav - Deep Floating Glass */}
+        <nav className="md:hidden fixed bottom-6 left-6 right-6 bg-white/60 dark:bg-[#0f1016]/80 backdrop-blur-2xl border border-white/30 dark:border-white/10 flex justify-between items-center px-4 pb-safe z-50 shadow-2xl rounded-[2rem] h-[72px] animate-slide-in">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />

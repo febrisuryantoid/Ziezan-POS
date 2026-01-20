@@ -13,12 +13,10 @@ type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'USAGE_DESC' | 'STATUS';
 
 const DEFAULT_CONSOLE_IMAGE = "https://beeimg.com/images/j43189671173.png";
 
-// --- REUSABLE FORMATTED INPUT ---
 const FormattedNumberInput: React.FC<{ value: number; onChange: (v: number) => void; className?: string; placeholder?: string }> = ({ value, onChange, className, placeholder }) => {
     const [display, setDisplay] = useState(value === 0 ? '' : value.toLocaleString('id-ID'));
     
     useEffect(() => {
-        // Sync external changes if value is significant
         if (value !== parseInt(display.replace(/\./g, '') || '0')) {
              setDisplay(value === 0 ? '' : value.toLocaleString('id-ID'));
         }
@@ -83,14 +81,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   
   const [now, setNow] = useState(new Date());
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000); 
     return () => clearInterval(timer);
@@ -112,7 +102,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
   const filteredConsoles = useMemo(() => {
     return consoles.filter(c => {
-      // FIX: Safe Name
       const safeName = c.name || '';
       const matchesSearch = safeName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterStatus === 'ALL' ? true : 
@@ -141,8 +130,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       const sorted = activeMembers.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''));
       if (!memberSearchTerm) return sorted;
       const lowerTerm = memberSearchTerm.toLowerCase();
-      
-      // FIX: Safe Member Search
       return sorted.filter(m => (m.name || '').toLowerCase().includes(lowerTerm) || (m.nickname || '').toLowerCase().includes(lowerTerm));
   }, [members, memberSearchTerm]);
 
@@ -151,10 +138,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     const member = members.find(m => m.id === rentalMemberId);
     if (!member) return null;
 
-    let hoursToPay = rentalDuration;
     let freeHoursUsed = 0;
     let totalBaseCost = rentalDuration * settings.hourlyRate;
-
     const canUseBonus = member.freeHoursBalance >= 1;
 
     if (selectedPayment === 'BONUS') {
@@ -262,10 +247,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       addToast('error', 'Gagal', 'Console sedang digunakan. Selesaikan sesi terlebih dahulu.');
       return;
     }
-    
     const newStatus = c.status === ConsoleStatus.MAINTENANCE ? ConsoleStatus.AVAILABLE : ConsoleStatus.MAINTENANCE;
     updateConsoleStatus(c.id, newStatus);
-    
     if(newStatus === ConsoleStatus.MAINTENANCE) {
        addToast('warning', 'Mode Maintenance', `${c.name} kini dalam perbaikan.`);
     } else {
@@ -273,13 +256,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   };
 
-  const openConfirmDelete = (console: Console) => {
-    setDeletingConsole(console);
-  };
-
   const executeDelete = () => {
     if(!deletingConsole) return;
-    
     const success = deleteConsole(deletingConsole.id);
     if(!success) {
       addToast('error', 'Gagal Menghapus', t('unit_in_use'));
@@ -344,31 +322,32 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
     return (
         <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in">
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeft size={18} /></button>
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md"><ChevronLeft size={18} /></button>
             {getPageNumbers().map((page, idx) => (
-                <button key={idx} onClick={() => typeof page === 'number' && setCurrentPage(page)} disabled={typeof page !== 'number'} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${page === currentPage ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' : typeof page === 'number' ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10' : 'text-slate-400 cursor-default'}`}>{page}</button>
+                <button key={idx} onClick={() => typeof page === 'number' && setCurrentPage(page)} disabled={typeof page !== 'number'} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all backdrop-blur-md ${page === currentPage ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' : typeof page === 'number' ? 'bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10' : 'text-slate-400 cursor-default'}`}>{page}</button>
             ))}
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRight size={18} /></button>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md"><ChevronRight size={18} /></button>
         </div>
     );
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div className="mb-2 xl:mb-0">
+      {/* Control Bar with Glass Effect */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white/30 dark:bg-white/[0.02] p-4 rounded-[2.5rem] border border-white/20 dark:border-white/5 backdrop-blur-xl shadow-sm">
+        <div className="mb-2 xl:mb-0 px-2">
           <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
-          <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
+          <p className="text-palette-brown/70 dark:text-palette-cream/60 text-[10px] uppercase font-black tracking-widest">{t('manage_units_desc')}</p>
         </div>
         
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400" />
+            <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="h-10 sm:h-11 pl-10 pr-3 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-inner text-slate-900 dark:text-white placeholder:text-slate-400 backdrop-blur-md" />
           </div>
           <div className="relative col-span-1 md:col-span-6 lg:w-48">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer">
+             <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-xs sm:text-sm font-bold w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-inner text-slate-900 dark:text-white appearance-none truncate cursor-pointer backdrop-blur-md">
                 <option value="NAME_ASC">{t('sort_name_asc')}</option>
                 <option value="NAME_DESC">{t('sort_name_desc')}</option>
                 <option value="USAGE_DESC">{t('sort_usage_desc')}</option>
@@ -377,13 +356,13 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           </div>
           <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer">
+             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-xs sm:text-sm font-bold w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-inner text-slate-900 dark:text-white appearance-none truncate cursor-pointer backdrop-blur-md">
                 <option value="ALL">{t('filter_all')}</option>
                 <option value="AVAILABLE">{t('filter_avail')}</option>
                 <option value="IN_USE">{t('filter_in_use')}</option>
              </select>
           </div>
-          <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95">
+          <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-xl bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95 uppercase tracking-wider">
             <Plus size={18} /> {t('add_unit')}
           </button>
         </div>
@@ -392,8 +371,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       <div className="space-y-4">
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm"><Gamepad2 size={18} /></div>
-          <h3 className="text-lg font-bold text-palette-navy dark:text-white">{t('active_consoles')}</h3>
-          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">Total: {filteredConsoles.length}</span>
+          <h3 className="text-lg font-bold text-palette-navy dark:text-white uppercase tracking-tight">{t('active_consoles')}</h3>
+          <span className="ml-auto text-[10px] font-black text-palette-brown/70 dark:text-slate-300 bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10 px-3 py-1 rounded-full shadow-sm backdrop-blur-md">Total: {filteredConsoles.length}</span>
         </div>
 
         <div className="grid grid-cols-1 min-[350px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
@@ -404,64 +383,67 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             const imageUrl = console.imageUrl || DEFAULT_CONSOLE_IMAGE;
             
             return (
-              <div key={console.id} className={`group relative rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-xl dark:shadow-none bg-white dark:bg-palette-navyLight ${isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'}`}>
+              <div key={console.id} className={`group relative rounded-[2rem] border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-2xl dark:shadow-none bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl ${isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-white/20 dark:border-white/5 hover:border-palette-mustard/40 hover:-translate-y-1'}`}>
                 <div className="aspect-video w-full bg-slate-100 dark:bg-black/20 relative">
                   <img src={imageUrl} alt={console.name} className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-70"></div>
                   
                   {isMaintenance && (
-                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-[1px] animate-fade-in">
+                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-[2px] animate-fade-in">
                         <div className="w-full h-full absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(249,115,22,0.1)_10px,rgba(249,115,22,0.1)_20px)] pointer-events-none"></div>
                         <Construction size={48} className="text-palette-copper mb-2 animate-bounce" />
-                        <span className="bg-palette-copper text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg border border-white/20 tracking-wider">UNDER MAINTENANCE</span>
+                        <span className="bg-palette-copper text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-2xl border border-white/20 tracking-widest uppercase">Maintenance</span>
                      </div>
                   )}
                   
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                     <button onClick={() => toggleMaintenance(console)} className={`p-2 backdrop-blur-md rounded-full text-white transition-colors ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-slate-500/50 hover:bg-slate-500'}`} title={isMaintenance ? "Selesai Perbaikan" : "Mode Perbaikan"}><Wrench size={14} /></button>
-                     <button onClick={() => setEditingConsole(console)} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"><Edit2 size={14} /></button>
-                     <button onClick={() => openConfirmDelete(console)} className="p-2 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40"><Trash2 size={14} /></button>
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-20 translate-y-2 group-hover:translate-y-0">
+                     <button onClick={() => toggleMaintenance(console)} className={`p-2.5 backdrop-blur-md rounded-full text-white transition-all shadow-lg ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-white/10 hover:bg-white/20 border border-white/10'}`} title={isMaintenance ? "Selesai Perbaikan" : "Mode Perbaikan"}><Wrench size={14} /></button>
+                     <button onClick={() => setEditingConsole(console)} className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 border border-white/10 shadow-lg"><Edit2 size={14} /></button>
+                     <button onClick={() => setDeletingConsole(console)} className="p-2.5 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40 border border-red-500/20 shadow-lg"><Trash2 size={14} /></button>
                   </div>
 
                   <div className="absolute top-3 left-3 z-20">
-                     <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${isActive ? 'bg-palette-mustard/90 text-white animate-pulse' : isMaintenance ? 'bg-palette-copper/90 text-white' : 'bg-palette-green/90 text-white'}`}>
+                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/10 shadow-lg ${isActive ? 'bg-palette-mustard/90 text-white animate-pulse' : isMaintenance ? 'bg-palette-copper/90 text-white' : 'bg-emerald-500/90 text-white'}`}>
                         {isActive ? t('session_active') : isMaintenance ? t('maintenance') : t('available_status')}
                      </span>
                   </div>
                 </div>
 
-                <div className="p-3 sm:p-5 flex flex-col flex-1 relative">
-                   <h3 className="font-bold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
+                <div className="p-4 sm:p-5 flex flex-col flex-1 relative">
+                   <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
                    
                    {isActive && session ? (
                       <div className="mt-2 space-y-3">
                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 max-w-[60%] truncate"><User size={12}/> {session.tx.memberName}</span>
-                            <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{session.formattedRemaining}</span>
+                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-bold max-w-[65%] truncate">
+                                <div className="p-1 bg-palette-mustard/10 rounded-lg text-palette-mustard"><User size={10}/></div>
+                                {session.tx.memberName}
+                            </span>
+                            <span className="font-mono font-black text-slate-900 dark:text-palette-mustard text-sm bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-lg">{session.formattedRemaining}</span>
                          </div>
-                         <div className="h-1.5 sm:h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-palette-mustard'}`} style={{ width: `${session.progress}%` }}></div>
+                         <div className="h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+                            <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-gradient-to-r from-palette-mustard to-palette-purple'}`} style={{ width: `${session.progress}%` }}></div>
                          </div>
-                         <div className="flex justify-between text-[8px] sm:text-[10px] font-bold uppercase text-slate-400">
-                            <span>{t('elapsed')}</span>
-                            <span>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
+                         <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-slate-400">
+                            <span>{t('elapsed')} {session.formattedElapsed}</span>
+                            <span className={session.isWarning ? 'text-palette-copper' : ''}>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
                          </div>
                       </div>
                    ) : (
                       <div className="mt-2 flex-1 flex items-center text-slate-400 text-xs">
-                         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg w-full ${isMaintenance ? 'bg-palette-copper/10 text-palette-copper' : 'bg-slate-50 dark:bg-white/5'}`}>
-                            {isMaintenance ? <Construction size={14}/> : <Clock size={14} />}
-                            <span className="truncate">{isMaintenance ? 'Unit sedang diperbaiki' : t('ready_to_play')}</span>
+                         <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl w-full border border-dashed transition-colors ${isMaintenance ? 'bg-palette-copper/5 border-palette-copper/20 text-palette-copper' : 'bg-black/5 dark:bg-white/[0.02] border-white/10'}`}>
+                            {isMaintenance ? <Construction size={16}/> : <Clock size={16} className="text-palette-mustard" />}
+                            <span className="font-bold uppercase tracking-widest text-[10px]">{isMaintenance ? 'UNDER REPAIR' : t('ready_to_play')}</span>
                          </div>
                       </div>
                    )}
 
-                   <div className="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 dark:border-white/5">
+                   <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
                       {isActive && session ? (
-                         <button onClick={() => initiateCheckout(session.tx)} className="w-full py-2.5 sm:py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-xs sm:text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"><Power size={14} className="sm:w-4 sm:h-4" /> Stop</button>
+                         <button onClick={() => initiateCheckout(session.tx)} className="w-full py-3.5 rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-black text-xs sm:text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-lg shadow-red-500/10 active:scale-95"><Power size={16} /> Stop</button>
                       ) : (
-                         <button onClick={() => setSelectedConsoleId(console.id)} disabled={isMaintenance} className={`w-full py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${isMaintenance ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-slate-900/10'}`}>
-                            {isMaintenance ? <span className="text-[10px]">UNDER MAINTENANCE</span> : <><Play size={14} className="sm:w-4 sm:h-4" fill="currentColor" /> {t('start_session')}</>}
+                         <button onClick={() => setSelectedConsoleId(console.id)} disabled={isMaintenance} className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xl uppercase tracking-widest active:scale-95 ${isMaintenance ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed border border-white/5' : 'bg-palette-navy dark:bg-white text-white dark:text-palette-navy hover:-translate-y-0.5 hover:shadow-palette-mustard/20 shadow-black/20'}`}>
+                            {isMaintenance ? <span className="text-[10px]">Disabled</span> : <><Play size={16} fill="currentColor" /> {t('start_session')}</>}
                          </button>
                       )}
                    </div>
@@ -473,254 +455,131 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         {renderPagination()}
       </div>
 
-      {checkoutTx && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-              <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
-                 <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Checkout Sesi</h3>
-                    <p className="text-xs text-slate-500">Konfirmasi pembayaran akhir</p>
-                 </div>
-                 <button onClick={() => setCheckoutTx(null)} className="p-2 bg-white dark:bg-white/10 rounded-full hover:bg-slate-200"><X size={18} /></button>
-              </div>
-              
-              <div className="p-6 overflow-y-auto space-y-5">
-                 <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Member</span>
-                        <span className="font-bold dark:text-white">{checkoutTx.memberName}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Durasi Rental</span>
-                        <span className="font-bold dark:text-white">{checkoutTx.durationHours} Jam</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Biaya Rental</span>
-                        <span className="font-mono dark:text-white">Rp {checkoutTx.cost.toLocaleString()}</span>
-                    </div>
-                    
-                    <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10">
-                        <div className="flex items-center gap-2 mb-2">
-                            <ShoppingBag size={16} className="text-palette-mustard"/>
-                            <span className="text-xs font-bold uppercase text-slate-500">Jajanan / Tambahan (Rp)</span>
-                        </div>
-                        <FormattedNumberInput 
-                            value={extraCost}
-                            onChange={(v) => setExtraCost(v)}
-                            className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-right font-mono font-bold focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white"
-                            placeholder="0"
-                        />
-                    </div>
-
-                    <div className="border-t border-slate-200 dark:border-white/10 pt-3 flex justify-between items-center">
-                        <span className="text-lg font-bold text-slate-900 dark:text-white">Total Akhir</span>
-                        {checkoutPayment === 'BONUS' ? (
-                            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                                Rp {extraCost.toLocaleString()} + Bonus
-                            </span>
-                        ) : (
-                            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                                Rp {(checkoutTx.cost + extraCost).toLocaleString()}
-                            </span>
-                        )}
-                    </div>
-                 </div>
-
-                 <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Metode Pembayaran</label>
-                    
-                    {(() => {
-                        const member = members.find(m => m.id === checkoutTx.memberId);
-                        const canPayWithBonus = member && member.freeHoursBalance > 0;
-                        return (
-                            <>
-                                {member && (
-                                    <div className="mb-2 text-[10px] text-slate-500 flex items-center justify-between px-1">
-                                        <span>Saldo Bonus Member:</span>
-                                        <span className="font-bold text-emerald-500">{member.freeHoursBalance} Jam</span>
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button 
-                                        onClick={() => setCheckoutPayment('CASH')}
-                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
-                                    >
-                                        <Wallet size={16} /> Tunai
-                                    </button>
-                                    <button 
-                                        onClick={() => setCheckoutPayment('QRIS')}
-                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
-                                    >
-                                        <QrCode size={16} /> QRIS
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={() => { if(canPayWithBonus) setCheckoutPayment('BONUS'); }}
-                                        disabled={!canPayWithBonus}
-                                        className={`col-span-2 p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'BONUS' ? 'bg-emerald-600 text-white border-emerald-600' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'}`}
-                                    >
-                                        <Gift size={16} /> Bayar Pakai Saldo Bonus
-                                    </button>
-                                </div>
-                            </>
-                        );
-                    })()}
-                 </div>
-              </div>
-
-              <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
-                 <button 
-                    onClick={confirmCheckout}
-                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
-                 >
-                    <Power size={18} /> Selesaikan & Simpan
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
-
+      {/* RENTAL MODAL - HIGH GLASS EFFECT */}
       {selectedConsoleId && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-              <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
-                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('new_rental_session')}</h3>
-                 <button onClick={resetModal} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full hover:bg-slate-200"><X size={18} /></button>
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+           <div className="bg-white/90 dark:bg-palette-navyLight/95 w-full max-w-md sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-white/20 dark:border-white/5 backdrop-blur-3xl">
+              <div className="p-6 border-b border-white/20 dark:border-white/5 flex justify-between items-center shrink-0">
+                 <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{t('new_rental_session')}</h3>
+                    <p className="text-[10px] font-black text-palette-mustard uppercase tracking-widest">Ziezan Terminal v1.1.0</p>
+                 </div>
+                 <button onClick={resetModal} className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"><X size={20} /></button>
               </div>
               
-              <div className="p-6 overflow-y-auto">
+              <div className="p-8 overflow-y-auto custom-scrollbar space-y-6">
                  {currentStep === 'INPUT' && (
-                    <div className="space-y-5">
-                       <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-500 uppercase">{t('select_member')}</label>
+                    <div className="space-y-6">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{t('select_member')}</label>
                           <div className="relative" ref={dropdownRef}>
-                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                <input type="text" placeholder={t('search_placeholder')} value={memberSearchTerm} onFocus={() => setIsMemberDropdownOpen(true)} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
+                             <div className="relative group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-palette-mustard transition-colors" size={18} />
+                                <input type="text" placeholder={t('search_placeholder')} value={memberSearchTerm} onFocus={() => setIsMemberDropdownOpen(true)} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} className="w-full pl-12 pr-4 py-4 bg-white/50 dark:bg-black/40 border border-white/40 dark:border-white/10 rounded-2xl text-base md:text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white transition-all shadow-inner backdrop-blur-md" />
                              </div>
                              
                              {isMemberDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20">
+                                <div className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-palette-navy/95 border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl max-h-56 overflow-y-auto z-[160] backdrop-blur-2xl p-2 animate-zoom-in">
                                    {sortedAndFilteredMembers.length > 0 ? (
                                       sortedAndFilteredMembers.map(m => (
-                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname || m.name); setIsMemberDropdownOpen(false); }} className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0">
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{m.nickname}</p>
-                                            <p className="text-xs text-slate-500">{m.membershipId}</p>
+                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname || m.name); setIsMemberDropdownOpen(false); }} className="p-4 hover:bg-palette-mustard hover:text-white rounded-xl cursor-pointer transition-colors border-b border-black/5 dark:border-white/5 last:border-0 group">
+                                            <p className="text-sm font-black truncate">{m.nickname}</p>
+                                            <p className="text-[10px] font-bold opacity-60 group-hover:opacity-100">{m.membershipId}</p>
                                          </div>
                                       ))
                                    ) : (
-                                      <div className="p-3 text-center">
-                                         <p className="text-xs text-slate-500 mb-2">Member tidak ditemukan.</p>
-                                         <button onClick={handleQuickAddMember} className="text-xs font-bold text-palette-mustard hover:underline flex items-center justify-center gap-1 w-full"><UserPlus size={12}/> Tambah "{memberSearchTerm}"</button>
+                                      <div className="p-4 text-center">
+                                         <p className="text-xs text-slate-500 mb-3 font-bold">Member tidak ditemukan.</p>
+                                         <button onClick={handleQuickAddMember} className="w-full py-3 rounded-xl bg-palette-mustard/10 text-palette-mustard font-black text-xs uppercase tracking-widest hover:bg-palette-mustard hover:text-white transition-all flex items-center justify-center gap-2"><UserPlus size={14}/> Tambah Baru</button>
                                       </div>
                                    )}
                                 </div>
                              )}
                           </div>
-                          {rentalMemberId && <div className="text-xs text-emerald-500 font-bold flex items-center gap-1"><CheckCircle size={12}/> Member terpilih</div>}
+                          {rentalMemberId && <div className="text-xs text-emerald-500 font-black flex items-center gap-2 px-1 animate-slide-in"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> MEMBER TERPILIH</div>}
                        </div>
 
-                       <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-500 uppercase">{t('duration_hrs')}</label>
-                          <div className="flex items-center gap-4">
-                             <button onClick={() => setRentalDuration(Math.max(1, rentalDuration - 1))} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-200"><ChevronLeft/></button>
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{t('duration_hrs')}</label>
+                          <div className="flex items-center gap-5 bg-black/5 dark:bg-black/20 p-2 rounded-[2rem] border border-white/10">
+                             <button onClick={() => setRentalDuration(Math.max(1, rentalDuration - 1))} className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 shadow-md flex items-center justify-center text-slate-900 dark:text-white hover:bg-slate-100 transition-all active:scale-90"><ChevronLeft size={24}/></button>
                              <div className="flex-1 text-center">
-                                <span className="text-3xl font-black text-slate-900 dark:text-white">{rentalDuration}</span>
-                                <span className="text-xs text-slate-500 block">{t('jam')}</span>
+                                <span className="text-4xl font-black text-slate-900 dark:text-white tabular-nums">{rentalDuration}</span>
+                                <span className="text-[10px] font-black text-slate-500 block uppercase tracking-widest mt-1">{t('jam')}</span>
                              </div>
-                             <button onClick={() => setRentalDuration(rentalDuration + 1)} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-200"><ChevronRight/></button>
+                             <button onClick={() => setRentalDuration(rentalDuration + 1)} className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 shadow-md flex items-center justify-center text-slate-900 dark:text-white hover:bg-slate-100 transition-all active:scale-90"><ChevronRight size={24}/></button>
                           </div>
                        </div>
                     </div>
                  )}
 
                  {currentStep === 'PAYMENT' && calculation && (
-                    <div className="space-y-4">
-                       <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl space-y-2">
-                          <div className="flex justify-between text-sm">
-                             <span className="text-slate-500">{t('cost')} Normal</span>
-                             <span className="font-mono text-slate-900 dark:text-white">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
+                    <div className="space-y-6 animate-fade-in">
+                       <div className="bg-palette-mustard/10 p-6 rounded-3xl border border-palette-mustard/20 space-y-3 backdrop-blur-md shadow-inner">
+                          <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                             <span className="text-slate-500">Harga Normal</span>
+                             <span className="text-slate-900 dark:text-white">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
                           </div>
                           {selectedPayment === 'BONUS' && calculation.freeHoursUsed > 0 && (
-                             <div className="flex justify-between text-sm text-emerald-500">
-                                <span className="flex items-center gap-1"><Gift size={12}/> {t('use_bonus')} ({calculation.freeHoursUsed}h)</span>
-                                <span className="font-mono">-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
+                             <div className="flex justify-between text-xs font-black text-emerald-500 uppercase tracking-wider">
+                                <span className="flex items-center gap-1"><Gift size={14}/> {t('use_bonus')}</span>
+                                <span>-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
                              </div>
                           )}
-                          <div className="border-t border-slate-200 dark:border-white/10 my-2"></div>
-                          <div className="flex justify-between text-lg font-bold">
-                             <span className="text-slate-900 dark:text-white">{t('total_bill')}</span>
-                             <span className="font-mono text-palette-mustard">Rp {calculation.totalCost.toLocaleString()}</span>
+                          <div className="border-t border-palette-mustard/10 my-3"></div>
+                          <div className="flex justify-between items-end">
+                             <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('total_bill')}</span>
+                             <span className="text-3xl font-black text-palette-mustard font-mono">Rp {calculation.totalCost.toLocaleString()}</span>
                           </div>
                        </div>
 
-                       <div className="grid grid-cols-2 gap-3">
-                            <button 
-                                onClick={() => setSelectedPayment('CASH')}
-                                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'CASH' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
-                            >
-                                <Wallet size={24} />
-                                <span className="font-bold text-xs">{t('pay_cash')}</span>
+                       <div className="grid grid-cols-2 gap-4">
+                            <button onClick={() => setSelectedPayment('CASH')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'CASH' ? 'border-palette-mustard bg-palette-mustard/10 text-palette-mustard shadow-lg shadow-palette-mustard/20 scale-105' : 'border-white/20 dark:border-white/5 text-slate-500 hover:border-white/40'}`}>
+                                <Wallet size={28} />
+                                <span className="font-black text-[10px] uppercase tracking-widest">{t('pay_cash')}</span>
                             </button>
-                            <button 
-                                onClick={() => setSelectedPayment('QRIS')}
-                                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'QRIS' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
-                            >
-                                <QrCode size={24} />
-                                <span className="font-bold text-xs">QRIS</span>
+                            <button onClick={() => setSelectedPayment('QRIS')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'QRIS' ? 'border-palette-mustard bg-palette-mustard/10 text-palette-mustard shadow-lg shadow-palette-mustard/20 scale-105' : 'border-white/20 dark:border-white/5 text-slate-500 hover:border-white/40'}`}>
+                                <QrCode size={28} />
+                                <span className="font-black text-[10px] uppercase tracking-widest">QRIS</span>
                             </button>
-                            <button 
-                                onClick={() => { if(calculation.canUseBonus) setSelectedPayment('BONUS'); }}
-                                disabled={!calculation.canUseBonus}
-                                className={`col-span-2 p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'BONUS' ? 'border-emerald-500 bg-emerald-500/5 text-emerald-500' : 'border-slate-200 dark:border-white/10 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed'}`}
-                            >
-                                <Gift size={24} />
-                                <span className="font-bold text-xs">Gunakan Saldo Bonus ({calculation.memberBonus} Jam)</span>
+                            <button onClick={() => { if(calculation.canUseBonus) setSelectedPayment('BONUS'); }} disabled={!calculation.canUseBonus} className={`col-span-2 p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'BONUS' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/20 scale-105' : 'border-white/20 dark:border-white/5 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-emerald-500/30'}`}>
+                                <Gift size={28} />
+                                <span className="font-black text-[10px] uppercase tracking-widest">Saldo Bonus ({calculation.memberBonus} Jam)</span>
                             </button>
                         </div>
                     </div>
                  )}
 
                  {currentStep === 'QRIS' && (
-                    <div className="flex flex-col items-center justify-center py-4">
-                       <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-lg mb-4">
+                    <div className="flex flex-col items-center justify-center py-6 animate-zoom-in">
+                       <div className="w-56 h-56 bg-white p-4 rounded-3xl shadow-2xl mb-6 ring-4 ring-palette-mustard/10">
                           <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MOCK_QRIS_PAYMENT" alt="QRIS" className="w-full h-full" />
                        </div>
-                       <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t('scan_to_pay')}</p>
-                       <p className="text-xs text-slate-500">Scan QRIS di atas untuk pembayaran.</p>
+                       <p className="text-lg font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('scan_to_pay')}</p>
+                       <p className="text-xs text-slate-500 font-bold">Sistem menunggu konfirmasi pembayaran...</p>
                     </div>
                  )}
 
                  {currentStep === 'CONFIRM' && (
-                    <div className="text-center py-6">
-                       <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                          <Gamepad2 size={40} />
+                    <div className="text-center py-8 animate-zoom-in">
+                       <div className="w-24 h-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/20 border border-emerald-500/20 animate-pulse">
+                          <Gamepad2 size={48} />
                        </div>
-                       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('ready_start')}</h3>
-                       <p className="text-slate-500 text-sm">Console akan menyala dan timer dimulai.</p>
+                       <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight uppercase">{t('ready_start')}</h3>
+                       <p className="text-slate-500 text-sm font-medium">Data tersimpan. Timer akan segera diaktifkan.</p>
                     </div>
                  )}
               </div>
 
-              <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
+              <div className="p-6 border-t border-white/20 dark:border-white/5 bg-black/5 dark:bg-white/[0.02] shrink-0">
                  {currentStep === 'INPUT' ? (
-                    <button 
-                       onClick={handleNextStep} disabled={!rentalMemberId}
-                       className="w-full py-3.5 bg-palette-mustard text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                       {t('next_payment')}
-                    </button>
+                    <button onClick={handleNextStep} disabled={!rentalMemberId} className="w-full py-4.5 bg-palette-mustard text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-palette-mustard/30 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] transition-all active:scale-95">{t('next_payment')}</button>
                  ) : currentStep === 'CONFIRM' ? (
-                    <button 
-                       onClick={handleConfirmRental}
-                       className="w-full py-3.5 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20"
-                    >
-                       {t('start_session')}
-                    </button>
+                    <button onClick={handleConfirmRental} className="w-full py-4.5 bg-emerald-500 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/30 hover:scale-[1.02] transition-all active:scale-95">{t('start_session')}</button>
                  ) : (
-                    <div className="flex gap-3">
-                       <button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-3.5 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-slate-600 dark:text-slate-300">{t('back')}</button>
-                       <button onClick={handleNextStep} className="flex-[2] py-3.5 bg-palette-mustard text-white rounded-xl font-bold">{currentStep === 'QRIS' ? t('paid_confirm') : t('confirm_pay')}</button>
+                    <div className="flex gap-4">
+                       <button onClick={() => setCurrentStep('INPUT')} className="flex-1 py-4.5 border-2 border-white/40 dark:border-white/10 rounded-[1.5rem] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">{t('back')}</button>
+                       <button onClick={handleNextStep} className="flex-[2] py-4.5 bg-palette-mustard text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-palette-mustard/30 hover:scale-[1.02] transition-all active:scale-95">{currentStep === 'QRIS' ? t('paid_confirm') : t('confirm_pay')}</button>
                     </div>
                  )}
               </div>
@@ -728,60 +587,113 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       )}
 
+      {/* CHECKOUT MODAL - GLASS STYLE */}
+      {checkoutTx && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+           <div className="bg-white/90 dark:bg-palette-navyLight/95 w-full max-w-md sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-white/20 dark:border-white/5 backdrop-blur-3xl">
+              <div className="p-6 border-b border-white/20 dark:border-white/5 flex justify-between items-center bg-black/5 dark:bg-white/5">
+                 <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Checkout Sesi</h3>
+                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Selesaikan Pembayaran</p>
+                 </div>
+                 <button onClick={() => setCheckoutTx(null)} className="p-2.5 bg-black/10 dark:bg-white/10 rounded-full hover:bg-red-500 hover:text-white transition-all"><X size={20} /></button>
+              </div>
+              
+              <div className="p-8 overflow-y-auto space-y-6">
+                 <div className="space-y-4">
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                        <span className="text-slate-500">Member</span>
+                        <span className="text-slate-900 dark:text-white">{checkoutTx.memberName}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                        <span className="text-slate-500">Durasi Rental</span>
+                        <span className="text-slate-900 dark:text-white">{checkoutTx.durationHours} Jam</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                        <span className="text-slate-500">Biaya Dasar</span>
+                        <span className="text-slate-900 dark:text-white">Rp {checkoutTx.cost.toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="p-5 bg-black/5 dark:bg-black/20 rounded-3xl border-2 border-dashed border-white/20 dark:border-white/10 shadow-inner">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard"><ShoppingBag size={18}/></div>
+                            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Tambahan / Cafe</span>
+                        </div>
+                        <FormattedNumberInput 
+                            value={extraCost}
+                            onChange={(v) => setExtraCost(v)}
+                            className="w-full bg-white dark:bg-palette-navy/60 border border-white/40 dark:border-white/10 rounded-2xl px-5 py-4 text-right font-mono font-black text-xl focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white shadow-inner backdrop-blur-md"
+                            placeholder="0"
+                        />
+                    </div>
+
+                    <div className="border-t border-white/20 dark:border-white/10 pt-4 flex justify-between items-center">
+                        <span className="text-base font-black text-slate-900 dark:text-white uppercase tracking-widest">Total Akhir</span>
+                        <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                            Rp {(checkoutTx.cost + extraCost).toLocaleString()}
+                        </span>
+                    </div>
+                 </div>
+
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Metode Pelunasan</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => setCheckoutPayment('CASH')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard shadow-lg shadow-palette-mustard/20' : 'border-white/20 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><Wallet size={18} /> Tunai</button>
+                        <button onClick={() => setCheckoutPayment('QRIS')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard shadow-lg shadow-palette-mustard/20' : 'border-white/20 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><QrCode size={18} /> QRIS</button>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-6 border-t border-white/20 dark:border-white/5 bg-black/5 dark:bg-white/[0.02]">
+                 <button onClick={confirmCheckout} className="w-full py-4.5 bg-red-600 hover:bg-red-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-red-500/30 flex items-center justify-center gap-3 transition-all active:scale-95"><Power size={20} /> Selesaikan & Simpan</button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* ADD/EDIT MODAL - GLASS STYLE */}
       {(isAdding || editingConsole) && (
-         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
-            <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6">
-               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                  {isAdding ? <PlusCircle size={20} className="text-palette-mustard"/> : <Edit2 size={20} className="text-palette-mustard"/>}
+         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+            <div className="bg-white/90 dark:bg-palette-navyLight/95 w-full max-w-sm sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 backdrop-blur-3xl">
+               <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3 uppercase tracking-tight">
+                  <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard">{isAdding ? <PlusCircle size={22}/> : <Edit2 size={22}/>}</div>
                   {isAdding ? t('add_unit') : t('edit_unit')}
                </h3>
                
-               <form onSubmit={isAdding ? handleAddConsole : handleUpdateConsole} className="space-y-4">
-                  <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-500 uppercase">{t('console_name')}</label>
-                     <input type="text" required value={isAdding ? newConsoleName : editingConsole?.name} onChange={(e) => isAdding ? setNewConsoleName(e.target.value) : setEditingConsole(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard font-bold dark:text-white" placeholder={t('console_name_placeholder')} />
+               <form onSubmit={isAdding ? handleAddConsole : handleUpdateConsole} className="space-y-5">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{t('console_name')}</label>
+                     <input type="text" required value={isAdding ? newConsoleName : editingConsole?.name} onChange={(e) => isAdding ? setNewConsoleName(e.target.value) : setEditingConsole(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 dark:border-white/10 rounded-2xl px-5 py-4 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard font-bold dark:text-white backdrop-blur-md shadow-inner" placeholder={t('console_name_placeholder')} />
                   </div>
-                  <div className="space-y-1.5">
-                     <label className="text-xs font-bold text-slate-500 uppercase">Image URL (Optional)</label>
-                     <div className="relative">
-                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input type="text" value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''} onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard dark:text-white" placeholder="https://..." />
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Image URL</label>
+                     <div className="relative group">
+                        <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-palette-mustard transition-colors" size={18} />
+                        <input type="text" value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''} onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)} className="w-full pl-12 pr-4 py-4 bg-white/50 dark:bg-black/40 border border-white/40 dark:border-white/10 rounded-2xl text-base md:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-palette-mustard dark:text-white backdrop-blur-md shadow-inner" placeholder="https://..." />
                      </div>
                   </div>
-                  <div className="pt-2 flex gap-3">
-                     <button type="button" onClick={() => { setIsAdding(false); setEditingConsole(null); }} className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">{t('cancel')}</button>
-                     <button type="submit" className="flex-1 py-3 bg-palette-mustard text-white rounded-xl font-bold shadow-lg shadow-palette-mustard/20">{t('save')}</button>
+                  <div className="pt-4 flex gap-4">
+                     <button type="button" onClick={() => { setIsAdding(false); setEditingConsole(null); }} className="flex-1 py-4 border-2 border-white/40 dark:border-white/10 rounded-2xl font-black text-slate-500 uppercase tracking-widest text-xs hover:bg-black/5 transition-all">{t('cancel')}</button>
+                     <button type="submit" className="flex-1 py-4 bg-palette-mustard text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-palette-mustard/20 hover:scale-[1.02] transition-all active:scale-95">{t('save')}</button>
                   </div>
                </form>
             </div>
          </div>
       )}
-
+      
+      {/* DELETE CONFIRM - GLASS STYLE */}
       {deletingConsole && (
-          <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
-              <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">
-                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in"><AlertTriangle size={32} /></div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('delete_confirm')}</h3>
-                  <p className="text-sm text-slate-500 mb-6">Unit: {deletingConsole.name}</p>
-                  <div className="grid grid-cols-2 gap-3">
-                      <button onClick={() => setDeletingConsole(null)} className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-sm">{t('cancel')}</button>
-                      <button onClick={executeDelete} className="py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-500/20">Ya, Hapus</button>
+          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+              <div className="bg-white/90 dark:bg-palette-navyLight/95 sm:rounded-[2rem] rounded-t-[2rem] w-full max-w-sm shadow-2xl p-8 text-center border border-white/20 dark:border-white/5 backdrop-blur-3xl">
+                  <div className="w-20 h-20 bg-red-100 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-zoom-in border border-red-500/20 shadow-2xl shadow-red-500/10"><AlertTriangle size={36} /></div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('delete_confirm')}</h3>
+                  <p className="text-sm font-bold text-slate-500 mb-8 px-4">Anda akan menghapus console <span className="text-red-500">{deletingConsole.name}</span> secara permanen.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                      <button onClick={() => setDeletingConsole(null)} className="py-4 px-4 rounded-2xl border-2 border-white/40 dark:border-white/10 hover:bg-black/5 font-black text-xs uppercase tracking-widest">{t('cancel')}</button>
+                      <button onClick={executeDelete} className="py-4 px-4 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-red-500/30 active:scale-95 transition-all">Ya, Hapus</button>
                   </div>
               </div>
           </div>
-      )}
-
-      {printTx && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-palette-navy/80 backdrop-blur-sm sm:p-4 animate-fade-in">
-           <div className="bg-white dark:bg-palette-navyLight sm:rounded-2xl rounded-t-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3>
-              <div className="grid grid-cols-1 gap-3">
-                 <button onClick={handlePrintWifi} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"><Printer size={20} className="text-palette-mustard"/><span className="text-sm">{t('print_wifi')}</span></button>
-                 <button onClick={handlePrintBluetooth} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"><Bluetooth size={20} className="text-blue-500"/><span className="text-sm">{t('print_bt')}</span></button>
-              </div>
-              <button onClick={() => setPrintTx(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline">{t('cancel')}</button>
-           </div>
-        </div>
       )}
     </div>
   );

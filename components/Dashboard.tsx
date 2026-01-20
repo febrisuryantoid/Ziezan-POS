@@ -27,7 +27,6 @@ const Dashboard: React.FC = () => {
   const recentTransactions = transactions.slice(0, 5);
 
   const consoleUsageData = consoles.map(c => {
-    // FIX: Safe Name Parsing
     const safeName = c.name || 'Unit';
     const shortName = safeName.includes(' - ') ? safeName.split(' - ')[1] : safeName;
     return {
@@ -37,29 +36,32 @@ const Dashboard: React.FC = () => {
   });
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="bg-white dark:bg-[#0f1016] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
+    <div className="bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl p-5 sm:p-6 rounded-[2rem] border border-white/20 dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group">
+      <div className={`absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
       <div className="flex justify-between items-start relative z-10">
         <div className="min-w-0 pr-2">
-          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-wide truncate opacity-70">{title}</p>
-          <h3 className={`text-xl sm:text-2xl font-black mt-1 sm:mt-2 ${colorClass} truncate`}>{value}</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] opacity-80 mb-2">{title}</p>
+          <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} truncate tracking-tighter`}>{value}</h3>
         </div>
-        <div className={`p-2.5 sm:p-3 rounded-2xl shrink-0 ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
-          <Icon size={18} className="sm:w-5 sm:h-5" />
+        <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+          <Icon size={20} className="sm:w-6 sm:h-6" />
         </div>
       </div>
-      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-bold truncate">{sub}</p>
+      <div className="mt-4 flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')} animate-pulse`}></div>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{sub}</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
-        <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('overview_subtitle')}</p>
+    <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in">
+      <div className="flex flex-col gap-1 px-1">
+        <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase">{t('dashboard')}</h2>
+        <p className="text-palette-brown/70 dark:text-palette-cream/50 text-[10px] font-black uppercase tracking-widest">{t('overview_subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <StatCard 
           title={t('active_consoles')}
           value={`${stats.activeConsoles} / ${consoles.length}`}
@@ -94,135 +96,111 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-          <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
-            <h3 className="font-bold text-sm text-palette-navy dark:text-white flex items-center gap-2">
-              <Activity size={16} className="text-palette-mustard" /> {t('recent_tx')}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="lg:col-span-2 bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[450px]">
+          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/10 dark:bg-white/5">
+            <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white flex items-center gap-3 uppercase tracking-wider">
+              <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><Activity size={18} /></div>
+              {t('recent_tx')}
             </h3>
           </div>
-          <div className="flex-1 p-0">
+          <div className="flex-1">
             {recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-slate-500">
-                <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-full mb-3 opacity-50">
-                   <Activity className="w-6 h-6" />
-                </div>
-                <p className="font-medium text-xs">{t('no_tx')}</p>
+              <div className="flex flex-col items-center justify-center h-full py-12 text-slate-500 opacity-40">
+                <Activity className="w-12 h-12 mb-4" />
+                <p className="font-black text-xs uppercase tracking-widest">{t('no_tx')}</p>
               </div>
             ) : (
-              <>
-                <div className="md:hidden">
-                   {recentTransactions.map(tx => (
-                     <div key={tx.id} className="p-4 border-b border-slate-100 dark:border-white/5 last:border-0 bg-white dark:bg-transparent">
-                       <div className="flex justify-between items-start mb-2 gap-2">
-                         <div className="min-w-0 flex-1">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">{t('members')}</span>
-                            <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName || 'Unknown'}</span>
-                         </div>
-                         <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 border ${
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left whitespace-nowrap">
+                  <thead className="text-[10px] text-slate-500 font-black uppercase bg-white/5 dark:bg-white/[0.02] border-b border-white/10 tracking-widest">
+                    <tr>
+                      <th className="px-8 py-5">{t('members')}</th>
+                      <th className="px-8 py-5">{t('consoles')}</th>
+                      <th className="px-8 py-5">{t('status')}</th>
+                      <th className="px-8 py-5 text-right">{t('duration')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {recentTransactions.map(tx => (
+                      <tr key={tx.id} className="hover:bg-palette-mustard/5 transition-colors group">
+                        <td className="px-8 py-5 font-black text-slate-900 dark:text-white text-xs max-w-[200px] truncate">{tx.memberName || 'Unknown'}</td>
+                        <td className="px-8 py-5 text-slate-500 dark:text-slate-400 font-bold text-xs">{tx.consoleName || 'Unknown'}</td>
+                        <td className="px-8 py-5">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${
                             tx.status === 'ACTIVE' 
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                              : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 border-transparent'
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' 
+                              : 'bg-white/5 text-slate-400 border-white/10'
                           }`}>
+                            {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"/>}
                             {tx.status}
                           </span>
-                       </div>
-                       <div className="flex justify-between items-end mt-2 pt-2 border-t border-dashed border-slate-100 dark:border-white/5">
-                         <div className="min-w-0 flex-1">
-                           <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t('consoles')}</div>
-                           <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{tx.consoleName || 'Unknown'}</div>
-                         </div>
-                         <div className="text-right shrink-0 ml-2">
-                           <div className="text-xs font-mono font-bold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-                </div>
-
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-sm text-left whitespace-nowrap">
-                    <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5 tracking-wider">
-                      <tr>
-                        <th className="px-6 py-4">{t('members')}</th>
-                        <th className="px-6 py-4">{t('consoles')}</th>
-                        <th className="px-6 py-4">{t('status')}</th>
-                        <th className="px-6 py-4 text-right">{t('duration')}</th>
+                        </td>
+                        <td className="px-8 py-5 text-slate-700 dark:text-slate-300 text-right text-xs font-mono font-black">{tx.durationHours} {t('hour_short')}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                      {recentTransactions.map(tx => (
-                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName || 'Unknown'}</td>
-                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName || 'Unknown'}</td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
-                              tx.status === 'ACTIVE' 
-                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                                : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 border-transparent'
-                            }`}>
-                              {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"/>}
-                              {tx.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-right text-xs font-mono font-bold">{tx.durationHours} {t('hour_short')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
-          <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-4 flex items-center gap-2">
-            <MonitorPlay size={16} className="text-palette-mustard" /> {t('console_util')}
+        <div className="bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-sm p-6 sm:p-8 flex flex-col">
+          <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white mb-6 flex items-center gap-3 uppercase tracking-wider">
+            <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><MonitorPlay size={18} /></div>
+            {t('console_util')}
           </h3>
           
-          <div className="w-full h-[200px] sm:h-[300px]">
+          <div className="w-full h-[300px]">
              {consoleUsageData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={consoleUsageData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} strokeOpacity={0.3} />
+                  <BarChart data={consoleUsageData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="5 5" vertical={false} stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
                     <XAxis 
                       dataKey="name" 
                       stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={10} 
+                      fontSize={9} 
                       tickLine={false} 
                       axisLine={false}
                       dy={10}
+                      fontFamily='Plus Jakarta Sans'
+                      fontWeight='800'
                     />
                     <YAxis 
                       stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={10} 
+                      fontSize={9} 
                       tickLine={false} 
                       axisLine={false} 
+                      fontFamily='Plus Jakarta Sans'
+                      fontWeight='800'
                     />
                     <Tooltip 
-                      cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.2 }}
+                      cursor={{ fill: 'rgba(124, 58, 237, 0.1)', radius: 10 }}
                       contentStyle={{ 
-                        backgroundColor: theme === 'dark' ? '#181825' : '#ffffff', 
-                        borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+                        backgroundColor: theme === 'dark' ? 'rgba(15, 7, 32, 0.9)' : 'rgba(255, 255, 255, 0.9)', 
+                        borderColor: 'rgba(255,255,255,0.1)',
                         color: theme === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderRadius: '16px',
-                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                        fontSize: '12px',
-                        padding: '12px'
+                        borderRadius: '20px',
+                        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)',
+                        fontSize: '11px',
+                        padding: '16px',
+                        backdropFilter: 'blur(20px)',
+                        fontWeight: '800',
+                        textTransform: 'uppercase'
                       }}
                     />
-                    <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
+                    <Bar dataKey="hours" radius={[10, 10, 0, 0]} barSize={35}>
                        {consoleUsageData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#facc15'} />
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#ec4899'} fillOpacity={0.8} />
                         ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                    <MonitorPlay size={32} className="mb-2 opacity-30"/>
-                    <span className="text-xs opacity-50">{t('no_data_consoles')}</span>
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-30">
+                    <MonitorPlay size={48} className="mb-4"/>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('no_data_consoles')}</span>
                 </div>
              )}
           </div>

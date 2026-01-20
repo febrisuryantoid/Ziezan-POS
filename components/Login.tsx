@@ -51,16 +51,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
         {/* Animated Border - Updated to Purple & Pink Theme */}
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
-             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow"></div>
+             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow opacity-60"></div>
         </div>
 
-        {/* Card Content - Flex column with scaling gaps */}
-        <div className="relative z-10 bg-white/95 dark:bg-[#0f1016]/95 backdrop-blur-xl rounded-[22px] px-6 py-6 sm:py-8 shadow-xl dark:shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-white/5">
+        {/* Card Content - Glass Blur Effect Applied by making background more transparent */}
+        <div className="relative z-10 bg-white/70 dark:bg-[#0f1016]/70 backdrop-blur-2xl rounded-[22px] px-6 py-6 sm:py-8 shadow-xl dark:shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-white/20 dark:border-white/10">
           
           {/* Lang Switcher */}
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5 backdrop-blur-md"
           >
             <Globe size={12} />
             {language.toUpperCase()}
@@ -70,7 +70,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
           <div className="text-center mb-4 sm:mb-6 shrink-0">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-palette-mustard blur-xl opacity-20 rounded-full"></div>
-              {/* Responsive Logo Size - Smaller on very short screens if needed */}
+              {/* Responsive Logo Size */}
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
@@ -87,13 +87,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                {/* FIX: text-base on mobile prevents iOS zoom */}
                 <input 
                     type="text" 
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-white/40 dark:bg-black/40 border border-white/40 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
                     placeholder={t('enter_username')}
                 />
               </div>
@@ -102,12 +101,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                {/* FIX: text-base on mobile prevents iOS zoom */}
                 <input 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-white/40 dark:bg-black/40 border border-white/40 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
                     placeholder={t('enter_password')}
                 />
               </div>
@@ -121,7 +119,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
             <button 
               type="submit" 
-              className="w-full bg-palette-mustard hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
+              className="w-full bg-palette-mustard hover:bg-palette-mustard/90 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2 active:scale-95"
             >
               <LogIn size={18} /> {t('sign_in')}
             </button>

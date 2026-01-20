@@ -14,8 +14,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       
       <div className="relative z-10 w-full max-w-5xl flex flex-col items-center animate-fade-in py-10">
         <div className="text-center mb-12 sm:mb-20">
-            {/* Logo Container - Removed rotate classes */}
-            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#0f1016]/80 rounded-[2.5rem] p-1 border border-white/10 shadow-2xl mx-auto mb-8 backdrop-blur-md group cursor-pointer">
+            {/* Logo Container */}
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/5 dark:bg-[#0f1016]/60 rounded-[2.5rem] p-1 border border-white/20 shadow-2xl mx-auto mb-8 backdrop-blur-xl group cursor-pointer">
                 <img 
                     src="https://beeimg.com/images/t47564105964.png" 
                     alt="Logo" 
@@ -25,7 +25,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <h1 className="text-4xl sm:text-7xl font-black tracking-tighter drop-shadow-2xl mb-3 text-white">
                 ZIEZAN <span className="text-transparent bg-clip-text bg-gradient-to-r from-palette-mustard to-pink-500">STATION</span>
             </h1>
-            <p className="text-slate-400 text-xs sm:text-lg font-bold tracking-[0.4em] uppercase bg-black/40 px-6 py-2 rounded-full inline-block border border-white/5 backdrop-blur-md">
+            <p className="text-slate-400 text-xs sm:text-lg font-bold tracking-[0.4em] uppercase bg-black/40 px-6 py-2 rounded-full inline-block border border-white/10 backdrop-blur-md">
                 PlayStation Rental System
             </p>
         </div>
@@ -39,7 +39,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {/* 1. MASUK */}
             <button 
                 onClick={() => onNavigate('/login')}
-                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-[#0f1016]/50 backdrop-blur-2xl border border-white/10 hover:border-palette-mustard/60 hover:bg-[#0f1016]/90 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
+                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-white/5 dark:bg-[#0f1016]/40 backdrop-blur-2xl border border-white/20 hover:border-palette-mustard/60 hover:bg-white/10 dark:hover:bg-[#0f1016]/70 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-palette-mustard/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-palette-mustard to-purple-700 flex items-center justify-center mb-8 shadow-2xl shadow-palette-mustard/40 group-hover:scale-110 transition-transform duration-500 relative z-10">
@@ -58,7 +58,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {/* 2. MODE TV */}
             <button 
                 onClick={() => onNavigate('/tv')}
-                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-[#0f1016]/50 backdrop-blur-2xl border border-white/10 hover:border-cyan-500/60 hover:bg-[#0f1016]/90 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
+                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-white/5 dark:bg-[#0f1016]/40 backdrop-blur-2xl border border-white/20 hover:border-cyan-500/60 hover:bg-white/10 dark:hover:bg-[#0f1016]/70 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-cyan-500 to-blue-700 flex items-center justify-center mb-8 shadow-2xl shadow-cyan-500/40 group-hover:scale-110 transition-transform duration-500 relative z-10">
@@ -77,7 +77,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {/* 3. RANK */}
             <button 
                 onClick={() => onNavigate('/rank')}
-                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-[#0f1016]/50 backdrop-blur-2xl border border-white/10 hover:border-yellow-500/60 hover:bg-[#0f1016]/90 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
+                className="group relative flex flex-col items-center p-10 rounded-[3rem] bg-white/5 dark:bg-[#0f1016]/40 backdrop-blur-2xl border border-white/20 hover:border-yellow-500/60 hover:bg-white/10 dark:hover:bg-[#0f1016]/70 transition-all duration-500 hover:-translate-y-3 shadow-2xl overflow-hidden h-full"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-yellow-400 to-orange-700 flex items-center justify-center mb-8 shadow-2xl shadow-orange-500/40 group-hover:scale-110 transition-transform duration-500 relative z-10">
