@@ -276,7 +276,16 @@ const Members: React.FC = () => {
                           <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nomor HP</label><input type="tel" value={isAdding ? newPhone : editingMember?.phone || ''} onChange={e => isAdding ? setNewPhone(e.target.value) : setEditingMember({...editingMember!, phone: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-mono font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
                           <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Alamat</label><textarea rows={2} value={isAdding ? newAddress : editingMember?.address || ''} onChange={e => isAdding ? setNewAddress(e.target.value) : setEditingMember({...editingMember!, address: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md resize-none" /></div>
                           <div className="grid grid-cols-2 gap-5">
-                              <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membership</label><select value={isAdding ? newTier : editingMember?.membershipId} onChange={e => isAdding ? setNewTier(e.target.value as MembershipTierId) : setEditingMember({...editingMember!, membershipId: e.target.value as MembershipTierId})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-4 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md"><{membershipConfigs.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+                              <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membership</label>
+                                  <select 
+                                      value={isAdding ? newTier : editingMember?.membershipId} 
+                                      onChange={e => isAdding ? setNewTier(e.target.value as MembershipTierId) : setEditingMember({...editingMember!, membershipId: e.target.value as MembershipTierId})} 
+                                      className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-4 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md"
+                                  >
+                                      {membershipConfigs.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                  </select>
+                              </div>
                               <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Join Date</label><input type="date" value={isAdding ? newJoinDate : editingMember?.joinDate.split('T')[0]} onChange={e => isAdding ? setNewJoinDate(e.target.value) : setEditingMember({...editingMember!, joinDate: new Date(e.target.value).toISOString()})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-4 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
                           </div>
                       </form>
