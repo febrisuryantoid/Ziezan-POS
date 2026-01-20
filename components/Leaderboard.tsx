@@ -67,7 +67,6 @@ const Leaderboard: React.FC = () => {
       const isThird = rank === 3;
 
       const score = member ? getRealtimeScore(member) : 0;
-      // THEME from MEMBER TIER (Dynamic Color Request)
       const theme = member ? getTierTheme(member.membershipId) : null;
       const isPlaying = member ? transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE') : false;
 
@@ -77,8 +76,6 @@ const Leaderboard: React.FC = () => {
       let zIndex = 'z-10';
       let translateY = 'translate-y-0';
       
-      // Dynamic Colors from Tier Theme (or fallback if empty)
-      const borderGradient = theme ? `bg-gradient-to-b ${theme.conic}` : 'bg-slate-700';
       const textClass = theme ? theme.text : 'text-slate-400';
       const badgeColor = theme ? theme.badge : 'bg-slate-700 text-white';
 
@@ -120,7 +117,7 @@ const Leaderboard: React.FC = () => {
 
               {/* Avatar Container */}
               <div className="relative mb-2 flex flex-col items-center">
-                  {/* Crown */}
+                  {/* Crown for #1 */}
                   {isFirst && (
                       <Crown 
                         size={40} 
@@ -137,7 +134,7 @@ const Leaderboard: React.FC = () => {
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                             alt={member.nickname}
                           />
-                          {/* Live Indicator overlay on image */}
+                          {/* Live Indicator */}
                           {isPlaying && (
                               <div className="absolute inset-0 bg-black/20 flex items-center justify-center backdrop-blur-[1px]">
                                   <Gamepad2 size={isFirst ? 24 : 16} className="text-emerald-400 animate-pulse drop-shadow-md" />
@@ -145,19 +142,20 @@ const Leaderboard: React.FC = () => {
                           )}
                       </div>
                       
-                      {/* Rank Badge */}
+                      {/* Rank Badge Number */}
                       <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-[#020205] shadow-lg z-20 ${badgeColor}`}>
                           {rank}
                       </div>
                   </div>
                   
-                  {/* Name & Tier */}
-                  <div className="mt-4 text-center">
+                  {/* Name & Tier Icon */}
+                  <div className="mt-4 text-center flex flex-col items-center">
                       <h3 className={`font-black text-sm sm:text-base leading-tight truncate max-w-[100px] drop-shadow-md text-white`}>
                           {member.nickname}
                       </h3>
-                      <div className={`text-[8px] font-bold uppercase tracking-wider opacity-80 mt-0.5 ${theme.text}`}>
-                          {theme.id}
+                      {/* Tier Icon Image */}
+                      <div className="mt-1">
+                          <img src={theme.iconUrl} alt={theme.id} className="w-8 h-8 object-contain drop-shadow-md" />
                       </div>
                   </div>
               </div>
@@ -167,8 +165,6 @@ const Leaderboard: React.FC = () => {
                   
                   {/* Animated Border Top specific to Tier */}
                   <div className={`absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r ${theme.conic} opacity-80`}></div>
-                  {/* Subtle Glow inside pillar */}
-                  <div className={`absolute top-0 inset-x-0 h-20 bg-gradient-to-b ${theme.conic} opacity-10 pointer-events-none`}></div>
                   
                   <span className={`font-mono text-3xl sm:text-4xl font-black tracking-tighter drop-shadow-lg ${textClass}`}>
                       {score.toFixed(0)}
@@ -177,7 +173,6 @@ const Leaderboard: React.FC = () => {
                       {t('hour_short')}
                   </span>
                   
-                  {/* Decorative Elements inside pillar */}
                   {isFirst && <div className={`mt-4 w-0.5 h-full bg-gradient-to-b ${theme.conic} opacity-50`}></div>}
               </div>
           </div>
@@ -187,7 +182,6 @@ const Leaderboard: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    // FIX: h-[100dvh] ensures it fits mobile screens perfectly without browser bar issues
     <div className="h-[100dvh] w-full bg-[#020205] text-white font-sans relative flex flex-col items-center overflow-hidden">
         <GamingBackground />
         
@@ -204,7 +198,7 @@ const Leaderboard: React.FC = () => {
                     {t('leaderboard_title')}
                 </h1>
                 
-                {/* Search Bar - Modern Glass */}
+                {/* Search Bar */}
                 <div className="mt-4 relative mx-auto w-full max-w-[280px]">
                     <div className="relative flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2.5 focus-within:border-palette-mustard/50 focus-within:bg-black/40 transition-all shadow-inner">
                         <Search className="text-slate-400 mr-2 shrink-0" size={16} />
@@ -220,9 +214,7 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {/* --- PODIUM SECTION --- */}
-            {/* Flex-1 ensures this section takes available space, pushing list down */}
             <div className="flex-1 flex items-end justify-center px-4 pb-0 pt-4 relative shrink-0 min-h-[300px]">
-                {/* Podium Arrangement: 2 - 1 - 3 */}
                 <div className="flex items-end justify-center gap-2 w-full max-w-sm mb-[-20px] z-10">
                     <PodiumPillar member={filledTop3[1]} rank={2} />
                     <PodiumPillar member={filledTop3[0]} rank={1} />
@@ -231,7 +223,6 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {/* --- LIST SECTION (Sliding Sheet) --- */}
-            {/* Creates a "Card" effect that slides up over the bottom of the pillars */}
             <div className="flex-1 bg-[#0f1016]/90 rounded-t-[35px] border-t border-white/10 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col z-20 mt-[-10px] backdrop-blur-xl">
                 
                 {/* Sheet Handle */}
@@ -274,11 +265,12 @@ const Leaderboard: React.FC = () => {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-slate-300 text-xs truncate group-hover:text-white transition-colors">{m.nickname}</h4>
-                                            {m.membershipId === 'MYTHIC' && <Sparkles size={10} className="text-red-500 animate-pulse" />}
+                                            {m.membershipId.includes('MYTHIC') && <Sparkles size={10} className="text-red-500 animate-pulse" />}
                                         </div>
                                         <div className="flex items-center gap-1 text-[9px] text-slate-600 mt-0.5">
-                                            <Hexagon size={8} className={theme.text} fill="currentColor" fillOpacity={0.2} />
-                                            <span className={`${theme.text} font-bold opacity-80`}>{m.membershipId}</span>
+                                            {/* Updated to use Image Icon for Tier */}
+                                            <img src={theme.iconUrl} alt={m.membershipId} className="w-4 h-4 object-contain" />
+                                            <span className={`${theme.text} font-bold opacity-80`}>{m.membershipId.replace('MYTHICAL_', 'M.')}</span>
                                         </div>
                                     </div>
 

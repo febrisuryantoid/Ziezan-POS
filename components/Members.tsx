@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Crown, Star, Shield, ExternalLink, Phone, Camera, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Calendar, FileText, User, MoreVertical, Copy } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 import { getTierTheme } from './PublicMemberCard';
 
@@ -261,9 +261,9 @@ const Members: React.FC = () => {
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_members_desc')}</p>
         </div>
 
-        {/* RESPONSIVE FILTER GRID SYSTEM - Optimized for 320px screens */}
+        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
-            {/* Search - Full Width on Mobile, adjusted text size for iOS input zoom prevention */}
+            {/* Search */}
             <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
@@ -275,7 +275,7 @@ const Members: React.FC = () => {
                 />
             </div>
 
-            {/* Sort - Half Width on Mobile */}
+            {/* Sort */}
             <div className="relative col-span-1 md:col-span-6 lg:w-48">
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
@@ -290,7 +290,7 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Filter Tier - Half Width on Mobile */}
+            {/* Filter Tier */}
             <div className="relative col-span-1 md:col-span-6 lg:w-40">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
@@ -305,7 +305,7 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Add Button - Full Width on Mobile for easy access */}
+            {/* Add Button */}
             <button 
                 onClick={() => setIsAdding(true)}
                 className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
@@ -329,7 +329,7 @@ const Members: React.FC = () => {
           </span>
         </div>
 
-        {/* MEMBER GRID - SLIMMER & RESPONSIVE (1 Col Mobile, 2 Col Tablet, 3 Col Desktop) */}
+        {/* MEMBER GRID */}
         {filteredMembers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
                 <Users size={48} className="text-slate-300 mb-4" />
@@ -341,7 +341,6 @@ const Members: React.FC = () => {
                     const theme = getTierTheme(member.membershipId);
                     const realtimePlaytime = getRealtimePlaytime(member);
                     const isPlaying = transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE');
-                    const TierIcon = theme.icon;
 
                     return (
                     <div key={member.id} className={`group relative rounded-2xl border ${theme.borderInner} bg-white dark:bg-[#0f1016] overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg dark:hover:shadow-none hover:-translate-y-0.5`}>
@@ -364,22 +363,22 @@ const Members: React.FC = () => {
                                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-black animate-pulse z-20"></div>
                                     )}
                                 </div>
-                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${theme.badge} border border-white dark:border-black shadow-sm`}>
-                                    <TierIcon size={10} fill="currentColor" />
+                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${theme.badge} border border-white dark:border-black shadow-sm overflow-hidden`}>
+                                    {/* Using Tier Image Icon */}
+                                    <img src={theme.iconUrl} alt="Tier" className="w-4 h-4 object-contain" />
                                 </div>
                             </div>
 
-                            {/* Identity Section - HIDDEN Full Name */}
+                            {/* Identity Section */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <h3 className={`font-bold text-sm sm:text-base leading-tight truncate ${theme.text}`}>
                                         {member.nickname}
                                     </h3>
-                                    {member.membershipId === 'MYTHIC' && <span className="text-[9px] font-black text-red-500 animate-pulse">GOD</span>}
+                                    {member.membershipId.includes('MYTHICAL_IMMORTAL') && <span className="text-[9px] font-black text-red-500 animate-pulse">GOD</span>}
                                 </div>
                                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                                    {/* Removed member.name */}
-                                    <span className={`font-black uppercase ${theme.text}`}>{member.membershipId}</span>
+                                    <span className={`font-black uppercase ${theme.text}`}>{member.membershipId.replace('MYTHICAL_', 'M.')}</span>
                                 </div>
                             </div>
 
@@ -416,7 +415,8 @@ const Members: React.FC = () => {
                                         <span className="text-[9px] font-bold uppercase">Main</span>
                                     </div>
                                     <span className={`text-xs font-black ${theme.text}`}>
-                                        {parseFloat(realtimePlaytime.toFixed(1))}h
+                                        {/* INTEGER DISPLAY */}
+                                        {realtimePlaytime.toFixed(0)}h
                                     </span>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-2 flex items-center justify-between border border-slate-100 dark:border-white/5">
@@ -435,7 +435,7 @@ const Members: React.FC = () => {
             </div>
         )}
 
-        {/* PAGINATION UI - UX IMPROVED */}
+        {/* PAGINATION UI */}
         {renderPagination()}
       </div>
 
@@ -490,7 +490,7 @@ const Members: React.FC = () => {
                                </div>
                           </div>
 
-                          {/* 3. Membership (Default Basic) & Tanggal Daftar (Default Today) */}
+                          {/* 3. Membership & Tanggal Daftar */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('membership')}</label>
@@ -504,7 +504,7 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 4. Tanggal Lahir & Bonus (Now available in Add too for consistency) */}
+                          {/* 4. Tanggal Lahir & Bonus */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
@@ -536,7 +536,7 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* EDIT MEMBER MODAL - Consistent UI */}
+      {/* EDIT MEMBER MODAL */}
       {editingMember && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -632,7 +632,7 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* DELETE CONFIRMATION - RESPONSIVE LAYOUT */}
+      {/* DELETE CONFIRMATION */}
       {deletingMemberId && (
           <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">

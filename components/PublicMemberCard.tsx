@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Crown, Star, Shield, Clock, Calendar, Loader2, AlertCircle, Gamepad2, Zap, Trophy, Hexagon, Sparkles, Swords, Medal, Flame, Gem, RefreshCw } from 'lucide-react';
+import { Clock, Calendar, Loader2, AlertCircle, Gamepad2, Trophy, Hexagon, Flame, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Member } from '../types';
 
@@ -22,10 +22,7 @@ const DragonPattern = ({ color }: { color: string }) => (
 
 export const GamingBackground = () => (
   <div className="fixed inset-0 z-0 pointer-events-none bg-[#050505]">
-    {/* Base Dark Metal Gradient */}
     <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#0a0a12] to-black"></div>
-    
-    {/* Metallic Silver Honeycomb Pattern */}
     <div 
         className="absolute inset-0 opacity-[0.07]"
         style={{
@@ -33,115 +30,139 @@ export const GamingBackground = () => (
             backgroundSize: '30px 60px'
         }}
     ></div>
-
-    {/* Diagonal Lines Texture */}
     <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_10px)]"></div>
-
-    {/* Animated Spotlight / Vignette */}
     <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-spin-slow opacity-10 bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(255,255,255,0.1)_10deg,transparent_20deg)] blur-3xl"></div>
     <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/90"></div>
   </div>
 );
 
-// --- LUXURY TIER THEME CONFIGURATION (7 RANKS) ---
+// --- LUXURY TIER THEME CONFIGURATION (9 RANKS) ---
 export const getTierTheme = (id: string) => {
   switch(id) {
-    case 'MYTHIC': // GOD TIER: Black, Red, Holographic (Ultimate Luxury)
+    case 'MYTHICAL_IMMORTAL': // ULTIMATE GOD TIER (Red/Gold/Fiery)
       return {
-        id: 'MYTHIC',
-        conic: 'from-[#ef4444] via-[#7f1d1d] to-[#000000]', 
-        shadow: 'shadow-[0_0_80px_-10px_rgba(239,68,68,0.9)]', // Intense Red Glow
-        text: 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-200 to-white',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(220,38,38,1)]',
-        bgInner: 'bg-black', // Void Black
-        icon: Gem,
-        dragonColor: '#f87171',
-        borderInner: 'border-red-500', // Solid Red Border
-        badge: 'bg-gradient-to-r from-red-900 to-black text-red-100 border border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)]',
+        id: 'MYTHICAL_IMMORTAL',
+        conic: 'from-[#facc15] via-[#ef4444] to-[#7f1d1d]', // Gold to Red to Dark Red
+        shadow: 'shadow-[0_0_90px_-10px_rgba(239,68,68,0.9)]', 
+        text: 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-red-500 to-rose-400',
+        textGlow: 'drop-shadow-[0_0_20px_rgba(220,38,38,1)]',
+        bgInner: 'bg-black',
+        iconUrl: 'https://beeimg.com/images/x16984420291.webp',
+        dragonColor: '#ef4444',
+        borderInner: 'border-red-500',
+        badge: 'bg-gradient-to-r from-red-900 to-black text-red-100 border border-red-500',
         particleColor: '#ef4444'
       };
-    case 'LEGEND': // COSMIC TIER: Purple, Gold
+    case 'MYTHICAL_GLORY': // PINK/RED GLOW
+      return {
+        id: 'MYTHICAL_GLORY',
+        conic: 'from-[#ec4899] via-[#be185d] to-[#831843]',
+        shadow: 'shadow-[0_0_80px_-10px_rgba(236,72,153,0.8)]',
+        text: 'text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-400 to-red-400',
+        textGlow: 'drop-shadow-[0_0_15px_rgba(219,39,119,0.9)]',
+        bgInner: 'bg-[#280510]',
+        iconUrl: 'https://beeimg.com/images/s96067611113.webp',
+        dragonColor: '#f472b6',
+        borderInner: 'border-pink-600',
+        badge: 'bg-gradient-to-r from-pink-900 to-rose-900 text-pink-100 border border-pink-600',
+        particleColor: '#f472b6'
+      };
+    case 'MYTHICAL_HONOR': // BLUE/PURPLE
+      return {
+        id: 'MYTHICAL_HONOR',
+        conic: 'from-[#3b82f6] via-[#6366f1] to-[#4338ca]',
+        shadow: 'shadow-[0_0_70px_-10px_rgba(59,130,246,0.8)]',
+        text: 'text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-400',
+        textGlow: 'drop-shadow-[0_0_15px_rgba(79,70,229,0.9)]',
+        bgInner: 'bg-[#050b28]',
+        iconUrl: 'https://beeimg.com/images/o23141558932.webp',
+        dragonColor: '#60a5fa',
+        borderInner: 'border-indigo-500',
+        badge: 'bg-gradient-to-r from-blue-900 to-indigo-900 text-blue-100 border border-indigo-500',
+        particleColor: '#60a5fa'
+      };
+    case 'MYTHIC': // GOLD/BLACK/BLUE MIX
+      return {
+        id: 'MYTHIC',
+        conic: 'from-[#eab308] via-[#3b82f6] to-[#a855f7]',
+        shadow: 'shadow-[0_0_60px_-10px_rgba(234,179,8,0.6)]',
+        text: 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-500',
+        textGlow: 'drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]',
+        bgInner: 'bg-[#181005]',
+        iconUrl: 'https://beeimg.com/images/k43676617811.webp',
+        dragonColor: '#facc15',
+        borderInner: 'border-yellow-500/60',
+        badge: 'bg-gradient-to-r from-yellow-800 to-amber-900 text-yellow-100 border border-yellow-500/50',
+        particleColor: '#facc15'
+      };
+    case 'LEGEND': // BRIGHT GOLD/HOLY
       return {
         id: 'LEGEND',
-        conic: 'from-[#6d28d9] via-[#ef4444] to-[#fbbf24]', 
-        shadow: 'shadow-[0_0_60px_-10px_rgba(147,51,234,0.7)]',
-        text: 'text-transparent bg-clip-text bg-gradient-to-br from-fuchsia-300 via-purple-300 to-amber-200',
-        textGlow: 'drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]',
-        bgInner: 'bg-[#1e052e]',
-        icon: Crown,
-        dragonColor: '#d8b4fe',
-        borderInner: 'border-purple-500/50',
-        badge: 'bg-gradient-to-r from-purple-600 to-rose-600 text-white shadow-purple-500/50',
-        particleColor: '#e879f9'
+        conic: 'from-[#fef08a] via-[#fde047] to-[#eab308]', 
+        shadow: 'shadow-[0_0_60px_-10px_rgba(250,204,21,0.5)]',
+        text: 'text-transparent bg-clip-text bg-gradient-to-br from-yellow-100 via-yellow-300 to-amber-400',
+        textGlow: 'drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]',
+        bgInner: 'bg-[#291d03]',
+        iconUrl: 'https://beeimg.com/images/y38717349562.webp',
+        dragonColor: '#fef08a',
+        borderInner: 'border-yellow-400/50',
+        badge: 'bg-gradient-to-r from-yellow-700 to-amber-700 text-white shadow-yellow-500/40',
+        particleColor: '#fef08a'
       };
-    case 'EPIC': // TECH/MAGIC TIER: Neon Green, Cyan
+    case 'EPIC': // GREEN/TEAL
       return {
         id: 'EPIC',
         conic: 'from-[#059669] via-[#34d399] to-[#06b6d4]', 
-        shadow: 'shadow-[0_0_50px_-10px_rgba(16,185,129,0.6)]',
+        shadow: 'shadow-[0_0_50px_-10px_rgba(16,185,129,0.5)]',
         text: 'text-transparent bg-clip-text bg-gradient-to-br from-emerald-200 via-teal-300 to-cyan-200',
-        textGlow: 'drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]',
+        textGlow: 'drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]',
         bgInner: 'bg-[#022c22]',
-        icon: Star,
+        iconUrl: 'https://beeimg.com/images/r68860524144.webp',
         dragonColor: '#34d399',
         borderInner: 'border-emerald-500/50',
-        badge: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/50',
+        badge: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/50',
         particleColor: '#34d399'
       };
-    case 'GRANDMASTER': // PLATINUM/ROSE GOLD
+    case 'GRANDMASTER': // GOLD/AMBER
       return {
         id: 'GRANDMASTER',
-        conic: 'from-[#db2777] via-[#f472b6] to-[#f59e0b]', 
-        shadow: 'shadow-[0_0_50px_-10px_rgba(236,72,153,0.6)]',
-        text: 'text-transparent bg-clip-text bg-gradient-to-br from-pink-300 via-rose-300 to-orange-200',
-        textGlow: 'drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]',
-        bgInner: 'bg-[#2e0518]',
-        icon: Trophy,
-        dragonColor: '#f472b6',
-        borderInner: 'border-pink-500/40',
-        badge: 'bg-gradient-to-r from-pink-600 to-rose-500 text-white shadow-pink-500/50',
-        particleColor: '#f472b6'
+        conic: 'from-[#d97706] via-[#f59e0b] to-[#b45309]', 
+        shadow: 'shadow-[0_0_40px_-10px_rgba(245,158,11,0.4)]',
+        text: 'text-transparent bg-clip-text bg-gradient-to-br from-amber-200 via-orange-300 to-amber-500',
+        textGlow: 'drop-shadow-[0_0_5px_rgba(245,158,11,0.6)]',
+        bgInner: 'bg-[#2e1505]',
+        iconUrl: 'https://beeimg.com/images/o78780173421.webp',
+        dragonColor: '#fbbf24',
+        borderInner: 'border-amber-600/40',
+        badge: 'bg-gradient-to-r from-amber-700 to-orange-700 text-white shadow-amber-500/40',
+        particleColor: '#fbbf24'
       };
-    case 'MASTER': // GOLD TIER
-      return {
-        id: 'MASTER',
-        conic: 'from-[#ca8a04] via-[#facc15] to-[#ca8a04]', 
-        shadow: 'shadow-[0_0_40px_-10px_rgba(234,179,8,0.5)]',
-        text: 'text-transparent bg-clip-text bg-gradient-to-br from-yellow-200 via-amber-300 to-yellow-500',
-        textGlow: 'drop-shadow-[0_0_5px_rgba(250,204,21,0.6)]',
-        bgInner: 'bg-[#291d03]',
-        icon: Medal,
-        dragonColor: '#facc15',
-        borderInner: 'border-yellow-500/40',
-        badge: 'bg-gradient-to-r from-yellow-600 to-amber-600 text-white shadow-yellow-500/40',
-        particleColor: '#facc15'
-      };
-    case 'ELITE': // SILVER TIER
+    case 'ELITE': // SILVER/BLUE-ISH
       return {
         id: 'ELITE',
-        conic: 'from-[#475569] via-[#94a3b8] to-[#cbd5e1]', 
+        conic: 'from-[#64748b] via-[#94a3b8] to-[#cbd5e1]', 
         shadow: 'shadow-[0_0_30px_-5px_rgba(148,163,184,0.4)]',
-        text: 'text-slate-200',
+        text: 'text-slate-300',
         textGlow: 'drop-shadow-[0_0_5px_rgba(203,213,225,0.5)]',
         bgInner: 'bg-[#0f172a]',
-        icon: Shield,
+        iconUrl: 'https://beeimg.com/images/b10988003143.webp',
         dragonColor: '#94a3b8',
         borderInner: 'border-slate-400/30',
-        badge: 'bg-gradient-to-r from-slate-500 to-slate-400 text-white shadow-slate-500/30',
+        badge: 'bg-gradient-to-r from-slate-600 to-slate-500 text-white shadow-slate-500/30',
         particleColor: '#cbd5e1'
       };
-    default: // WARRIOR
+    default: // WARRIOR (BRONZE/BROWN)
       return {
         id: 'WARRIOR',
-        conic: 'from-[#451a03] via-[#b45309] to-[#78350f]', 
+        conic: 'from-[#451a03] via-[#7c2d12] to-[#b45309]', 
         shadow: 'shadow-[0_0_30px_-5px_rgba(180,83,9,0.3)]',
-        text: 'text-orange-200', 
+        text: 'text-orange-300', 
         textGlow: '',
         bgInner: 'bg-[#1a0f08]', 
-        icon: Swords,
+        iconUrl: 'https://beeimg.com/images/c81812042923.webp',
         dragonColor: '#d97706',
         borderInner: 'border-orange-900/50',
-        badge: 'bg-gradient-to-r from-orange-800 to-amber-900 text-orange-100 shadow-orange-900/30',
+        badge: 'bg-gradient-to-r from-orange-900 to-amber-950 text-orange-200 shadow-orange-900/30',
         particleColor: '#b45309'
       };
   }
@@ -164,7 +185,6 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
     refreshData();
   }, [refreshData]);
 
-  // Initial Data Check with Timeout for Sync
   useEffect(() => {
     let checkInterval: ReturnType<typeof setInterval>;
     
@@ -183,10 +203,8 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         return false;
     };
 
-    // Try finding immediately
     if (findMember()) return;
 
-    // Retry every 500ms for up to 3 seconds if not found immediately (waiting for sync)
     let retries = 0;
     checkInterval = setInterval(() => {
         retries++;
@@ -202,7 +220,6 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   const handleManualRefresh = () => {
       setLoading(true);
       refreshData();
-      // Force reload page if simple refresh doesn't work (last resort for stuck cache)
       setTimeout(() => {
           if (!member) window.location.reload();
       }, 1500);
@@ -228,28 +245,27 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
     }
 
     const projectedHours = activeTx ? activeTx.durationHours : 0;
-    const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours).toFixed(1);
+    const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours);
     const config = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
     
-    // Bonus Progress
     const currentProgressTotal = member.hoursProgressToNextBonus + projectedHours;
     const effectiveProgress = currentProgressTotal % config.bonusThreshold;
     const progressPercent = Math.min(100, (effectiveProgress / config.bonusThreshold) * 100);
 
-    // Rank Progress (Find next rank config)
     const nextRankConfig = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours).find(c => c.minHours > member.totalPlayTime);
-    const hoursToNextRank = nextRankConfig ? (nextRankConfig.minHours - member.totalPlayTime).toFixed(1) : "MAX";
+    // Display playtime as INTEGER (toFixed(0))
+    const hoursToNextRank = nextRankConfig ? (nextRankConfig.minHours - member.totalPlayTime).toFixed(0) : "MAX";
     const nextRankName = nextRankConfig ? nextRankConfig.name : "Top Rank";
 
     return {
-        totalPlayTime: totalPlayTimeRealtime,
+        totalPlayTime: Math.floor(totalPlayTimeRealtime), // INTEGER DISPLAY
         bonusBalance: member.freeHoursBalance,
         activeTx,
         formattedElapsedTime,
         config,
         progressPercent,
         joinDate: new Date(member.joinDate).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
-        hoursToNextBonus: Math.max(0, config.bonusThreshold - effectiveProgress).toFixed(1),
+        hoursToNextBonus: Math.max(0, config.bonusThreshold - effectiveProgress).toFixed(0),
         hoursToNextRank,
         nextRankName
     };
@@ -281,8 +297,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   }
 
   const theme = getTierTheme(member.membershipId);
-  const TierIcon = theme.icon;
-  const isMythic = member.membershipId === 'MYTHIC';
+  const isMythic = member.membershipId.includes('MYTHIC');
 
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans p-4 overflow-hidden">
@@ -291,7 +306,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
       {/* --- CARD WRAPPER --- */}
       <div className={`relative w-full max-w-sm aspect-[9/16] z-10 animate-fade-in perspective-1000 ${isMythic ? 'scale-105' : ''}`}>
           
-          {/* Spinning Border Beam - FASTER FOR MYTHIC */}
+          {/* Spinning Border Beam */}
           <div className={`absolute -inset-[3px] rounded-[38px] overflow-hidden ${isMythic ? 'animate-pulse-slow' : ''}`}>
               <div className={`absolute top-[-50%] left-[-50%] w-[200%] h-[200%] ${isMythic ? 'animate-spin' : 'animate-spin-slow'} bg-[conic-gradient(transparent_0deg,transparent_90deg,currentColor_180deg,transparent_270deg,transparent_360deg)] ${theme.text} opacity-100 blur-md`}></div>
           </div>
@@ -302,10 +317,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
               {/* Mythic Special Particle Effect */}
               {isMythic && (
                   <div className="absolute inset-0 z-0">
-                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_rgba(220,38,38,0.15),transparent_70%)] animate-pulse-slow"></div>
-                      {/* Floating Particles Mockup */}
-                      <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-red-500 rounded-full animate-ping"></div>
-                      <div className="absolute bottom-1/3 right-1/3 w-1.5 h-1.5 bg-red-400 rounded-full animate-ping delay-75"></div>
+                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_rgba(255,255,255,0.05),transparent_70%)] animate-pulse-slow"></div>
                   </div>
               )}
 
@@ -313,9 +325,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
               <DragonPattern color={theme.dragonColor} />
               <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${theme.conic} opacity-20 blur-3xl`}></div>
 
-              {/* Floating Icon (Tier Emblem) */}
-              <div className={`absolute top-6 right-6 opacity-30 ${isMythic ? 'animate-spin-slow' : 'animate-pulse-slow'} pointer-events-none`}>
-                  <TierIcon size={120} className={theme.text} />
+              {/* Floating Tier Icon (Image) */}
+              <div className={`absolute top-6 right-6 opacity-40 ${isMythic ? 'animate-pulse' : 'opacity-20'} pointer-events-none`}>
+                  <img src={theme.iconUrl} alt={member.membershipId} className="w-24 h-24 object-contain drop-shadow-lg" />
               </div>
               
               {/* Avatar & Identity */}
@@ -331,7 +343,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                       {/* Rank Badge */}
                       <div className={`absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 z-20 whitespace-nowrap shadow-xl ${theme.badge}`}>
                           <Hexagon size={12} fill="currentColor" />
-                          {member.membershipId}
+                          {member.membershipId.replace('MYTHICAL_', 'M.')}
                       </div>
                   </div>
 
@@ -345,7 +357,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                   <div className="relative group/box rounded-2xl bg-white/5 backdrop-blur-md overflow-hidden p-4 flex flex-col items-center justify-center gap-1 border border-white/10 hover:bg-white/10 transition-colors">
                       <div className={`absolute -inset-10 bg-gradient-to-tr ${theme.conic} opacity-0 group-hover/box:opacity-20 blur-xl transition-opacity`}></div>
                       <Clock size={20} className={`${theme.text} mb-1 relative z-10`} />
-                      <span className="text-2xl font-black text-white tracking-tight relative z-10">{parseFloat(stats.totalPlayTime)}</span>
+                      <span className="text-2xl font-black text-white tracking-tight relative z-10">{stats.totalPlayTime}</span>
                       <span className="text-[8px] uppercase font-bold text-slate-400 tracking-widest relative z-10">Hours Played</span>
                   </div>
                   <div className="relative group/box rounded-2xl bg-white/5 backdrop-blur-md overflow-hidden p-4 flex flex-col items-center justify-center gap-1 border border-white/10 hover:bg-white/10 transition-colors">

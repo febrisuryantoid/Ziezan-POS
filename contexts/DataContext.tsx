@@ -27,7 +27,7 @@ interface DataContextType {
   // Member Actions
   addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
-  deleteMember: (id: string) => boolean; // Changed return type to boolean for success/fail feedback
+  deleteMember: (id: string) => boolean;
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
   resetSeason: () => void;
 
@@ -87,7 +87,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let hasUpdates = false;
     
-    // Sort configs DESCENDING (Highest minHours first)
     const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
 
     const updatedMembers = members.map(member => {
@@ -219,14 +218,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
-  // ROOT CAUSE FIX 1: Prevent deleting active members
   const deleteMember = (id: string): boolean => {
-    // Check if member has active transaction
     const hasActiveTx = transactions.some(t => t.memberId === id && t.status === 'ACTIVE');
     if (hasActiveTx) {
-        return false; // Fail safe
+        return false;
     }
-
     const updated = members.filter(m => m.id !== id);
     safeSave(() => Storage.saveMembers(updated));
     setMembers(updated);
@@ -247,11 +243,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetSeason = () => {
       const updatedMembers = members.map(m => {
           let newTier: MembershipTierId = 'WARRIOR';
-          if (m.membershipId === 'MYTHIC') newTier = 'LEGEND';
+          if (m.membershipId === 'MYTHICAL_IMMORTAL') newTier = 'MYTHICAL_GLORY';
+          else if (m.membershipId === 'MYTHICAL_GLORY') newTier = 'MYTHICAL_HONOR';
+          else if (m.membershipId === 'MYTHICAL_HONOR') newTier = 'MYTHIC';
+          else if (m.membershipId === 'MYTHIC') newTier = 'LEGEND';
           else if (m.membershipId === 'LEGEND') newTier = 'EPIC';
           else if (m.membershipId === 'EPIC') newTier = 'GRANDMASTER';
-          else if (m.membershipId === 'GRANDMASTER') newTier = 'MASTER';
-          else if (m.membershipId === 'MASTER') newTier = 'ELITE';
+          else if (m.membershipId === 'GRANDMASTER') newTier = 'ELITE';
           else if (m.membershipId === 'ELITE') newTier = 'WARRIOR';
 
           return {
@@ -276,13 +274,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let freeHoursUsed = 0;
     let finalPaymentMethod = paymentMethod;
 
-    if (member.freeHoursBalance > 0) {
+    // FIX: Only use bonus if payment method is explicitly set to BONUS
+    if (paymentMethod === 'BONUS') {
         if (member.freeHoursBalance >= duration) {
             freeHoursUsed = duration;
             discount = cost;
             cost = 0;
-            finalPaymentMethod = 'BONUS';
         } else {
+            // Partial
             freeHoursUsed = member.freeHoursBalance;
             discount = freeHoursUsed * settings.hourlyRate;
             cost = cost - discount;
@@ -294,7 +293,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       consoleId,
       consoleName: consoleUnit.name,
       memberId,
-      // CHANGE: Use Nickname as the primary identifier in Transaction Snapshot
       memberName: member.nickname || member.name, 
       startTime: new Date().toISOString(),
       durationHours: duration,
@@ -306,6 +304,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       synced: false
     };
 
+    // Update member balance immediately if using Bonus
     const updatedMember = {
         ...member,
         freeHoursBalance: member.freeHoursBalance - freeHoursUsed,
@@ -338,12 +337,34 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tx = transactions.find(t => t.id === transactionId);
     if (!tx || tx.status === 'COMPLETED') return;
 
-    // Sanitize extraCost to prevent negative values (fraud prevention)
     const safeExtraCost = Math.max(0, extraCost);
+    const member = members.find(m => m.id === tx.memberId);
+    
+    // --- LATE BONUS REDEMPTION LOGIC ---
+    // If the session wasn't already paid by bonus, but now they want to pay with BONUS
+    let additionalDiscount = 0;
+    let cost = tx.cost;
+    let freeHoursDeductedNow = 0;
+
+    // Check if switching to BONUS payment at checkout
+    if (finalPaymentMethod === 'BONUS' && tx.paymentMethod !== 'BONUS' && member) {
+        // Calculate how much bonus covers
+        if (member.freeHoursBalance >= tx.durationHours) {
+            freeHoursDeductedNow = tx.durationHours;
+            additionalDiscount = cost; // Discount entire rental cost
+            cost = 0; 
+        } else {
+            // Partial
+            freeHoursDeductedNow = member.freeHoursBalance;
+            additionalDiscount = freeHoursDeductedNow * settings.hourlyRate;
+            cost = cost - additionalDiscount;
+        }
+    }
 
     const updatedTx: Transaction = { 
         ...tx, 
-        cost: tx.cost + safeExtraCost, // Add sanitized extra cost (F&B, etc)
+        cost: cost + safeExtraCost, 
+        discountApplied: tx.discountApplied + additionalDiscount,
         paymentMethod: finalPaymentMethod || tx.paymentMethod,
         status: 'COMPLETED', 
         endTime: new Date().toISOString(),
@@ -367,16 +388,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         safeSave(() => Storage.saveConsoles(newConsoles));
     }
 
-    const member = members.find(m => m.id === tx.memberId);
     if (member) {
         const currentConfig = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
         
-        // BUG FIX (Bonus Farming): Bonus progress ONLY if PAID (CASH/QRIS), NOT for BONUS sessions.
-        const isBonusSession = tx.paymentMethod === 'BONUS';
+        const isBonusSession = updatedTx.paymentMethod === 'BONUS';
         
         let newProgress = member.hoursProgressToNextBonus;
-        let newFreeBalance = member.freeHoursBalance;
+        let newFreeBalance = member.freeHoursBalance - freeHoursDeductedNow; // Deduct if used at checkout
 
+        // Only accrue progress if PAID by CASH/QRIS
         if (!isBonusSession) {
             newProgress += tx.durationHours;
             if (newProgress >= currentConfig.bonusThreshold && currentConfig.bonusThreshold > 0) {
@@ -399,10 +419,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...member,
             membershipId: newTierId,
             totalPlayTime: newTotalPlayTime,
-            // FIX: totalAmountPaid MUST include the final transaction cost (including extraCost)
             totalAmountPaid: member.totalAmountPaid + updatedTx.cost, 
             hoursProgressToNextBonus: newProgress,
             freeHoursBalance: newFreeBalance,
+            totalBonusHoursUsed: member.totalBonusHoursUsed + freeHoursDeductedNow,
             synced: false
         };
         const newMembers = members.map(m => m.id === member.id ? updatedMember : m);

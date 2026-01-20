@@ -4,9 +4,8 @@ import { Console, Member, Transaction, AppSettings, User, Role, MembershipConfig
 // Initial Data Seeding - CLEARED FOR PRODUCTION
 const DEFAULT_CONSOLES: Console[] = [];
 
-// New 7-Tier "Kid-Friendly Progression" Configuration
-// Philosophy: Fast rank-up early game, generous bonuses for loyalty.
-// Warrior (0h) -> Elite (10h) -> Master (25h) -> GM (50h) -> Epic (85h) -> Legend (120h) -> Mythic (160h)
+// New 9-Tier "Mobile Legends Style" Configuration
+// UPDATED: Easier progression from Warrior to Epic, specific targets for Legend/Mythic.
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'WARRIOR', 
@@ -14,73 +13,95 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 0,
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // START: Main 6 Jam -> Gratis 1
+    bonusThreshold: 10, // Main 10 jam -> Bonus 1 jam
     bonusReward: 1,     
     isActive: true,
-    color: 'slate'
+    color: 'orange'
   },
   { 
     id: 'ELITE', 
     name: 'Elite', 
-    minHours: 10, // Cepat naik pangkat (sekitar 5x main)
+    minHours: 5, // Dipermudah (sebelumnya 10)
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Masih 6:1, tapi status naik
+    bonusThreshold: 10, 
     bonusReward: 1,    
     isActive: true,
-    color: 'zinc'
+    color: 'slate'
   },
   { 
-    id: 'MASTER', 
-    name: 'Master', 
-    minHours: 25, // Target 2-3 Minggu
+    id: 'GRANDMASTER', 
+    name: 'Grand Master', 
+    minHours: 15, // Dipermudah (sebelumnya 30)
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 5, // UPGRADE 1: Jadi Main 5 Jam -> Gratis 1
+    bonusThreshold: 9, // Upgrade: Main 9 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'amber'
   },
   { 
-    id: 'GRANDMASTER', 
-    name: 'Grandmaster', 
-    minHours: 50, // Target 1 Bulan
+    id: 'EPIC', 
+    name: 'Epic', 
+    minHours: 30, // Dipermudah (sebelumnya 60)
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 5, 
+    bonusThreshold: 8, // Upgrade: Main 8 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
     color: 'emerald'
   },
   { 
-    id: 'EPIC', 
-    name: 'Epic', 
-    minHours: 85, // Target 1.5 Bulan
-    price: 0, 
-    durationDays: 0, 
-    bonusThreshold: 4, // UPGRADE 2: Jadi Main 4 Jam -> Gratis 1
-    bonusReward: 1,    
-    isActive: true,
-    color: 'cyan'
-  },
-  { 
     id: 'LEGEND', 
     name: 'Legend', 
-    minHours: 120, // Target 2 Bulan
+    minHours: 60, // Fixed as requested
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 4, 
+    bonusThreshold: 7, // Upgrade: Main 7 jam -> Bonus 1 jam
     bonusReward: 1,    
     isActive: true,
-    color: 'violet'
+    color: 'yellow'
   },
   { 
     id: 'MYTHIC', 
     name: 'Mythic', 
-    minHours: 160, // Target Akhir Season (±3 Bulan)
+    minHours: 100, // Fixed as requested
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 3, // JACKPOT: Main 3 Jam -> Gratis 1
+    bonusThreshold: 6, // Upgrade: Main 6 jam -> Bonus 1 jam
+    bonusReward: 1,    
+    isActive: true,
+    color: 'indigo'
+  },
+  { 
+    id: 'MYTHICAL_HONOR', 
+    name: 'Mythical Honor', 
+    minHours: 150, // Smoother transition
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 5, // Upgrade: Main 5 jam -> Bonus 1 jam
+    bonusReward: 1,    
+    isActive: true,
+    color: 'blue'
+  },
+  { 
+    id: 'MYTHICAL_GLORY', 
+    name: 'Mythical Glory', 
+    minHours: 220, // Smoother transition
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 4, // Upgrade: Main 4 jam -> Bonus 1 jam
+    bonusReward: 1,    
+    isActive: true,
+    color: 'pink'
+  },
+  { 
+    id: 'MYTHICAL_IMMORTAL', 
+    name: 'Mythical Immortal', 
+    minHours: 365, // Top Tier
+    price: 0, 
+    durationDays: 0, 
+    bonusThreshold: 3, // GOD MODE: Main 3 Jam -> Gratis 1
     bonusReward: 1,    
     isActive: true,
     color: 'rose'
@@ -120,12 +141,9 @@ export const getMemberships = (): MembershipConfig[] => {
   const data = localStorage.getItem(K_MEMBERSHIPS);
   if (data) {
       const parsed = JSON.parse(data);
-      // Ensure we always have the 7 tiers even if local storage is old
-      // We map over default and merge preserved fields
       const merged = DEFAULT_MEMBERSHIPS.map(def => {
           const existing = parsed.find((p: any) => p.id === def.id);
           if (existing) {
-             // CRITICAL FIX: Merge all configurable fields, not just isActive
              return { 
                  ...def, 
                  isActive: existing.isActive ?? def.isActive,
@@ -160,11 +178,13 @@ export const getMembers = (): Member[] => {
   members.forEach(m => {
       if (!m.id || !m.name) { hasChanges = true; return; }
 
-      // Name Migration for old tiers to new schema
+      // Migration for old tiers to new 9-Tier schema
       let tier = m.membershipId;
+      // Auto migrate old names to new structure if encountered
       if (tier as any === 'BASIC') tier = 'WARRIOR';
-      if (tier as any === 'PLUS') tier = 'GRANDMASTER'; // Mid-tier mapping
-      if (tier as any === 'VIP') tier = 'LEGEND'; // High-tier mapping
+      if (tier as any === 'MASTER') tier = 'GRANDMASTER'; 
+      if (tier as any === 'PLUS') tier = 'EPIC';
+      if (tier as any === 'VIP') tier = 'LEGEND'; 
 
       const cleaned: Member = {
         ...m,
@@ -217,8 +237,6 @@ export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(K_SETTINGS);
   if (data) {
       const parsed = JSON.parse(data);
-      // Merge saved data with defaults. 
-      // Note: Spread operator overwrites DEFAULT_SETTINGS with parsed values if they exist.
       return { 
         ...DEFAULT_SETTINGS, 
         ...parsed

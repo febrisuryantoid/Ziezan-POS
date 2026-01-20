@@ -16,8 +16,18 @@ export enum MemberStatus {
 }
 
 export type PaymentMethod = 'CASH' | 'QRIS' | 'BONUS';
-// Updated to 7 Tiers (Mythic Added)
-export type MembershipTierId = 'WARRIOR' | 'ELITE' | 'MASTER' | 'GRANDMASTER' | 'EPIC' | 'LEGEND' | 'MYTHIC';
+
+// Updated to 9 Tiers (Mobile Legends Style)
+export type MembershipTierId = 
+  | 'WARRIOR' 
+  | 'ELITE' 
+  | 'GRANDMASTER' 
+  | 'EPIC' 
+  | 'LEGEND' 
+  | 'MYTHIC' 
+  | 'MYTHICAL_HONOR' 
+  | 'MYTHICAL_GLORY' 
+  | 'MYTHICAL_IMMORTAL';
 
 // --- NEW: TOAST TYPES ---
 export type ToastType = 'success' | 'error' | 'info' | 'warning';

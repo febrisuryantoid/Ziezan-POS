@@ -113,7 +113,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const totalPages = Math.ceil(filteredConsoles.length / itemsPerPage);
   const currentConsoles = filteredConsoles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Sort Members A-Z and filter for dropdown
   const sortedAndFilteredMembers = useMemo(() => {
       const activeMembers = members.filter(m => m.status === 'ACTIVE');
       const sorted = activeMembers.sort((a, b) => a.nickname.localeCompare(b.nickname));
@@ -129,26 +128,24 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
     let hoursToPay = rentalDuration;
     let freeHoursUsed = 0;
-    let discount = 0;
     let totalBaseCost = rentalDuration * settings.hourlyRate;
 
-    // AUTOMATIC BONUS CALCULATION
-    if (member.freeHoursBalance > 0) {
-      if (member.freeHoursBalance >= rentalDuration) {
-        // Case 1: Bonus covers EVERYTHING
-        freeHoursUsed = rentalDuration;
-        discount = totalBaseCost;
-        totalBaseCost = 0; // Cost is 0
-      } else {
-        // Case 2: Partial Bonus
-        freeHoursUsed = member.freeHoursBalance;
-        discount = freeHoursUsed * settings.hourlyRate;
-        totalBaseCost = totalBaseCost - discount;
-      }
+    // Check bonus availability (for display)
+    const canUseBonus = member.freeHoursBalance >= 1;
+
+    // If SELECTED payment is BONUS, apply it
+    if (selectedPayment === 'BONUS') {
+        if (member.freeHoursBalance >= rentalDuration) {
+            freeHoursUsed = rentalDuration;
+            totalBaseCost = 0;
+        } else {
+            freeHoursUsed = member.freeHoursBalance;
+            totalBaseCost = (rentalDuration - freeHoursUsed) * settings.hourlyRate;
+        }
     }
 
-    return { totalCost: totalBaseCost, freeHoursUsed, finalHoursToPay: hoursToPay };
-  }, [rentalMemberId, rentalDuration, members, settings.hourlyRate]);
+    return { totalCost: totalBaseCost, freeHoursUsed, canUseBonus, memberBonus: member.freeHoursBalance };
+  }, [rentalMemberId, rentalDuration, members, settings.hourlyRate, selectedPayment]);
 
   const resetModal = () => {
     setSelectedConsoleId(null);
@@ -162,8 +159,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const handleNextStep = () => {
     if (currentStep === 'INPUT' && rentalMemberId) setCurrentStep('PAYMENT');
     else if (currentStep === 'PAYMENT') {
-        // Logic: If Cost is 0 (Full Bonus), skip QRIS check/step and go straight to confirm
-        if (calculation?.totalCost === 0) {
+        if (selectedPayment === 'BONUS' && calculation?.totalCost === 0) {
             setCurrentStep('CONFIRM');
         } else {
             selectedPayment === 'QRIS' ? setCurrentStep('QRIS') : setCurrentStep('CONFIRM');
@@ -179,11 +175,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   };
 
-  // --- CHECKOUT LOGIC ---
   const initiateCheckout = (tx: Transaction) => {
       setCheckoutTx(tx);
-      setExtraCost(0); // Reset
-      setCheckoutPayment(tx.paymentMethod); // Default to initial method
+      setExtraCost(0);
+      // Default to existing, but if it was open-ended cash, maybe allow bonus now
+      setCheckoutPayment(tx.paymentMethod); 
   };
 
   const confirmCheckout = () => {
@@ -194,7 +190,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       }
   };
 
-  // FIX: Quick Add Member integration
   const handleQuickAddMember = () => {
       if (!memberSearchTerm.trim()) return;
       const name = memberSearchTerm.trim();
@@ -208,9 +203,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           notes: 'Added via Quick Rental',
           joinDate: new Date().toISOString()
       });
-      // Force update the selection immediately
       setRentalMemberId(newMemberId);
-      setMemberSearchTerm(name); // Keep name in input
+      setMemberSearchTerm(name); 
       setIsMemberDropdownOpen(false);
       addToast('success', 'Member Baru Ditambahkan', `Member ${name} berhasil dibuat dan dipilih.`);
   };
@@ -241,7 +235,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   }
 
-  // --- TOGGLE MAINTENANCE ---
   const toggleMaintenance = (c: Console) => {
     if (c.status === ConsoleStatus.IN_USE) {
       addToast('error', 'Gagal', 'Console sedang digunakan. Selesaikan sesi terlebih dahulu.');
@@ -258,7 +251,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     }
   };
 
-  // --- DELETE CONFIRMATION HANDLERS ---
   const openConfirmDelete = (console: Console) => {
     setDeletingConsole(console);
   };
@@ -310,10 +302,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
      return { tx, progress, isOvertime, isWarning, formattedElapsed: formatTime(elapsedMs), formattedRemaining: formatTime(timeRemainingMs) };
   }
 
-  // --- PAGINATION RENDERER ---
   const renderPagination = () => {
     if (totalPages <= 1) return null;
-
     const getPageNumbers = () => {
         const pages = [];
         if (totalPages <= 5) {
@@ -332,38 +322,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
     return (
         <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in">
-            <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <ChevronLeft size={18} />
-            </button>
-
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeft size={18} /></button>
             {getPageNumbers().map((page, idx) => (
-                <button
-                    key={idx}
-                    onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                    disabled={typeof page !== 'number'}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                        page === currentPage 
-                        ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' 
-                        : typeof page === 'number'
-                            ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10'
-                            : 'text-slate-400 cursor-default'
-                    }`}
-                >
-                    {page}
-                </button>
+                <button key={idx} onClick={() => typeof page === 'number' && setCurrentPage(page)} disabled={typeof page !== 'number'} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${page === currentPage ? 'bg-palette-mustard text-white shadow-lg shadow-palette-mustard/30 scale-105' : typeof page === 'number' ? 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10' : 'text-slate-400 cursor-default'}`}>{page}</button>
             ))}
-
-            <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <ChevronRight size={18} />
-            </button>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRight size={18} /></button>
         </div>
     );
   };
@@ -379,53 +342,28 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         
         {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
-           
-           {/* Search */}
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="search" 
-              placeholder={t('search_placeholder')} 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400"
-            />
+            <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="h-10 sm:h-11 pl-10 pr-3 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400" />
           </div>
-
-          {/* Sort */}
           <div className="relative col-span-1 md:col-span-6 lg:w-48">
              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select 
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
-             >
+             <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer">
                 <option value="NAME_ASC">{t('sort_name_asc')}</option>
                 <option value="NAME_DESC">{t('sort_name_desc')}</option>
                 <option value="USAGE_DESC">{t('sort_usage_desc')}</option>
                 <option value="STATUS">{t('status')}</option>
              </select>
           </div>
-
-          {/* Filter Status */}
           <div className="relative col-span-1 md:col-span-6 lg:w-40">
              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-             <select 
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer"
-             >
+             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-10 sm:h-11 pl-10 pr-2 sm:pr-8 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 rounded-xl text-xs sm:text-sm font-medium w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-sm text-slate-900 dark:text-white appearance-none truncate cursor-pointer">
                 <option value="ALL">{t('filter_all')}</option>
                 <option value="AVAILABLE">{t('filter_avail')}</option>
                 <option value="IN_USE">{t('filter_in_use')}</option>
              </select>
           </div>
-
-          {/* Add Button */}
-          <button 
-            onClick={() => setIsAdding(true)}
-            className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
-          >
+          <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95">
             <Plus size={18} /> {t('add_unit')}
           </button>
         </div>
@@ -435,19 +373,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       <div className="space-y-4">
         {/* Widget Header with Count Badge */}
         <div className="flex items-center gap-3 px-1">
-          <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm">
-            <Gamepad2 size={18} />
-          </div>
-          <h3 className="text-lg font-bold text-palette-navy dark:text-white">
-            {t('active_consoles')}
-          </h3>
-          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">
-            Total: {filteredConsoles.length}
-          </span>
+          <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm"><Gamepad2 size={18} /></div>
+          <h3 className="text-lg font-bold text-palette-navy dark:text-white">{t('active_consoles')}</h3>
+          <span className="ml-auto text-[10px] font-bold text-palette-brown/70 dark:text-slate-300 bg-white dark:bg-palette-navyLight border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full shadow-sm">Total: {filteredConsoles.length}</span>
         </div>
 
-        {/* Grid - RESPONSIVE TWEAK HERE */}
-        {/* min-[350px] handles iPhone 6 upwards to have 2 columns. Below that (320px iPhone 5S) stays 1 column */}
         <div className="grid grid-cols-1 min-[350px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
           {currentConsoles.map(console => {
             const isActive = console.status === ConsoleStatus.IN_USE;
@@ -456,21 +386,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             const imageUrl = console.imageUrl || DEFAULT_CONSOLE_IMAGE;
             
             return (
-              <div key={console.id} className={`group relative rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-xl dark:shadow-none bg-white dark:bg-palette-navyLight ${
-                isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'
-              }`}>
+              <div key={console.id} className={`group relative rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-xl dark:shadow-none bg-white dark:bg-palette-navyLight ${isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'}`}>
                 {/* Image Container */}
                 <div className="aspect-video w-full bg-slate-100 dark:bg-black/20 relative">
-                  <img 
-                    src={imageUrl} 
-                    alt={console.name} 
-                    className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`}
-                    onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)}
-                  />
-                  {/* Status Overlay */}
+                  <img src={imageUrl} alt={console.name} className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
                   
-                  {/* MAINTENANCE OVERLAY */}
                   {isMaintenance && (
                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-[1px] animate-fade-in">
                         <div className="w-full h-full absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(249,115,22,0.1)_10px,rgba(249,115,22,0.1)_20px)] pointer-events-none"></div>
@@ -479,34 +400,19 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                      </div>
                   )}
                   
-                  {/* Top Right Actions */}
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                     {/* MAINTENANCE TOGGLE BUTTON */}
-                     <button 
-                        onClick={() => toggleMaintenance(console)} 
-                        className={`p-2 backdrop-blur-md rounded-full text-white transition-colors ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-slate-500/50 hover:bg-slate-500'}`}
-                        title={isMaintenance ? "Selesai Perbaikan" : "Mode Perbaikan"}
-                     >
-                        <Wrench size={14} />
-                     </button>
-                     
+                     <button onClick={() => toggleMaintenance(console)} className={`p-2 backdrop-blur-md rounded-full text-white transition-colors ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-slate-500/50 hover:bg-slate-500'}`} title={isMaintenance ? "Selesai Perbaikan" : "Mode Perbaikan"}><Wrench size={14} /></button>
                      <button onClick={() => setEditingConsole(console)} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"><Edit2 size={14} /></button>
                      <button onClick={() => openConfirmDelete(console)} className="p-2 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40"><Trash2 size={14} /></button>
                   </div>
 
-                  {/* Status Badge */}
                   <div className="absolute top-3 left-3 z-20">
-                     <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${
-                        isActive ? 'bg-palette-mustard/90 text-white animate-pulse' :
-                        isMaintenance ? 'bg-palette-copper/90 text-white' :
-                        'bg-palette-green/90 text-white'
-                     }`}>
+                     <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/10 shadow-sm ${isActive ? 'bg-palette-mustard/90 text-white animate-pulse' : isMaintenance ? 'bg-palette-copper/90 text-white' : 'bg-palette-green/90 text-white'}`}>
                         {isActive ? t('session_active') : isMaintenance ? t('maintenance') : t('available_status')}
                      </span>
                   </div>
                 </div>
 
-                {/* Content Body */}
                 <div className="p-3 sm:p-5 flex flex-col flex-1 relative">
                    <h3 className="font-bold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white truncate mb-1" title={console.name}>{console.name}</h3>
                    
@@ -516,12 +422,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 max-w-[60%] truncate"><User size={12}/> {session.tx.memberName}</span>
                             <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{session.formattedRemaining}</span>
                          </div>
-                         {/* Progress Bar */}
                          <div className="h-1.5 sm:h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-palette-mustard'}`} 
-                              style={{ width: `${session.progress}%` }}
-                            ></div>
+                            <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-palette-mustard'}`} style={{ width: `${session.progress}%` }}></div>
                          </div>
                          <div className="flex justify-between text-[8px] sm:text-[10px] font-bold uppercase text-slate-400">
                             <span>{t('elapsed')}</span>
@@ -537,30 +439,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                       </div>
                    )}
 
-                   {/* Footer Action */}
                    <div className="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 dark:border-white/5">
                       {isActive && session ? (
-                         <button 
-                           onClick={() => initiateCheckout(session.tx)}
-                           className="w-full py-2.5 sm:py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-xs sm:text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
-                         >
-                            <Power size={14} className="sm:w-4 sm:h-4" /> Stop
-                         </button>
+                         <button onClick={() => initiateCheckout(session.tx)} className="w-full py-2.5 sm:py-3 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 font-bold text-xs sm:text-sm hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"><Power size={14} className="sm:w-4 sm:h-4" /> Stop</button>
                       ) : (
-                         <button 
-                           onClick={() => setSelectedConsoleId(console.id)}
-                           disabled={isMaintenance}
-                           className={`w-full py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${
-                               isMaintenance 
-                               ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' 
-                               : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-slate-900/10'
-                           }`}
-                         >
-                            {isMaintenance ? (
-                                <span className="text-[10px]">UNDER MAINTENANCE</span>
-                            ) : (
-                                <><Play size={14} className="sm:w-4 sm:h-4" fill="currentColor" /> {t('start_session')}</>
-                            )}
+                         <button onClick={() => setSelectedConsoleId(console.id)} disabled={isMaintenance} className={`w-full py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-lg ${isMaintenance ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 shadow-slate-900/10'}`}>
+                            {isMaintenance ? <span className="text-[10px]">UNDER MAINTENANCE</span> : <><Play size={14} className="sm:w-4 sm:h-4" fill="currentColor" /> {t('start_session')}</>}
                          </button>
                       )}
                    </div>
@@ -569,8 +453,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             );
           })}
         </div>
-
-        {/* PAGINATION UI */}
         {renderPagination()}
       </div>
 
@@ -614,7 +496,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             type="number" 
                             inputMode="numeric"
                             value={extraCost}
-                            // ROOT CAUSE FIX 3: Prevent negative input
                             onChange={(e) => setExtraCost(Math.max(0, parseInt(e.target.value) || 0))}
                             className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-right font-mono font-bold focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white"
                             placeholder="0"
@@ -623,29 +504,60 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
                     <div className="border-t border-slate-200 dark:border-white/10 pt-3 flex justify-between items-center">
                         <span className="text-lg font-bold text-slate-900 dark:text-white">Total Akhir</span>
-                        <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                            Rp {(checkoutTx.cost + extraCost).toLocaleString()}
-                        </span>
+                        {checkoutPayment === 'BONUS' ? (
+                            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                                Rp {extraCost.toLocaleString()} + Bonus
+                            </span>
+                        ) : (
+                            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                                Rp {(checkoutTx.cost + extraCost).toLocaleString()}
+                            </span>
+                        )}
                     </div>
                  </div>
 
                  {/* Payment Method Selector */}
                  <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Metode Pembayaran</label>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button 
-                            onClick={() => setCheckoutPayment('CASH')}
-                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
-                        >
-                            <Wallet size={16} /> Tunai
-                        </button>
-                        <button 
-                            onClick={() => setCheckoutPayment('QRIS')}
-                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
-                        >
-                            <QrCode size={16} /> QRIS
-                        </button>
-                    </div>
+                    
+                    {/* Member bonus info for Checkout */}
+                    {(() => {
+                        const member = members.find(m => m.id === checkoutTx.memberId);
+                        const canPayWithBonus = member && member.freeHoursBalance > 0;
+                        return (
+                            <>
+                                {member && (
+                                    <div className="mb-2 text-[10px] text-slate-500 flex items-center justify-between px-1">
+                                        <span>Saldo Bonus Member:</span>
+                                        <span className="font-bold text-emerald-500">{member.freeHoursBalance} Jam</span>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button 
+                                        onClick={() => setCheckoutPayment('CASH')}
+                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
+                                    >
+                                        <Wallet size={16} /> Tunai
+                                    </button>
+                                    <button 
+                                        onClick={() => setCheckoutPayment('QRIS')}
+                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}
+                                    >
+                                        <QrCode size={16} /> QRIS
+                                    </button>
+                                    
+                                    {/* Bonus Option at Checkout - Deferred Payment Logic */}
+                                    <button 
+                                        onClick={() => { if(canPayWithBonus) setCheckoutPayment('BONUS'); }}
+                                        disabled={!canPayWithBonus}
+                                        className={`col-span-2 p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-all ${checkoutPayment === 'BONUS' ? 'bg-emerald-600 text-white border-emerald-600' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'}`}
+                                    >
+                                        <Gift size={16} /> Bayar Pakai Saldo Bonus
+                                    </button>
+                                </div>
+                            </>
+                        );
+                    })()}
                  </div>
               </div>
 
@@ -679,26 +591,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                           <div className="relative" ref={dropdownRef}>
                              <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                <input 
-                                   type="text" 
-                                   placeholder={t('search_placeholder')} 
-                                   value={memberSearchTerm}
-                                   onFocus={() => setIsMemberDropdownOpen(true)}
-                                   onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }}
-                                   className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white"
-                                />
+                                <input type="text" placeholder={t('search_placeholder')} value={memberSearchTerm} onFocus={() => setIsMemberDropdownOpen(true)} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" />
                              </div>
                              
                              {isMemberDropdownOpen && (
                                 <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20">
                                    {sortedAndFilteredMembers.length > 0 ? (
                                       sortedAndFilteredMembers.map(m => (
-                                         <div 
-                                            key={m.id} 
-                                            onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname); setIsMemberDropdownOpen(false); }}
-                                            className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0"
-                                         >
-                                            {/* CHANGE: Display Nickname in Dropdown, Removed Name */}
+                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname); setIsMemberDropdownOpen(false); }} className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0">
                                             <p className="text-sm font-bold text-slate-900 dark:text-white">{m.nickname}</p>
                                             <p className="text-xs text-slate-500">{m.membershipId}</p>
                                          </div>
@@ -737,7 +637,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                              <span className="text-slate-500">{t('cost')} Normal</span>
                              <span className="font-mono text-slate-900 dark:text-white">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
                           </div>
-                          {calculation.freeHoursUsed > 0 && (
+                          {selectedPayment === 'BONUS' && calculation.freeHoursUsed > 0 && (
                              <div className="flex justify-between text-sm text-emerald-500">
                                 <span className="flex items-center gap-1"><Gift size={12}/> {t('use_bonus')} ({calculation.freeHoursUsed}h)</span>
                                 <span className="font-mono">-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
@@ -750,24 +650,31 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                           </div>
                        </div>
 
-                       {calculation.totalCost > 0 && (
-                          <div className="grid grid-cols-2 gap-3">
-                             <button 
+                       <div className="grid grid-cols-2 gap-3">
+                            <button 
                                 onClick={() => setSelectedPayment('CASH')}
                                 className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'CASH' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
-                             >
+                            >
                                 <Wallet size={24} />
                                 <span className="font-bold text-xs">{t('pay_cash')}</span>
-                             </button>
-                             <button 
+                            </button>
+                            <button 
                                 onClick={() => setSelectedPayment('QRIS')}
                                 className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'QRIS' ? 'border-palette-mustard bg-palette-mustard/5 text-palette-mustard' : 'border-slate-200 dark:border-white/10 text-slate-500'}`}
-                             >
+                            >
                                 <QrCode size={24} />
                                 <span className="font-bold text-xs">QRIS</span>
-                             </button>
-                          </div>
-                       )}
+                            </button>
+                            {/* Explicit Bonus Button */}
+                            <button 
+                                onClick={() => { if(calculation.canUseBonus) setSelectedPayment('BONUS'); }}
+                                disabled={!calculation.canUseBonus}
+                                className={`col-span-2 p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${selectedPayment === 'BONUS' ? 'border-emerald-500 bg-emerald-500/5 text-emerald-500' : 'border-slate-200 dark:border-white/10 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed'}`}
+                            >
+                                <Gift size={24} />
+                                <span className="font-bold text-xs">Gunakan Saldo Bonus ({calculation.memberBonus} Jam)</span>
+                            </button>
+                        </div>
                     </div>
                  )}
 
@@ -820,7 +727,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       )}
 
-      {/* 3. ADD / EDIT CONSOLE MODAL - RESPONSIVE LAYOUT FIX */}
+      {/* 3. ADD / EDIT CONSOLE MODAL */}
       {(isAdding || editingConsole) && (
          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
             <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6">
@@ -832,29 +739,15 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                <form onSubmit={isAdding ? handleAddConsole : handleUpdateConsole} className="space-y-4">
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-500 uppercase">{t('console_name')}</label>
-                     <input 
-                        type="text" 
-                        required
-                        value={isAdding ? newConsoleName : editingConsole?.name}
-                        onChange={(e) => isAdding ? setNewConsoleName(e.target.value) : setEditingConsole(prev => prev ? {...prev, name: e.target.value} : null)}
-                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard font-bold dark:text-white"
-                        placeholder={t('console_name_placeholder')}
-                     />
+                     <input type="text" required value={isAdding ? newConsoleName : editingConsole?.name} onChange={(e) => isAdding ? setNewConsoleName(e.target.value) : setEditingConsole(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard font-bold dark:text-white" placeholder={t('console_name_placeholder')} />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold text-slate-500 uppercase">Image URL (Optional)</label>
                      <div className="relative">
                         <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input 
-                           type="text"
-                           value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''}
-                           onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)}
-                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard dark:text-white"
-                           placeholder="https://..."
-                        />
+                        <input type="text" value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''} onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard dark:text-white" placeholder="https://..." />
                      </div>
                   </div>
-                  
                   <div className="pt-2 flex gap-3">
                      <button type="button" onClick={() => { setIsAdding(false); setEditingConsole(null); }} className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">{t('cancel')}</button>
                      <button type="submit" className="flex-1 py-3 bg-palette-mustard text-white rounded-xl font-bold shadow-lg shadow-palette-mustard/20">{t('save')}</button>
@@ -864,13 +757,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
          </div>
       )}
 
-      {/* 4. DELETE CONFIRMATION - RESPONSIVE LAYOUT FIX */}
+      {/* 4. DELETE CONFIRMATION */}
       {deletingConsole && (
           <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">
-                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in">
-                      <AlertTriangle size={32} />
-                  </div>
+                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-zoom-in"><AlertTriangle size={32} /></div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('delete_confirm')}</h3>
                   <p className="text-sm text-slate-500 mb-6">Unit: {deletingConsole.name}</p>
                   <div className="grid grid-cols-2 gap-3">
@@ -881,37 +772,19 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           </div>
       )}
 
-      {/* 5. PRINT SELECTION MODAL - RESPONSIVE LAYOUT FIX */}
+      {/* 5. PRINT SELECTION MODAL */}
       {printTx && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-palette-navy/80 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight sm:rounded-2xl rounded-t-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('select_print_method')}</h3>
-              
               <div className="grid grid-cols-1 gap-3">
-                 <button 
-                    onClick={handlePrintWifi}
-                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
-                 >
-                    <Printer size={20} className="text-palette-mustard"/>
-                    <span className="text-sm">{t('print_wifi')}</span>
-                 </button>
-
-                 <button 
-                    onClick={handlePrintBluetooth}
-                    className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"
-                 >
-                    <Bluetooth size={20} className="text-blue-500"/>
-                    <span className="text-sm">{t('print_bt')}</span>
-                 </button>
+                 <button onClick={handlePrintWifi} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"><Printer size={20} className="text-palette-mustard"/><span className="text-sm">{t('print_wifi')}</span></button>
+                 <button onClick={handlePrintBluetooth} className="flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard hover:bg-palette-mustard/5 transition-all text-slate-700 dark:text-slate-200 font-bold"><Bluetooth size={20} className="text-blue-500"/><span className="text-sm">{t('print_bt')}</span></button>
               </div>
-
-              <button onClick={() => setPrintTx(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline">
-                 {t('cancel')}
-              </button>
+              <button onClick={() => setPrintTx(null)} className="mt-6 text-xs text-slate-400 hover:text-slate-600 underline">{t('cancel')}</button>
            </div>
         </div>
       )}
-
     </div>
   );
 };
