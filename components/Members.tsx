@@ -77,6 +77,7 @@ const Members: React.FC = () => {
   // -- FILTER & SORT LOGIC --
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
+      // Allows searching by Name (for admin convenience) BUT display will be Nickname only
       const matchesSearch = 
         m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         m.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,7 +148,7 @@ const Members: React.FC = () => {
 
       addMember({
         name: newName,
-        nickname: newNickname,
+        nickname: newNickname || newName.split(' ')[0], // Ensure nickname exists
         phone: newPhone,
         address: newAddress,
         photoUrl: newPhoto,
@@ -158,7 +159,7 @@ const Members: React.FC = () => {
         notes: newNotes,
         freeHoursBalance: newBonusBalance 
       });
-      addToast('success', 'Member Ditambahkan', `Selamat datang, ${newName}!`);
+      addToast('success', 'Member Ditambahkan', `Selamat datang, ${newNickname || newName}!`);
       resetForm();
     }
   };
@@ -356,7 +357,7 @@ const Members: React.FC = () => {
                                 <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-br ${theme.conic}`}>
                                     <img 
                                         src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
-                                        alt={member.name} 
+                                        alt={member.nickname} 
                                         className="w-full h-full rounded-full object-cover bg-black border border-black/50"
                                     />
                                     {isPlaying && (
@@ -369,7 +370,7 @@ const Members: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Identity Section */}
+                            {/* Identity Section - STRICTLY NICKNAME ONLY */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <h3 className={`font-bold text-sm sm:text-base leading-tight truncate ${theme.text}`}>
@@ -439,7 +440,7 @@ const Members: React.FC = () => {
         {renderPagination()}
       </div>
 
-      {/* ADD MEMBER MODAL */}
+      {/* ADD MEMBER MODAL - (Admin only view, Full Name Allowed) */}
       {isAdding && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -462,7 +463,7 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 1. Nama Lengkap & Panggilan */}
+                          {/* 1. Nama Lengkap & Panggilan - Full Name input is retained for Admin record */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')} *</label>
@@ -536,7 +537,7 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* EDIT MEMBER MODAL */}
+      {/* EDIT MEMBER MODAL - (Admin only view, Full Name Allowed) */}
       {editingMember && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">

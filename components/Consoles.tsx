@@ -118,6 +118,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       const sorted = activeMembers.sort((a, b) => a.nickname.localeCompare(b.nickname));
       if (!memberSearchTerm) return sorted;
       const lowerTerm = memberSearchTerm.toLowerCase();
+      // Allow searching by Name for convenience, but result list will show Nickname
       return sorted.filter(m => m.name.toLowerCase().includes(lowerTerm) || m.nickname.toLowerCase().includes(lowerTerm));
   }, [members, memberSearchTerm]);
 
@@ -204,7 +205,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           joinDate: new Date().toISOString()
       });
       setRentalMemberId(newMemberId);
-      setMemberSearchTerm(name); 
+      setMemberSearchTerm(name.split(' ')[0]); // Set term to nickname
       setIsMemberDropdownOpen(false);
       addToast('success', 'Member Baru Ditambahkan', `Member ${name} berhasil dibuat dan dipilih.`);
   };

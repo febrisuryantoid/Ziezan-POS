@@ -79,6 +79,7 @@ const Reports: React.FC = () => {
   });
 
   const handleExportCSV = () => {
+    // Export memberName (which is nickname)
     const headers = ["ID", "Tanggal", "Member", "Unit", "Durasi (Jam)", "Metode", "Total (Rp)", "Operator", "Status"];
     const rows = filteredTransactions.map(tx => [
         tx.id,
@@ -311,7 +312,7 @@ const Reports: React.FC = () => {
                         </div>
                       </td>
                       
-                      {/* Member */}
+                      {/* Member - NICKNAME ONLY */}
                       <td className="px-6 py-4">
                          <div className="flex flex-col">
                             <span className="font-bold text-slate-900 dark:text-white text-sm">{tx.memberName}</span>
