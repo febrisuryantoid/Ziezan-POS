@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LogIn, Tv, Trophy, ChevronRight } from 'lucide-react';
 import GamingBackground from './GamingBackground';
@@ -13,11 +14,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       
       <div className="relative z-10 w-full max-w-5xl flex flex-col items-center animate-fade-in py-10">
         <div className="text-center mb-12 sm:mb-20">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#0f1016]/80 rounded-[2.5rem] p-1 border border-white/10 shadow-2xl mx-auto mb-8 rotate-3 hover:rotate-0 transition-transform duration-500 backdrop-blur-md group cursor-pointer">
+            {/* Logo Container - Removed rotate classes */}
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#0f1016]/80 rounded-[2.5rem] p-1 border border-white/10 shadow-2xl mx-auto mb-8 backdrop-blur-md group cursor-pointer">
                 <img 
                     src="https://beeimg.com/images/t47564105964.png" 
                     alt="Logo" 
-                    className="w-full h-full object-cover rounded-[2.2rem] group-hover:scale-105 transition-transform" 
+                    className="w-full h-full object-cover rounded-[2.2rem] group-hover:scale-105 transition-transform duration-500" 
                 />
             </div>
             <h1 className="text-4xl sm:text-7xl font-black tracking-tighter drop-shadow-2xl mb-3 text-white">

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Console, Member, Transaction, AppSettings, ConsoleStatus, MemberStatus, PaymentMethod, MembershipConfig, MembershipTierId 
@@ -10,7 +9,7 @@ import { wifiService } from '../services/wifi';
 
 interface DataContextType {
   consoles: Console[];
-  members: Member[]; // Now returns COMPUTED members
+  members: Member[];
   membershipConfigs: MembershipConfig[];
   transactions: Transaction[];
   settings: AppSettings;
@@ -39,8 +38,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [consoles, setConsoles] = useState<Console[]>(() => Storage.getConsoles());
-  // rawMembers contains the Profile data + Manual Bonus adjustments
+  const [rawConsoles, setRawConsoles] = useState<Console[]>(() => Storage.getConsoles());
   const [rawMembers, setRawMembers] = useState<Member[]>(() => Storage.getMembers());
   const [membershipConfigs, setMembershipConfigs] = useState<MembershipConfig[]>(() => Storage.getMemberships());
   const [transactions, setTransactions] = useState<Transaction[]>(() => Storage.getTransactions());
@@ -50,67 +48,77 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { sendCommand, isConnected: isBtConnected } = useBluetooth();
 
   const refreshData = useCallback(() => {
-    setConsoles(Storage.getConsoles());
+    setRawConsoles(Storage.getConsoles());
     setRawMembers(Storage.getMembers());
     setMembershipConfigs(Storage.getMemberships());
     setTransactions(Storage.getTransactions());
     setSettings(Storage.getSettings());
   }, []);
 
-  // --- CORE INTEGRITY ENGINE: COMPUTED MEMBERS ---
-  // Calculates stats directly from Transactions to ensure 100% accuracy.
+  // --- SOURCE OF TRUTH: COMPUTED CONSOLES ---
+  // Memastikan UI Konsol selalu singkron dengan Transaksi Aktif
+  const computedConsoles = useMemo(() => {
+    return rawConsoles.map(console => {
+        // Cari apakah ada transaksi aktif untuk konsol ini
+        const activeTx = transactions.find(t => t.consoleId === console.id && t.status === 'ACTIVE');
+        
+        if (activeTx) {
+            return {
+                ...console,
+                status: ConsoleStatus.IN_USE,
+                currentSessionId: activeTx.id
+            };
+        }
+        
+        // Jika tidak ada transaksi aktif tapi status konsol adalah IN_USE (data korup/desync), 
+        // paksa menjadi AVAILABLE kecuali jika sedang MAINTENANCE
+        if (console.status === ConsoleStatus.IN_USE) {
+            return {
+                ...console,
+                status: ConsoleStatus.AVAILABLE,
+                currentSessionId: undefined
+            };
+        }
+
+        return console;
+    });
+  }, [rawConsoles, transactions]);
+
+  // --- SOURCE OF TRUTH: COMPUTED MEMBERS ---
   const computedMembers = useMemo(() => {
     return rawMembers.map(member => {
-        // 1. Get all COMPLETED transactions for this member
         const memberHistory = transactions.filter(t => t.memberId === member.id && t.status === 'COMPLETED');
-        
-        // 2. Aggregate Total Play Time (Hours)
         const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => sum + t.durationHours, 0);
-        
-        // 3. Aggregate Total Amount Paid
         const calculatedTotalPaid = memberHistory.reduce((sum, t) => sum + t.cost, 0);
 
-        // 4. Calculate Bonus Logic
-        // Find current config to get thresholds
-        // Sort configs to find the correct Tier based on PlayTime (Auto-Rank Logic)
         const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
         const correctTier = sortedConfigs.find(c => calculatedTotalPlayTime >= c.minHours) || sortedConfigs[sortedConfigs.length - 1];
-        
-        // Use the Tier's specific bonus rules
         const configForBonus = membershipConfigs.find(c => c.id === correctTier.id) || membershipConfigs[0];
         
         let generatedBonus = 0;
         let progress = 0;
 
         if (configForBonus.bonusThreshold > 0) {
-            // How many full cycles of bonus have they earned?
             const cycles = Math.floor(calculatedTotalPlayTime / configForBonus.bonusThreshold);
             generatedBonus = cycles * configForBonus.bonusReward;
-            // Remainder is the progress to next bonus
             progress = calculatedTotalPlayTime % configForBonus.bonusThreshold;
         }
 
-        // 5. Calculate Bonus USED from transactions
         const bonusUsed = memberHistory
             .filter(t => t.paymentMethod === 'BONUS')
             .reduce((sum, t) => sum + t.durationHours, 0);
 
-        // 6. Final Balance Calculation
-        // Formula: (Generated via Play - Used in Tx) + (Manual Adjustments stored in DB)
-        // 'member.freeHoursBalance' in raw DB now strictly represents MANUAL additions (Birthday, Gift)
-        const manualBonus = member.freeHoursBalance || 0; // In this architecture, DB stores ONLY manual additions
+        const manualBonus = member.freeHoursBalance || 0;
         const calculatedBalance = (generatedBonus - bonusUsed) + manualBonus;
 
-        // Return the member object with OVERWRITTEN computed stats
-        // This ensures the UI always sees the truth derived from history.
         return {
             ...member,
-            membershipId: correctTier.id, // Auto-update Rank based on calculated time
+            membershipId: correctTier.id,
             totalPlayTime: calculatedTotalPlayTime,
             totalAmountPaid: calculatedTotalPaid,
             hoursProgressToNextBonus: progress,
             totalBonusHoursUsed: bonusUsed,
-            freeHoursBalance: calculatedBalance // This is what the UI displays
+            freeHoursBalance: calculatedBalance
         };
     });
   }, [rawMembers, transactions, membershipConfigs]);
@@ -148,7 +156,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [refreshData]);
 
-  // --- AUTOMATIC BIRTHDAY CHECK ---
+  // Automatic Birthday Check
   useEffect(() => {
     if (!isInitialSyncComplete || rawMembers.length === 0) return;
     
@@ -167,7 +175,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (dob.getMonth() === currentMonth && dob.getDate() === currentDate) {
                 if (updatedMember.lastBirthdayBonusYear !== currentYear) {
                     const bonus = settings.birthdayBonusHours || 2;
-                    // We ADD to the manual balance field for birthdays
                     updatedMember.freeHoursBalance = (updatedMember.freeHoursBalance || 0) + bonus;
                     updatedMember.lastBirthdayBonusYear = currentYear;
                     updatedMember.notes = (updatedMember.notes ? updatedMember.notes + '\n' : '') + `[System] HPBD ${currentYear}: +${bonus} Jam`;
@@ -212,39 +219,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString(),
       synced: false
     };
-    const updated = [...consoles, newConsole];
+    const updated = [...rawConsoles, newConsole];
     safeSave(() => Storage.saveConsoles(updated));
-    setConsoles(updated);
+    setRawConsoles(updated);
     syncService.syncNow();
   };
 
   const updateConsole = (id: string, name: string, imageUrl?: string) => {
-    const updated = consoles.map(c => c.id === id ? { ...c, name, imageUrl, updatedAt: new Date().toISOString(), synced: false } : c);
+    const updated = rawConsoles.map(c => c.id === id ? { ...c, name, imageUrl, updatedAt: new Date().toISOString(), synced: false } : c);
     safeSave(() => Storage.saveConsoles(updated));
-    setConsoles(updated);
+    setRawConsoles(updated);
     syncService.syncNow();
   };
 
   const updateConsoleStatus = (id: string, status: ConsoleStatus) => {
-    const updated = consoles.map(c => c.id === id ? { ...c, status, updatedAt: new Date().toISOString(), synced: false } : c);
+    const updated = rawConsoles.map(c => c.id === id ? { ...c, status, updatedAt: new Date().toISOString(), synced: false } : c);
     safeSave(() => Storage.saveConsoles(updated));
-    setConsoles(updated);
+    setRawConsoles(updated);
     syncService.syncNow();
   };
 
   const deleteConsole = (id: string) => {
-    const consoleToDelete = consoles.find(c => c.id === id);
+    const consoleToDelete = computedConsoles.find(c => c.id === id);
     if (consoleToDelete && consoleToDelete.status === ConsoleStatus.IN_USE) return false;
-    const updated = consoles.filter(c => c.id !== id);
+    const updated = rawConsoles.filter(c => c.id !== id);
     safeSave(() => Storage.saveConsoles(updated));
-    setConsoles(updated);
+    setRawConsoles(updated);
     syncService.deleteConsole(id);
     return true;
   };
 
   const addMember = (data: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }): string => {
     const newId = Math.random().toString(36).substr(2, 9);
-    // Initial manual balance is what's passed in data.freeHoursBalance
     const newMember: Member = {
       ...data,
       nickname: data.nickname || data.name.split(' ')[0], 
@@ -253,7 +259,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalPlayTime: 0,
       totalAmountPaid: 0,
       hoursProgressToNextBonus: 0,
-      freeHoursBalance: data.freeHoursBalance || 0, // This is strictly MANUAL balance in DB
+      freeHoursBalance: data.freeHoursBalance || 0,
       totalBonusHoursUsed: 0,
       membershipExpiryDate: null,
       joinDate: data.joinDate || new Date().toISOString(),
@@ -269,33 +275,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateMember = (member: Member) => {
-    // When updating, we need to be careful NOT to overwrite manual balance with calculated balance
-    // The 'member' passed here might be the COMPUTED member from the UI.
-    // We must find the original RAW member to preserve the manual balance ID, 
-    // unless the user explicitly edited the balance field in the UI.
-    
-    const existingRaw = rawMembers.find(m => m.id === member.id);
-    const newManualBalance = member.freeHoursBalance; // Assuming UI allows editing this
-
-    // If the UI doesn't allow editing balance directly (it's calculated), we should ignore it.
-    // But in Members.tsx Edit Modal, we allow editing 'Bonus Balance'.
-    // If the Admin edits Bonus Balance, they are setting the MANUAL offset.
-    // However, since UI displays (Manual + Earned - Used), if they save, they might save the result.
-    
-    // STRATEGY: For "Update Member", we assume the Admin is setting the Base/Manual balance 
-    // to force the *Resulting* balance to be what they typed.
-    // NewManual = TargetTotal - (Earned - Used)
-    
-    // For simplicity in this architecture: Admin edits "Manual Balance" directly in the form.
-    // The form in Members.tsx currently reads `freeHoursBalance`.
-    // We'll trust that `member` passed here has the Intent of the Admin.
-    
     const updatedRaw = rawMembers.map(m => 
         m.id === member.id 
-        ? { ...member, synced: false, updatedAt: new Date().toISOString() } // We save what's passed
+        ? { ...member, synced: false, updatedAt: new Date().toISOString() }
         : m
     );
-    
     safeSave(() => Storage.saveMembers(updatedRaw));
     setRawMembers(updatedRaw);
     syncService.syncNow();
@@ -323,57 +307,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetSeason = () => {
-      // Archive transactions or just reset the manual base?
-      // "Reset Season" usually implies resetting rank.
-      // Since Rank is calculated from TotalPlayTime (which is Sum of Txs),
-      // we would technically need to 'archive' transactions.
-      
-      // For V1.1.0, we will just downgrade the Tier locally in the raw object
-      // But since Tier is computed... we actually need to wipe transaction history 
-      // OR set a 'SeasonStartDate' setting and only count transactions after that.
-      
-      // IMPLEMENTATION: Soft Reset. 
-      // 1. Move current 'Calculated Balance' to 'Manual Balance'.
-      // 2. Archive/Delete transactions (Optional, but destructive).
-      
-      // Simple approach as per previous logic (Downgrade Tier):
-      const updatedMembers = rawMembers.map(m => {
-          let newTier: MembershipTierId = 'WARRIOR';
-          // ... downgrade logic ...
-          return {
-              ...m,
-              membershipId: newTier, // This sets the 'base' tier, effectively overriding calc if calc is lower
-              synced: false,
-              updatedAt: new Date().toISOString()
-          };
-      });
-      // NOTE: With strict calculation, Rank will jump back up if transactions aren't deleted.
-      // Recommendation: Add 'seasonStartDate' to Settings and filter transactions in `computedMembers`.
-      // For now, keeping it simple as requested without changing Schema too much.
-      
+      const updatedMembers = rawMembers.map(m => ({
+          ...m,
+          membershipId: 'WARRIOR' as MembershipTierId,
+          synced: false,
+          updatedAt: new Date().toISOString()
+      }));
       safeSave(() => Storage.saveMembers(updatedMembers));
       setRawMembers(updatedMembers);
       syncService.syncNow();
   };
 
   const startRental = (memberId: string, consoleId: string, duration: number, operator: string, paymentMethod: PaymentMethod) => {
-    const consoleUnit = consoles.find(c => c.id === consoleId);
-    const member = computedMembers.find(m => m.id === memberId); // Use computed to check balance
+    const consoleUnit = rawConsoles.find(c => c.id === consoleId);
+    const member = computedMembers.find(m => m.id === memberId);
     if (!consoleUnit || !member) return;
 
     let cost = duration * settings.hourlyRate;
     let discount = 0;
-    
-    // Logic: Determine if we pay with bonus
-    // Note: We don't deduct balance here. We just record the transaction method.
-    // The deduction happens automatically in `computedMembers` because it sums up 'BONUS' transactions.
     
     if (paymentMethod === 'BONUS') {
         if (member.freeHoursBalance >= duration) {
             discount = cost;
             cost = 0;
         } else {
-            // Partial
             const coverable = member.freeHoursBalance;
             discount = coverable * settings.hourlyRate;
             cost = cost - discount;
@@ -397,9 +354,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString()
     };
 
-    // DO NOT MUTATE MEMBER STATS HERE.
-    // Just save the transaction. ComputedMembers will react.
-
     const updatedConsole = { 
         ...consoleUnit, 
         status: ConsoleStatus.IN_USE, 
@@ -407,8 +361,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         synced: false,
         updatedAt: new Date().toISOString()
     };
-    const newConsoles = consoles.map(c => c.id === consoleId ? updatedConsole : c);
-    setConsoles(newConsoles);
+    const newConsoles = rawConsoles.map(c => c.id === consoleId ? updatedConsole : c);
+    setRawConsoles(newConsoles);
     safeSave(() => Storage.saveConsoles(newConsoles));
 
     const newTransactions = [transaction, ...transactions];
@@ -430,7 +384,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let additionalDiscount = 0;
     let cost = tx.cost;
 
-    // Recalculate cost if method changed to BONUS at checkout
     if (finalPaymentMethod === 'BONUS' && tx.paymentMethod !== 'BONUS' && member) {
         if (member.freeHoursBalance >= tx.durationHours) {
             additionalDiscount = cost; 
@@ -457,7 +410,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTransactions(newTransactions);
     safeSave(() => Storage.saveTransactions(newTransactions));
 
-    const consoleUnit = consoles.find(c => c.id === tx.consoleId);
+    const consoleUnit = rawConsoles.find(c => c.id === tx.consoleId);
     if (consoleUnit) {
         const updatedConsole = { 
             ...consoleUnit, 
@@ -467,14 +420,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             synced: false,
             updatedAt: new Date().toISOString()
         };
-        const newConsoles = consoles.map(c => c.id === consoleUnit.id ? updatedConsole : c);
-        setConsoles(newConsoles);
+        const newConsoles = rawConsoles.map(c => c.id === consoleUnit.id ? updatedConsole : c);
+        setRawConsoles(newConsoles);
         safeSave(() => Storage.saveConsoles(newConsoles));
     }
-
-    // AGAIN: DO NOT MUTATE MEMBER STATS MANUALLY.
-    // The `computedMembers` memo will automatically pick up the new 'COMPLETED' transaction
-    // and update TotalPlayTime, Rank, and Bonus Used.
 
     if (isBtConnected) sendCommand({ type: 'STOP' });
     if(tx.consoleId) wifiService.sendCommand(tx.consoleId, 'STOP');
@@ -483,8 +432,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <DataContext.Provider value={{
-      consoles, 
-      members: computedMembers, // Expose the calculated version
+      consoles: computedConsoles, // Kembalikan versi yang sudah dikalkulasi
+      members: computedMembers,
       membershipConfigs, transactions, settings,
       refreshData, updateSettings, updateMembershipConfig,
       addConsole, updateConsole, updateConsoleStatus, deleteConsole,
