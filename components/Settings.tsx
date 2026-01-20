@@ -8,7 +8,7 @@ import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, Blueto
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
-import { getTierTheme } from './PublicMemberCard'; 
+import { getTierTheme } from '../utils/tierTheme'; 
 import { syncService } from '../services/sync';
 
 type SettingsSection = 'BUSINESS' | 'GENERAL' | 'CONNECTIVITY' | 'DATA' | 'MEMBERSHIP';
@@ -47,6 +47,66 @@ const StyledTextArea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>
     />
 );
 
+// --- NEW: FORMATTED NUMBER INPUT COMPONENT ---
+// Handles thousands separators (.) and removes leading zeros
+interface FormattedNumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+    value: number;
+    onChange: (value: number) => void;
+    suffix?: string;
+    isCurrency?: boolean;
+}
+
+const FormattedNumberInput: React.FC<FormattedNumberInputProps> = ({ value, onChange, suffix, isCurrency, style, ...props }) => {
+    // Local state to handle string manipulation while typing
+    const [displayValue, setDisplayValue] = useState<string>('');
+
+    // Sync from parent state
+    useEffect(() => {
+        setDisplayValue(value.toLocaleString('id-ID'));
+    }, [value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // 1. Strip non-digit characters
+        const raw = e.target.value.replace(/\D/g, '');
+        
+        // 2. Remove leading zeros (e.g., '05' -> '5') unless it's just '0'
+        const sanitized = raw.replace(/^0+/, '') || '0';
+        
+        // 3. Convert to number
+        const numValue = parseInt(sanitized, 10);
+        
+        // 4. Update display with formatting
+        setDisplayValue(numValue.toLocaleString('id-ID'));
+        
+        // 5. Trigger parent change with pure number
+        onChange(numValue);
+    };
+
+    return (
+        <div className="relative w-full">
+            {isCurrency && (
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 z-10">Rp</span>
+            )}
+            <input 
+                {...props}
+                type="text" 
+                inputMode="numeric"
+                value={displayValue}
+                onChange={handleChange}
+                className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-base md:text-sm font-bold text-white focus:outline-none focus:border-palette-mustard/50 focus:ring-1 focus:ring-palette-mustard/50 transition-all placeholder:text-slate-700"
+                style={{
+                    paddingLeft: isCurrency ? '2.5rem' : '1rem',
+                    paddingRight: suffix ? '3rem' : '1rem',
+                    ...style
+                }}
+            />
+            {suffix && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 uppercase">{suffix}</span>
+            )}
+        </div>
+    );
+};
+
 const Settings: React.FC = () => {
   const { settings, membershipConfigs, updateSettings, updateMembershipConfig, refreshData, resetSeason } = useData();
   const { t } = useLanguage();
@@ -84,9 +144,13 @@ const Settings: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+        // Save to Local & State
         updateSettings(localSettings);
         localMemberships.forEach(m => updateMembershipConfig(m));
+        
+        // Trigger Cloud Sync explicitly for Settings
         await syncService.syncNow();
+        
         addToast('success', t('saved'), t('saved'));
     } catch (e) {
         addToast('error', 'Error', 'Failed to save settings.');
@@ -279,8 +343,12 @@ const Settings: React.FC = () => {
                      </div>
                  </div>
                  <div className="relative z-10">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">Rp</span>
-                    <StyledInput type="number" inputMode="numeric" value={localSettings.hourlyRate} onChange={(e) => handleSettingsChange('hourlyRate', parseInt(e.target.value) || 0)} style={{ paddingLeft: '2.5rem', fontSize: '1.25rem', fontFamily: 'monospace' }} />
+                    <FormattedNumberInput 
+                        value={localSettings.hourlyRate}
+                        onChange={(val) => handleSettingsChange('hourlyRate', val)}
+                        isCurrency
+                        style={{ fontSize: '1.25rem', fontFamily: 'monospace' }}
+                    />
                  </div>
              </div>
              <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5 relative overflow-hidden group">
@@ -294,9 +362,13 @@ const Settings: React.FC = () => {
                  </div>
                  <div className="flex items-center gap-3 relative z-10">
                      <div className="w-32">
-                        <StyledInput type="number" inputMode="numeric" value={localSettings.birthdayBonusHours} onChange={(e) => handleSettingsChange('birthdayBonusHours', parseInt(e.target.value) || 0)} style={{ textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace' }} />
+                        <FormattedNumberInput 
+                            value={localSettings.birthdayBonusHours}
+                            onChange={(val) => handleSettingsChange('birthdayBonusHours', val)}
+                            suffix="JAM"
+                            style={{ textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace' }}
+                        />
                      </div>
-                     <span className="font-bold text-sm text-slate-400 uppercase tracking-wider">{t('jam')}</span>
                  </div>
              </div>
          </div>
@@ -383,7 +455,7 @@ const Settings: React.FC = () => {
              </div>
          </div>
 
-         {/* Backup & Restore Section - PREVIOUSLY MISSING */}
+         {/* Backup & Restore Section */}
          <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5">
              <div className="flex items-center gap-3 mb-6">
                  <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl"><HardDrive size={24}/></div>
@@ -476,13 +548,10 @@ const Settings: React.FC = () => {
                     <div className="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/10">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1"><Trophy size={12}/> Syarat Rank</span>
                         <div className="flex items-center gap-2 group/input">
-                            <input 
-                                type="number" 
-                                min="0" 
-                                value={m.minHours} 
-                                onFocus={(e) => e.target.select()}
-                                onChange={e => handleMembershipChange(m.id, 'minHours', e.target.value)} 
-                                className="w-16 text-center bg-transparent border-b border-slate-600 group-hover/input:border-white text-white font-mono font-bold focus:outline-none text-sm focus:border-palette-mustard transition-colors" 
+                            <FormattedNumberInput 
+                                value={m.minHours}
+                                onChange={(val) => handleMembershipChange(m.id, 'minHours', val)}
+                                style={{ width: '4rem', padding: '0', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '1px solid #475569' }}
                             />
                             <span className="text-[10px] font-bold text-slate-500">JAM</span>
                         </div>
@@ -492,13 +561,10 @@ const Settings: React.FC = () => {
                             <label className="text-[9px] font-bold uppercase text-slate-500 pl-1">{t('bonus_target')}</label>
                             <div className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-white/10 hover:border-white/20 transition-colors group/input">
                                 <Zap size={14} className="text-yellow-500"/>
-                                <input 
-                                    type="number" 
-                                    min="1" 
-                                    value={m.bonusThreshold} 
-                                    onFocus={(e) => e.target.select()}
-                                    onChange={e => handleMembershipChange(m.id, 'bonusThreshold', e.target.value)} 
-                                    className="w-full bg-transparent text-sm font-bold text-white focus:outline-none text-center" 
+                                <FormattedNumberInput 
+                                    value={m.bonusThreshold}
+                                    onChange={(val) => handleMembershipChange(m.id, 'bonusThreshold', val)}
+                                    style={{ width: '100%', padding: '0', textAlign: 'center', background: 'transparent', border: 'none' }}
                                 />
                                 <span className="text-[9px] font-bold text-slate-500">H</span>
                             </div>
@@ -507,13 +573,10 @@ const Settings: React.FC = () => {
                             <label className="text-[9px] font-bold uppercase text-slate-500 pl-1">{t('reward')}</label>
                             <div className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-white/10 hover:border-white/20 transition-colors group/input">
                                 <Gift size={14} className="text-emerald-500"/>
-                                <input 
-                                    type="number" 
-                                    min="1" 
-                                    value={m.bonusReward} 
-                                    onFocus={(e) => e.target.select()}
-                                    onChange={e => handleMembershipChange(m.id, 'bonusReward', e.target.value)} 
-                                    className="w-full bg-transparent text-sm font-bold text-white focus:outline-none text-center" 
+                                <FormattedNumberInput 
+                                    value={m.bonusReward}
+                                    onChange={(val) => handleMembershipChange(m.id, 'bonusReward', val)}
+                                    style={{ width: '100%', padding: '0', textAlign: 'center', background: 'transparent', border: 'none' }}
                                 />
                                 <span className="text-[9px] font-bold text-slate-500">H</span>
                             </div>
@@ -570,7 +633,7 @@ const Settings: React.FC = () => {
             </button>
           </div>
       </nav>
-      <main className={`flex-1 min-w-0 ${!isMobileMenuOpen ? 'fixed inset-0 z-[60] bg-slate-50 dark:bg-[#030712] overflow-y-auto px-4 pb-32 pt-4' : 'hidden lg:block lg:overflow-y-auto lg:pr-2 custom-scrollbar'}`}>
+      <main className={`flex-1 min-w-0 ${!isMobileMenuOpen ? 'fixed inset-0 z-[60] bg-slate-50 dark:bg-[#030712] overflow-y-auto px-4 pb-32 pt-0' : 'hidden lg:block lg:overflow-y-auto lg:pr-2 custom-scrollbar'}`}>
           <div className="lg:hidden flex items-center gap-4 mb-6 sticky top-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-sm z-30 py-2 border-b border-slate-200 dark:border-white/5 -mx-4 px-4">
               <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 rounded-xl bg-white dark:bg-white/10 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/20 transition-colors shadow-sm border border-slate-200 dark:border-white/5"><ArrowLeft size={20} /></button>
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wide truncate">{getSectionTitle()}</h3>

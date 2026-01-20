@@ -177,18 +177,14 @@ export const getMembers = (): Member[] => {
     const data = localStorage.getItem(K_MEMBERS);
     if (!data) return [];
     
-    let members: Member[] = JSON.parse(data);
-    
-    // Clean Data & Migration Logic
-    const nameMap = new Map<string, Member>();
-    let hasChanges = false;
+    let rawMembers: any[] = JSON.parse(data);
+    if (!Array.isArray(rawMembers)) return [];
 
-    members.forEach(m => {
-        // SAFETY FIX: Ensure 'name' exists and is a string
-        if (!m || !m.id) { hasChanges = true; return; }
+    // Validasi dan Clean Data tanpa Merging Nama (ID is King)
+    const cleanedMembers: Member[] = rawMembers.map(m => {
+        if (!m || !m.id) return null;
         
-        // Force strings to avoid crashes on .toLowerCase() or .split()
-        const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown Member';
+        const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown';
         const safeNick = (m.nickname && typeof m.nickname === 'string') ? m.nickname : safeName.split(' ')[0];
 
         // Migration for old tiers
@@ -198,40 +194,30 @@ export const getMembers = (): Member[] => {
         if (tier as any === 'PLUS') tier = 'EPIC';
         if (tier as any === 'VIP') tier = 'LEGEND'; 
 
-        const cleaned: Member = {
+        return {
           ...m,
           name: safeName.trim(),
           nickname: safeNick, 
           membershipId: tier,
           address: m.address || 'Nyomplong', 
           totalAmountPaid: m.totalAmountPaid || 0,
+          totalPlayTime: m.totalPlayTime || 0, // Ensure playtime is number
           membershipExpiryDate: m.membershipExpiryDate || null,
           photoUrl: m.photoUrl || undefined,
           dateOfBirth: m.dateOfBirth || undefined,
           lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
           notes: m.notes || '',
-          updatedAt: m.updatedAt || new Date().toISOString() // Ensure updatedAt exists
+          synced: m.synced !== undefined ? m.synced : false, // Default to false if missing to trigger sync
+          updatedAt: m.updatedAt || new Date().toISOString()
         };
+    }).filter(m => m !== null) as Member[];
 
-        const key = cleaned.name.toLowerCase();
-        if (nameMap.has(key)) {
-            const existing = nameMap.get(key)!;
-            // Prefer the one with more playtime or newer update
-            const isBetter = cleaned.totalPlayTime > existing.totalPlayTime;
-            if (isBetter) nameMap.set(key, cleaned);
-            hasChanges = true; 
-        } else {
-            nameMap.set(key, cleaned);
-        }
-    });
+    // Removed the dangerously loose "nameMap" deduplication logic.
+    // We trust that IDs are unique. If there are duplicates in localStorage, 
+    // we assume the last one in the array is the most recent state or filter by ID.
+    const uniqueMembers = Array.from(new Map(cleanedMembers.map(item => [item.id, item])).values());
 
-    if (hasChanges || nameMap.size !== members.length) {
-        const cleanList = Array.from(nameMap.values());
-        saveMembers(cleanList);
-        return cleanList;
-    }
-
-    return members;
+    return uniqueMembers;
   } catch (e) {
     console.error("Failed to load members", e);
     return [];
@@ -247,7 +233,6 @@ export const getTransactions = (): Transaction[] => {
     const data = localStorage.getItem(K_TRANSACTIONS);
     const txs: Transaction[] = data ? JSON.parse(data) : [];
     
-    // SAFETY FIX: Ensure transactions have valid names for display
     return txs.map(t => ({
         ...t,
         memberName: t.memberName || 'Unknown',

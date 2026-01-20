@@ -1,0 +1,18 @@
+
+import { TIER_ICONS } from './tierIcons';
+
+export const getTierTheme = (tierId: string) => {
+  // Map MLBB Tiers to colors
+  switch (tierId) {
+    case 'WARRIOR': return { id: 'WARRIOR', name: 'Warrior', color: 'text-orange-600', bg: 'bg-orange-600', border: 'border-orange-600', iconUrl: TIER_ICONS.WARRIOR, conic: 'from-orange-500 via-orange-700 to-orange-900', text: 'text-orange-500', badge: 'bg-orange-950 text-orange-200', borderInner: 'border-orange-500/20', particleColor: '#f97316' };
+    case 'ELITE': return { id: 'ELITE', name: 'Elite', color: 'text-slate-400', bg: 'bg-slate-400', border: 'border-slate-400', iconUrl: TIER_ICONS.ELITE, conic: 'from-slate-300 via-slate-500 to-slate-700', text: 'text-slate-300', badge: 'bg-slate-800 text-slate-200', borderInner: 'border-slate-500/20', particleColor: '#94a3b8' };
+    case 'GRANDMASTER': return { id: 'GRANDMASTER', name: 'Grandmaster', color: 'text-amber-500', bg: 'bg-amber-500', border: 'border-amber-500', iconUrl: TIER_ICONS.GRANDMASTER, conic: 'from-amber-300 via-amber-500 to-amber-700', text: 'text-amber-400', badge: 'bg-amber-900 text-amber-200', borderInner: 'border-amber-500/20', particleColor: '#f59e0b' };
+    case 'EPIC': return { id: 'EPIC', name: 'Epic', color: 'text-emerald-500', bg: 'bg-emerald-500', border: 'border-emerald-500', iconUrl: TIER_ICONS.EPIC, conic: 'from-emerald-400 via-emerald-600 to-emerald-800', text: 'text-emerald-400', badge: 'bg-emerald-900 text-emerald-200', borderInner: 'border-emerald-500/20', particleColor: '#10b981' };
+    case 'LEGEND': return { id: 'LEGEND', name: 'Legend', color: 'text-yellow-400', bg: 'bg-yellow-400', border: 'border-yellow-400', iconUrl: TIER_ICONS.LEGEND, conic: 'from-yellow-300 via-yellow-500 to-yellow-700', text: 'text-yellow-400', badge: 'bg-yellow-900 text-yellow-200', borderInner: 'border-yellow-500/20', particleColor: '#eab308' };
+    case 'MYTHIC': return { id: 'MYTHIC', name: 'Mythic', color: 'text-indigo-400', bg: 'bg-indigo-400', border: 'border-indigo-400', iconUrl: TIER_ICONS.MYTHIC, conic: 'from-indigo-400 via-indigo-600 to-indigo-800', text: 'text-indigo-400', badge: 'bg-indigo-900 text-indigo-200', borderInner: 'border-indigo-500/20', particleColor: '#818cf8' };
+    case 'MYTHICAL_HONOR': return { id: 'MYTHICAL_HONOR', name: 'Mythical Honor', color: 'text-blue-500', bg: 'bg-blue-500', border: 'border-blue-500', iconUrl: TIER_ICONS.MYTHICAL_HONOR, conic: 'from-blue-400 via-blue-600 to-blue-800', text: 'text-blue-400', badge: 'bg-blue-900 text-blue-200', borderInner: 'border-blue-500/20', particleColor: '#3b82f6' };
+    case 'MYTHICAL_GLORY': return { id: 'MYTHICAL_GLORY', name: 'Mythical Glory', color: 'text-pink-500', bg: 'bg-pink-500', border: 'border-pink-500', iconUrl: TIER_ICONS.MYTHICAL_GLORY, conic: 'from-pink-400 via-pink-600 to-pink-800', text: 'text-pink-400', badge: 'bg-pink-900 text-pink-200', borderInner: 'border-pink-500/20', particleColor: '#ec4899' };
+    case 'MYTHICAL_IMMORTAL': return { id: 'MYTHICAL_IMMORTAL', name: 'Mythical Immortal', color: 'text-rose-600', bg: 'bg-rose-600', border: 'border-rose-600', iconUrl: TIER_ICONS.MYTHICAL_IMMORTAL, conic: 'from-rose-500 via-rose-700 to-rose-900', text: 'text-rose-500', badge: 'bg-rose-950 text-rose-200', borderInner: 'border-rose-500/20', particleColor: '#f43f5e' };
+    default: return { id: 'WARRIOR', name: 'Warrior', color: 'text-slate-500', bg: 'bg-slate-500', border: 'border-slate-500', iconUrl: TIER_ICONS.WARRIOR, conic: 'from-slate-400 via-slate-600 to-slate-800', text: 'text-slate-400', badge: 'bg-slate-800 text-slate-200', borderInner: 'border-slate-500/20', particleColor: '#64748b' };
+  }
+};

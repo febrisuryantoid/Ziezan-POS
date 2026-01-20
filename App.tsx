@@ -1,17 +1,16 @@
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import TVReceiver from './components/TVReceiver';
-import SplashScreen from './components/SplashScreen';
+import LandingPage from './components/LandingPage';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { BluetoothProvider } from './contexts/BluetoothContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { User } from './types';
-import { isTV } from './utils/platform';
 import { Loader2 } from 'lucide-react';
 
 // LAZY LOAD COMPONENTS
@@ -23,142 +22,140 @@ const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'
 const Leaderboard = React.lazy(() => import('./components/Leaderboard')); 
 
 const App: React.FC = () => {
-  // 1. Initialize Route/Platform State IMMEDIATELY
-  const [publicMemberNickname] = useState<string | null>(() => {
-     const path = window.location.pathname;
-     if (path.startsWith('/member/')) {
-        const segments = path.split('/');
-        const rawNick = segments[2];
-        // CRITICAL FIX: Decode URI component to handle spaces (%20) and special chars
-        return rawNick ? decodeURIComponent(rawNick) : null;
-     }
-     return null;
-  });
-
-  // Detect Rank Page
-  const [isRankPage] = useState<boolean>(() => {
-      return window.location.pathname === '/rank' || window.location.pathname === '/rank/';
-  });
-
-  const [isTvMode, setIsTvMode] = useState<boolean>(() => isTV());
-
+  // Source of truth for navigation
+  const [path, setPath] = useState(window.location.pathname);
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // 2. Only show splash if NOT a public page AND NOT TV mode
-  const [showSplash, setShowSplash] = useState(() => !publicMemberNickname && !isTvMode && !isRankPage);
 
   useEffect(() => {
-    // 3. Platform Check (Double check for resizing events) & Session Restore
-    const handleResize = () => {
-       if (isTV() && !isTvMode) setIsTvMode(true);
-    };
-    window.addEventListener('resize', handleResize);
-
+    // Session recovery
     const session = localStorage.getItem('ziezan_user');
     if (session) {
-      setUser(JSON.parse(session));
+      try {
+        setUser(JSON.parse(session));
+      } catch (e) {
+        localStorage.removeItem('ziezan_user');
+      }
     }
 
-    // 4. Splash Timer
-    let timer: ReturnType<typeof setTimeout>;
-    if (showSplash) {
-        timer = setTimeout(() => {
-            setShowSplash(false);
-        }, 3000);
-    }
-
-    return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', handleResize);
+    const handlePopState = () => {
+      setPath(window.location.pathname);
     };
-  }, [showSplash, isTvMode]);
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const handleLogin = (u: User) => {
     setUser(u);
     localStorage.setItem('ziezan_user', JSON.stringify(u));
+    handleNavigate('/dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('ziezan_user');
-    setActiveTab('dashboard');
+    handleNavigate('/');
+  };
+
+  const handleNavigate = (newPath: string) => {
+    const route = newPath.startsWith('/') ? newPath : `/${newPath}`;
+    
+    // Safety check for browser history access
+    try {
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', route);
+        }
+    } catch (e) {
+        console.warn('History API restricted in this environment. Using state-only routing.');
+    }
+    
+    setPath(route);
   };
 
   const PageLoader = () => (
-    <div className="flex items-center justify-center h-[50vh] w-full">
-      <Loader2 className="w-8 h-8 animate-spin text-palette-mustard" />
+    <div className="flex items-center justify-center h-screen w-full bg-[#050b14]">
+      <Loader2 className="w-10 h-10 animate-spin text-palette-mustard" />
     </div>
   );
 
-  // --- RENDER CONTENT SELECTOR ---
+  // Memoized route detection for performance
+  const routeState = useMemo(() => {
+    return {
+        isRoot: path === '/' || path === '',
+        isLogin: path === '/login',
+        isTv: path === '/tv',
+        isRank: path === '/rank',
+        isMemberPublic: path.startsWith('/member/'),
+        publicMemberNickname: path.startsWith('/member/') ? decodeURIComponent(path.split('/')[2] || '') : null
+    };
+  }, [path]);
+
   const renderContent = () => {
-    // 1. Public Member Card (Priority 1)
-    if (publicMemberNickname) {
-       return (
-         <DataProvider>
-             <Suspense fallback={<div className="h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
-                <PublicMemberCard nickname={publicMemberNickname} />
-             </Suspense>
-         </DataProvider>
-       );
+    // 1. PUBLIC LANDING PAGE
+    if (routeState.isRoot) {
+      return <LandingPage onNavigate={handleNavigate} />;
     }
 
-    // Leaderboard Page (Priority 1.5)
-    if (isRankPage) {
-        return (
-            <DataProvider>
-                <Suspense fallback={<div className="h-screen w-full bg-[#020205] flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-palette-mustard"/></div>}>
-                    <Leaderboard />
-                </Suspense>
-            </DataProvider>
-        );
+    // 2. UNPROTECTED PUBLIC ROUTES
+    if (routeState.isTv) {
+      return (
+        <DataProvider>
+          <TVReceiver />
+        </DataProvider>
+      );
     }
 
-    // 2. TV Mode (Priority 2 - Skip Splash)
-    if (isTvMode) {
-        return (
-          <DataProvider>
-             <TVReceiver />
-          </DataProvider>
-        );
+    if (routeState.isRank) {
+      return (
+        <DataProvider>
+          <Suspense fallback={<PageLoader />}>
+            <Leaderboard />
+          </Suspense>
+        </DataProvider>
+      );
     }
 
-    // 3. Splash Screen (Priority 3 - Only for Admin/Operator App)
-    if (showSplash) {
-        return <SplashScreen />;
+    if (routeState.publicMemberNickname) {
+      return (
+        <DataProvider>
+          <Suspense fallback={<PageLoader />}>
+            <PublicMemberCard nickname={routeState.publicMemberNickname} />
+          </Suspense>
+        </DataProvider>
+      );
     }
 
-    // 4. Login Screen
+    if (routeState.isLogin) {
+      return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
+    }
+
+    // 3. PROTECTED ADMIN ROUTES
     if (!user) {
-        return <Login onLogin={handleLogin} />;
+      return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
     }
 
-    // 5. Main App
+    const currentTab = path.replace('/', '') || 'dashboard';
+
     return (
       <DataProvider>
         <Layout 
-          currentTab={activeTab} 
-          setTab={setActiveTab} 
+          currentTab={currentTab} 
+          setTab={handleNavigate} 
           user={user} 
           onLogout={handleLogout}
         >
-          <Suspense fallback={<PageLoader />}>
-            {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'consoles' && <Consoles operatorName={user.username} />}
-            {activeTab === 'members' && <Members />}
-            {activeTab === 'reports' && <Reports />}
-            {activeTab === 'settings' && user.role === 'ADMIN' && <Settings />}
-            {activeTab === 'settings' && user.role !== 'ADMIN' && (
-              <div className="p-8 text-center text-slate-500">Access Denied: Admin only.</div>
-            )}
+          <Suspense fallback={<div className="p-10 flex justify-center"><Loader2 className="animate-spin text-palette-mustard" /></div>}>
+            {currentTab === 'dashboard' && <Dashboard />}
+            {currentTab === 'consoles' && <Consoles operatorName={user.username} />}
+            {currentTab === 'members' && <Members />}
+            {currentTab === 'reports' && <Reports />}
+            {currentTab === 'settings' && (user.role === 'ADMIN' ? <Settings /> : <div className="p-8 text-center text-slate-500">Akses Ditolak</div>)}
           </Suspense>
         </Layout>
       </DataProvider>
     );
   };
 
-  // --- ROOT PROVIDER WRAPPER ---
   return (
     <ThemeProvider>
       <LanguageProvider>

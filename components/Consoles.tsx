@@ -13,6 +13,38 @@ type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'USAGE_DESC' | 'STATUS';
 
 const DEFAULT_CONSOLE_IMAGE = "https://beeimg.com/images/j43189671173.png";
 
+// --- REUSABLE FORMATTED INPUT ---
+const FormattedNumberInput: React.FC<{ value: number; onChange: (v: number) => void; className?: string; placeholder?: string }> = ({ value, onChange, className, placeholder }) => {
+    const [display, setDisplay] = useState(value === 0 ? '' : value.toLocaleString('id-ID'));
+    
+    useEffect(() => {
+        // Sync external changes if value is significant
+        if (value !== parseInt(display.replace(/\./g, '') || '0')) {
+             setDisplay(value === 0 ? '' : value.toLocaleString('id-ID'));
+        }
+    }, [value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value.replace(/\D/g, '');
+        const sanitized = raw.replace(/^0+/, '') || '0';
+        const num = parseInt(sanitized, 10);
+        
+        setDisplay(num === 0 ? '' : num.toLocaleString('id-ID'));
+        onChange(num);
+    };
+
+    return (
+        <input 
+            type="text" 
+            inputMode="numeric"
+            value={display}
+            onChange={handleChange}
+            className={className}
+            placeholder={placeholder}
+        />
+    );
+};
+
 const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const { consoles, members, startRental, stopRental, updateConsoleStatus, addConsole, updateConsole, deleteConsole, settings, transactions, addMember } = useData();
   const { t } = useLanguage();
@@ -472,11 +504,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             <ShoppingBag size={16} className="text-palette-mustard"/>
                             <span className="text-xs font-bold uppercase text-slate-500">Jajanan / Tambahan (Rp)</span>
                         </div>
-                        <input 
-                            type="number" 
-                            inputMode="numeric"
+                        <FormattedNumberInput 
                             value={extraCost}
-                            onChange={(e) => setExtraCost(Math.max(0, parseInt(e.target.value) || 0))}
+                            onChange={(v) => setExtraCost(v)}
                             className="w-full bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-right font-mono font-bold focus:ring-2 focus:ring-palette-mustard outline-none dark:text-white"
                             placeholder="0"
                         />

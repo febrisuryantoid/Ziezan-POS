@@ -6,7 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
-import { getTierTheme } from './PublicMemberCard';
+import { getTierTheme } from '../utils/tierTheme';
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 

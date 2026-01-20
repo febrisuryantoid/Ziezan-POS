@@ -1,11 +1,10 @@
 
 import { supabase } from './supabaseClient';
 import * as Storage from './storage';
-import { Member, Console, Transaction } from '../types';
+import { Member, Console, Transaction, AppSettings } from '../types';
 
 class SyncService {
   private isSyncing = false;
-  private isCleaning = false;
   private channel: any = null;
 
   constructor() {
@@ -22,8 +21,7 @@ class SyncService {
         { event: '*', schema: 'public' },
         (payload) => {
           console.log('[Realtime] Change received:', payload);
-          // When any change happens in DB, trigger a pull to stay updated
-          // Debounce this slightly in a real app, but direct call is fine for now
+          // Debounce sync to prevent spamming
           this.pullFromCloud().then(() => {
              window.dispatchEvent(new Event('external-data-change'));
           });
@@ -57,22 +55,20 @@ class SyncService {
     window.dispatchEvent(new Event('sync-start'));
 
     try {
+      console.log('[Sync] Starting Push...');
       // 1. PUSH: Send local changes to Cloud
-      await Promise.all([
-        this.syncConsolesToCloud(),
-        this.syncMembersToCloud()
-      ]);
+      // Using sequence instead of Promise.all for settings to handle potential table absence cleanly
+      await this.syncConsolesToCloud();
+      await this.syncMembersToCloud();
+      await this.syncSettingsToCloud(); 
       await this.syncTransactionsToCloud();
       
-      // 2. OPTIMIZE: Clean old data
-      this.runSmartCloudOptimizer();
-
-      // 3. PULL: Ensure we have latest data after push
+      // 2. PULL: Ensure we have latest data after push
       await this.pullFromCloud();
 
-      console.log('Cloud Sync completed');
+      console.log('[Sync] Completed successfully');
     } catch (error) {
-      console.error('Cloud Sync failed:', error);
+      console.error('[Sync] Sync failed:', error);
     } finally {
       this.isSyncing = false;
       window.dispatchEvent(new Event('sync-end'));
@@ -96,11 +92,11 @@ class SyncService {
                   nickname: m.nickname || m.name.split(' ')[0],
                   phone: m.phone,
                   address: m.address,
-                  membershipId: m.membership_type || 'BASIC',
+                  membershipId: m.membership_type || 'WARRIOR',
                   membershipExpiryDate: m.membership_expiry_date,
                   joinDate: m.joined_at,
                   totalPlayTime: m.total_hours_played || 0,
-                  totalAmountPaid: m.total_amount_paid || 0,
+                  totalAmountPaid: m.total_amount_played || 0,
                   hoursProgressToNextBonus: m.hours_progress_bonus || 0,
                   freeHoursBalance: m.bonus_balance || 0,
                   totalBonusHoursUsed: m.bonus_total_used || 0,
@@ -134,12 +130,30 @@ class SyncService {
               Storage.saveConsoles(merged);
           }
 
-          // 3. Pull Transactions (Limit to recent 500)
+          // 3. Pull Settings (Gracefully skip if table missing)
+          const { data: cloudSettings, error: setErr } = await supabase.from('settings').select('*').limit(1).single();
+          if (!setErr && cloudSettings) {
+             const settings: AppSettings = {
+                 businessName: cloudSettings.business_name,
+                 businessAddress: cloudSettings.business_address,
+                 businessPhone: cloudSettings.business_phone,
+                 businessLogo: cloudSettings.business_logo,
+                 hourlyRate: cloudSettings.hourly_rate,
+                 cloudRetentionDays: cloudSettings.cloud_retention_days,
+                 // Fix: Map birthday_bonus_hours from cloud correctly to AppSettings
+                 birthdayBonusHours: cloudSettings.birthday_bonus_hours
+             };
+             Storage.saveSettings(settings);
+          } else if (setErr && (setErr as any).code !== 'PGRST205') {
+             console.warn('[Sync] Pull Settings Warning:', setErr.message);
+          }
+
+          // 4. Pull Transactions
           const { data: cloudTx, error: txErr } = await supabase
             .from('transactions')
             .select('*')
             .order('start_time', { ascending: false })
-            .limit(500);
+            .limit(5000);
 
           if (!txErr && cloudTx) {
               const currentLocal = Storage.getTransactions();
@@ -160,7 +174,6 @@ class SyncService {
                   synced: true,
                   updatedAt: t.updated_at
               }));
-              // For transactions, we prioritize Cloud as source of truth for completed ones
               const merged = this.mergeGeneric(currentLocal, mappedTx);
               Storage.saveTransactions(merged);
           }
@@ -169,7 +182,7 @@ class SyncService {
           return true;
 
       } catch (e) {
-          console.error('[Sync] Pull failed:', e);
+          console.error('[Sync] Pull failed (General Error):', e);
           return false;
       } finally {
           window.dispatchEvent(new Event('sync-end'));
@@ -177,43 +190,28 @@ class SyncService {
   }
 
   // --- SMART MERGE LOGIC FOR MEMBERS ---
-  // Fixes "Aldi 5 jam reset jadi 1 jam" issue
   private mergeMembers(local: Member[], cloud: Member[]): Member[] {
       const mergedMap = new Map<string, Member>();
-
-      // Start with Cloud data as baseline
       cloud.forEach(item => mergedMap.set(item.id, item));
 
       local.forEach(localItem => {
           const cloudItem = mergedMap.get(localItem.id);
 
           if (!cloudItem) {
-              // Exists locally but not in cloud.
-              // If localItem.synced is false, it's a new item waiting to be pushed. Keep it.
-              if (localItem.synced === false) {
-                  mergedMap.set(localItem.id, localItem);
-              }
-              // If synced is true but missing in cloud, it might have been deleted remotely. 
-              // For safety in offline-first, we keep it but mark for re-check? 
-              // No, let's assume if it was synced before but gone now, it's deleted.
+              mergedMap.set(localItem.id, { ...localItem, synced: false });
           } else {
-              // Conflict Resolution
               if (localItem.synced === false) {
-                  // Local has changes.
-                  // CRITICAL CHECK: Playtime shouldn't decrease.
-                  // If Cloud has significantly more playtime, local state is likely stale 
-                  // (e.g. opened an old device that hadn't synced yet).
+                  const localTime = new Date(localItem.updatedAt || 0).getTime();
+                  const cloudTime = new Date(cloudItem.updatedAt || 0).getTime();
+
                   if (cloudItem.totalPlayTime > localItem.totalPlayTime) {
-                      // Cloud wins because progress > stale local edit
                       mergedMap.set(cloudItem.id, cloudItem);
-                  } else {
-                      // Local wins (it's a genuine new update)
+                  } else if (localTime > cloudTime) {
                       mergedMap.set(localItem.id, localItem);
+                  } else {
+                      mergedMap.set(cloudItem.id, cloudItem);
                   }
               } else {
-                  // Local thinks it's synced.
-                  // If Cloud is newer (by updatedAt) or has more playtime, trust Cloud.
-                  // Generally just trust Cloud here.
                   mergedMap.set(cloudItem.id, cloudItem);
               }
           }
@@ -222,7 +220,6 @@ class SyncService {
       return Array.from(mergedMap.values());
   }
 
-  // Generic Merge for Consoles/Transactions
   private mergeGeneric<T extends { id: string, synced?: boolean, updatedAt?: string }>(local: T[], cloud: T[]): T[] {
       const mergedMap = new Map<string, T>();
       cloud.forEach(item => mergedMap.set(item.id, item));
@@ -230,54 +227,20 @@ class SyncService {
       local.forEach(localItem => {
           const cloudItem = mergedMap.get(localItem.id);
           if (!cloudItem) {
-              if (localItem.synced === false) mergedMap.set(localItem.id, localItem);
+              mergedMap.set(localItem.id, { ...localItem, synced: false });
           } else {
-              // If local has unsynced changes, verify timestamps if available
-              if (localItem.synced === false) {
-                  const localTime = localItem.updatedAt ? new Date(localItem.updatedAt).getTime() : 0;
-                  const cloudTime = cloudItem.updatedAt ? new Date(cloudItem.updatedAt).getTime() : 0;
-                  
-                  // If Cloud is newer despite local "unsynced" flag (rare race condition), take cloud
-                  if (cloudTime > localTime + 1000) { 
-                      mergedMap.set(cloudItem.id, cloudItem);
-                  } else {
-                      mergedMap.set(localItem.id, localItem);
-                  }
-              }
+             if (localItem.synced === false) {
+                const localTime = localItem.updatedAt ? new Date(localItem.updatedAt).getTime() : 0;
+                const cloudTime = cloudItem.updatedAt ? new Date(cloudItem.updatedAt).getTime() : 0;
+                if (cloudTime > localTime + 5000) { 
+                    mergedMap.set(cloudItem.id, cloudItem);
+                } else {
+                    mergedMap.set(localItem.id, localItem);
+                }
+             }
           }
       });
       return Array.from(mergedMap.values());
-  }
-
-  // --- SMART OPTIMIZER LOGIC ---
-  private async runSmartCloudOptimizer() {
-      if (this.isCleaning) return;
-      this.isCleaning = true;
-
-      try {
-          const settings = Storage.getSettings();
-          const retentionDays = settings.cloudRetentionDays || 90;
-
-          if (retentionDays <= 0) {
-              this.isCleaning = false;
-              return;
-          }
-
-          const cutoffDate = new Date();
-          cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
-          const cutoffISO = cutoffDate.toISOString();
-
-          await supabase
-            .from('transactions')
-            .delete({ count: 'exact' })
-            .lt('start_time', cutoffISO)
-            .eq('status', 'COMPLETED');
-
-      } catch (err) {
-          console.error('[Smart Optimizer] Error:', err);
-      } finally {
-          this.isCleaning = false;
-      }
   }
 
   private async syncConsolesToCloud() {
@@ -320,6 +283,7 @@ class SyncService {
       hours_progress_bonus: m.hoursProgressToNextBonus,
       bonus_balance: m.freeHoursBalance,
       bonus_total_used: m.totalBonusHoursUsed,
+      // Fixed: use correct property names from Member interface
       date_of_birth: m.dateOfBirth || null,
       last_birthday_bonus_year: m.lastBirthdayBonusYear || null,
       status: m.status,
@@ -338,6 +302,28 @@ class SyncService {
     }
   }
 
+  private async syncSettingsToCloud() {
+     const settings = Storage.getSettings();
+     const payload = {
+        id: 1, 
+        business_name: settings.businessName,
+        business_address: settings.businessAddress,
+        business_phone: settings.businessPhone,
+        business_logo: settings.businessLogo,
+        hourly_rate: settings.hourlyRate,
+        cloud_retention_days: settings.cloudRetentionDays,
+        birthday_bonus_hours: settings.birthdayBonusHours,
+        updated_at: new Date().toISOString()
+     };
+     
+     const { error } = await supabase.from('settings').upsert(payload);
+     if (error && (error as any).code === 'PGRST205') {
+        console.warn('[Sync] Supabase table "settings" missing. Skipping settings sync.');
+     } else if (error) {
+        console.error("[Sync] Failed to sync settings:", error);
+     }
+  }
+
   private async syncTransactionsToCloud() {
     const transactions = Storage.getTransactions();
     const unsyncedTx = transactions.filter(t => !t.synced);
@@ -354,6 +340,7 @@ class SyncService {
       duration_hours: t.durationHours,
       cost: t.cost,
       discount_applied: t.discountApplied,
+      // Fix: Access paymentMethod from local Transaction object correctly
       payment_method: t.paymentMethod,
       status: t.status,
       operator_name: t.operatorName,

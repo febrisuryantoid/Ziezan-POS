@@ -1,16 +1,17 @@
 
 import React, { useState } from 'react';
-import { User, Lock, LogIn, Globe } from 'lucide-react';
+import { User, Lock, LogIn, Globe, ArrowLeft } from 'lucide-react';
 import { User as UserType } from '../types';
 import * as Storage from '../services/storage';
 import { useLanguage } from '../contexts/LanguageContext';
-import { GamingBackground } from './PublicMemberCard';
+import GamingBackground from './GamingBackground';
 
 interface LoginProps {
   onLogin: (user: UserType) => void;
+  onBack?: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState(''); 
   const [error, setError] = useState('');
@@ -32,15 +33,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     // h-[100dvh] forces full viewport height, overflow-hidden prevents scrolling
     <div className="h-[100dvh] w-full bg-[#050b14] flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
       
-      {/* Use shared background for consistency */}
+      {/* Shared Background Component */}
       <GamingBackground />
 
       {/* Main Container - Scalable */}
-      <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full">
+      <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full animate-fade-in">
         
-        {/* Animated Border */}
+        {/* Back Button */}
+        {onBack && (
+            <button 
+                onClick={onBack} 
+                className="absolute -top-12 left-0 text-slate-400 hover:text-white flex items-center gap-2 text-sm font-bold transition-colors z-20 cursor-pointer"
+            >
+                <ArrowLeft size={16} /> Kembali
+            </button>
+        )}
+
+        {/* Animated Border - Updated to Purple & Pink Theme */}
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
-             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#06b6d4,#ef4444,#06b6d4,#ef4444,#06b6d4)] animate-spin-slow"></div>
+             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow"></div>
         </div>
 
         {/* Card Content - Flex column with scaling gaps */}
@@ -49,7 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Lang Switcher */}
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-cyan-500 transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-slate-100 dark:bg-white/5 rounded-lg flex items-center gap-1.5"
           >
             <Globe size={12} />
             {language.toUpperCase()}
@@ -58,7 +69,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Header Section: Logo & Titles */}
           <div className="text-center mb-4 sm:mb-6 shrink-0">
             <div className="relative inline-block">
-              <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full"></div>
+              <div className="absolute inset-0 bg-palette-mustard blur-xl opacity-20 rounded-full"></div>
               {/* Responsive Logo Size - Smaller on very short screens if needed */}
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
@@ -82,7 +93,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_username')}
                 />
               </div>
@@ -96,7 +107,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard focus:border-transparent transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600"
                     placeholder={t('enter_password')}
                 />
               </div>
@@ -110,7 +121,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             <button 
               type="submit" 
-              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-600/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
+              className="w-full bg-palette-mustard hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-palette-mustard/20 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <LogIn size={18} /> {t('sign_in')}
             </button>

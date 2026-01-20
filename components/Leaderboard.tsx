@@ -2,8 +2,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getTierTheme, GamingBackground } from './PublicMemberCard';
-import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getTierTheme } from '../utils/tierTheme';
+import GamingBackground from './GamingBackground';
+import { Trophy, Search, Loader2, Flame, Gamepad2, Crown, Sparkles } from 'lucide-react';
 import { Member } from '../types';
 
 const Leaderboard: React.FC = () => {
@@ -70,8 +71,8 @@ const Leaderboard: React.FC = () => {
       const theme = member ? getTierTheme(member.membershipId) : null;
       const isPlaying = member ? transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE') : false;
 
-      // Visual Config (Geometry)
-      let pillarHeightClass = 'h-24 sm:h-32'; 
+      // Visual Config (Geometry) - Reduced Heights
+      let pillarHeightClass = 'h-20 sm:h-28'; // Default Rank 3
       let avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
       let zIndex = 'z-10';
       let translateY = 'translate-y-0';
@@ -79,16 +80,15 @@ const Leaderboard: React.FC = () => {
       
       const textClass = theme ? theme.text : 'text-slate-600';
       const badgeColor = theme ? theme.badge : 'bg-slate-800 text-slate-400';
-      const particleColor = theme ? theme.particleColor : '#94a3b8';
 
       if (isFirst) {
-          pillarHeightClass = 'h-36 sm:h-48'; 
+          pillarHeightClass = 'h-32 sm:h-44'; // Reduced Rank 1
           avatarSizeClass = 'w-24 h-24 sm:w-28 sm:h-28';
           zIndex = 'z-30';
           translateY = '-translate-y-4 sm:-translate-y-6';
           numberSize = 'w-8 h-8 text-sm';
       } else if (isSecond) {
-          pillarHeightClass = 'h-28 sm:h-36';
+          pillarHeightClass = 'h-24 sm:h-32'; // Reduced Rank 2
           avatarSizeClass = 'w-16 h-16 sm:w-20 sm:h-20';
           zIndex = 'z-20';
           translateY = 'translate-y-0';
@@ -210,7 +210,8 @@ const Leaderboard: React.FC = () => {
                 </div>
 
                 {/* --- PODIUM SECTION --- */}
-                <div className="flex-none px-4 pt-4 pb-2 relative w-full mb-[-10px] sm:mb-[-20px] z-0">
+                {/* Changed margin-bottom to positive (mb-2) to avoid list covering the podium base */}
+                <div className="flex-none px-4 pt-4 pb-2 relative w-full mb-2 z-0">
                     <div className="flex items-end justify-center gap-2 w-full max-w-lg mx-auto">
                         <PodiumPillar member={filledTop3[1]} rank={2} />
                         <PodiumPillar member={filledTop3[0]} rank={1} />

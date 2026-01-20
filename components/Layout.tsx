@@ -127,15 +127,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
 
         {/* Footer Actions */}
         <div className="mt-auto flex flex-col items-center gap-6">
-           
-           <div className="group relative cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-palette-mustard to-palette-purple p-[2px] shadow-lg shadow-purple-500/20">
-                <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-white font-black text-sm">
-                    {user.username.charAt(0).toUpperCase()}
-                </div>
-              </div>
-           </div>
-
            <button 
             onClick={onLogout}
             className="group relative flex items-center justify-center w-10 h-10 rounded-xl text-slate-500 hover:text-white hover:bg-red-500/20 transition-all border border-transparent hover:border-red-500/50"
@@ -206,11 +197,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
           {/* Decorative Grid Background for Dark Mode */}
           <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
           
-          {/* 
-             NOTE: Removed animate-fade-in from here to prevent fixed modals inside children 
-             from being clipped by stacking context created by transform/opacity animations.
-             Use relative only for children positioning, but ensure no z-index creates context trapping.
-          */}
           <div className="w-full min-h-full p-4 sm:p-6 lg:p-10 pb-32 md:pb-10 relative">
             {children}
           </div>
