@@ -15,96 +15,83 @@ const Members: React.FC = () => {
   const { t } = useLanguage();
   const { addToast } = useToast();
 
-  // -- STATE --
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   const [filterTier, setFilterTier] = useState<string>('ALL');
-  const [now, setNow] = useState(new Date()); // For Realtime updates
+  const [now, setNow] = useState(new Date());
   
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Modals
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
 
-  // Form State (New Member)
   const [newName, setNewName] = useState('');
   const [newNickname, setNewNickname] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [newAddress, setNewAddress] = useState('Nyomplong'); // Default Address
+  const [newAddress, setNewAddress] = useState('Nyomplong');
   const [newPhoto, setNewPhoto] = useState('');
   const [newDob, setNewDob] = useState('');
-  const [newJoinDate, setNewJoinDate] = useState(new Date().toISOString().split('T')[0]); // Default Today
-  const [newTier, setNewTier] = useState<MembershipTierId>('WARRIOR'); // Default Basic
+  const [newJoinDate, setNewJoinDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newTier, setNewTier] = useState<MembershipTierId>('WARRIOR');
   const [newNotes, setNewNotes] = useState('');
   const [newBonusBalance, setNewBonusBalance] = useState<number>(0); 
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
 
-  // Refs
   const photoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
 
-  // Realtime Tick (Update every 1 minute to refresh playtime stats in list)
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterTier, sortOption]);
 
-  // -- HELPER: Calculate Realtime Playtime --
   const getRealtimePlaytime = (member: Member) => {
-     // 1. Get stored historical time
-     let total = member.totalPlayTime;
-     
-     // 2. Find ACTIVE transaction
+     let total = member.totalPlayTime || 0;
      const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
-     
-     // 3. Add FULL DURATION of active transaction (Projected Total)
      if (activeTx) {
          total += activeTx.durationHours;
      }
-
      return total;
   };
 
-  // -- FILTER & SORT LOGIC --
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
-      // Allows searching by Name (for admin convenience) BUT display will be Nickname only
+      // FIX: Use safe string methods
+      const name = m.name || '';
+      const nickname = m.nickname || '';
+      const phone = m.phone || '';
+      const term = searchTerm.toLowerCase();
+
       const matchesSearch = 
-        m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        m.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.phone && m.phone.includes(searchTerm));
+        name.toLowerCase().includes(term) || 
+        nickname.toLowerCase().includes(term) ||
+        phone.includes(term);
       
       const matchesStatus = m.status === 'ACTIVE'; 
       const matchesTier = filterTier === 'ALL' ? true : m.membershipId === filterTier;
 
       return matchesSearch && matchesStatus && matchesTier;
     }).sort((a, b) => {
+      const nickA = a.nickname || '';
+      const nickB = b.nickname || '';
       switch (sortOption) {
-        case 'NAME_ASC': return a.nickname.localeCompare(b.nickname);
-        case 'NAME_DESC': return b.nickname.localeCompare(a.nickname);
-        case 'PLAYTIME_DESC': 
-            // Sort by REALTIME playtime
-            return getRealtimePlaytime(b) - getRealtimePlaytime(a);
+        case 'NAME_ASC': return nickA.localeCompare(nickB);
+        case 'NAME_DESC': return nickB.localeCompare(nickA);
+        case 'PLAYTIME_DESC': return getRealtimePlaytime(b) - getRealtimePlaytime(a);
         case 'JOIN_DATE_ASC': return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
         default: return 0;
       }
     });
   }, [members, transactions, searchTerm, sortOption, filterTier, now]);
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
   const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // -- HANDLERS --
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
       const file = e.target.files?.[0];
@@ -128,10 +115,10 @@ const Members: React.FC = () => {
 
   const resetForm = () => {
     setNewName(''); setNewNickname(''); setNewPhone(''); 
-    setNewAddress('Nyomplong'); // Default Value
+    setNewAddress('Nyomplong');
     setNewPhoto(''); setNewDob(''); 
     setNewJoinDate(new Date().toISOString().split('T')[0]);
-    setNewTier('WARRIOR'); // Default Value
+    setNewTier('WARRIOR');
     setNewNotes('');
     setNewBonusBalance(0);
     setIsAdding(false);
@@ -140,7 +127,6 @@ const Members: React.FC = () => {
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (newName.trim()) {
-      // FIX: Prevent Duplicate Phone
       if (newPhone && members.some(m => m.phone === newPhone)) {
           addToast('error', 'Gagal', 'Nomor HP ini sudah terdaftar.');
           return;
@@ -148,7 +134,7 @@ const Members: React.FC = () => {
 
       addMember({
         name: newName,
-        nickname: newNickname || newName.split(' ')[0], // Ensure nickname exists
+        nickname: newNickname || newName.split(' ')[0], 
         phone: newPhone,
         address: newAddress,
         photoUrl: newPhoto,
@@ -177,7 +163,6 @@ const Members: React.FC = () => {
 
   const handleDeleteMember = () => {
     if (deletingMemberId) {
-      // Call Context which now returns boolean for success
       const success = deleteMember(deletingMemberId);
       if (success) {
           addToast('info', 'Member Dihapus', 'Data member telah dihapus dari sistem.');
@@ -195,7 +180,6 @@ const Members: React.FC = () => {
       });
   };
 
-  // --- PAGINATION RENDERER ---
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -255,16 +239,13 @@ const Members: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      {/* HEADER & FILTERS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
           <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('members')}</h2>
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_members_desc')}</p>
         </div>
 
-        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
-            {/* Search */}
             <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
@@ -276,7 +257,6 @@ const Members: React.FC = () => {
                 />
             </div>
 
-            {/* Sort */}
             <div className="relative col-span-1 md:col-span-6 lg:w-48">
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
@@ -291,7 +271,6 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Filter Tier */}
             <div className="relative col-span-1 md:col-span-6 lg:w-40">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select 
@@ -306,7 +285,6 @@ const Members: React.FC = () => {
                 </select>
             </div>
 
-            {/* Add Button */}
             <button 
                 onClick={() => setIsAdding(true)}
                 className="col-span-2 md:col-span-12 lg:w-auto h-10 sm:h-11 px-6 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95"
@@ -317,7 +295,6 @@ const Members: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {/* Widget Header */}
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm">
             <Users size={18} />
@@ -330,7 +307,6 @@ const Members: React.FC = () => {
           </span>
         </div>
 
-        {/* MEMBER GRID */}
         {filteredMembers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-palette-navyLight rounded-3xl border border-slate-200 dark:border-white/5">
                 <Users size={48} className="text-slate-300 mb-4" />
@@ -345,19 +321,13 @@ const Members: React.FC = () => {
 
                     return (
                     <div key={member.id} className={`group relative rounded-2xl border ${theme.borderInner} bg-white dark:bg-[#0f1016] overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg dark:hover:shadow-none hover:-translate-y-0.5`}>
-                        
-                        {/* Subtle Header Gradient based on Tier */}
                         <div className={`absolute top-0 inset-x-0 h-16 bg-gradient-to-b ${theme.conic} opacity-10 dark:opacity-20`}></div>
-
-                        {/* Card Content - Slim Layout */}
                         <div className="relative p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-                            
-                            {/* Avatar Section */}
                             <div className="relative shrink-0">
                                 <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-br ${theme.conic}`}>
                                     <img 
                                         src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} 
-                                        alt={member.nickname} 
+                                        alt={member.nickname || 'Member'} 
                                         className="w-full h-full rounded-full object-cover bg-black border border-black/50"
                                     />
                                     {isPlaying && (
@@ -365,16 +335,14 @@ const Members: React.FC = () => {
                                     )}
                                 </div>
                                 <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${theme.badge} border border-white dark:border-black shadow-sm overflow-hidden`}>
-                                    {/* Using Tier Image Icon */}
                                     <img src={theme.iconUrl} alt="Tier" className="w-4 h-4 object-contain" />
                                 </div>
                             </div>
 
-                            {/* Identity Section - STRICTLY NICKNAME ONLY */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                     <h3 className={`font-bold text-sm sm:text-base leading-tight truncate ${theme.text}`}>
-                                        {member.nickname}
+                                        {member.nickname || 'Unknown'}
                                     </h3>
                                     {member.membershipId.includes('MYTHICAL_IMMORTAL') && <span className="text-[9px] font-black text-red-500 animate-pulse">GOD</span>}
                                 </div>
@@ -383,7 +351,6 @@ const Members: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Action Buttons (Compact) */}
                             <div className="flex flex-col gap-1 shrink-0">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setEditingMember(member); }} 
@@ -397,7 +364,6 @@ const Members: React.FC = () => {
                                 >
                                     <Copy size={14} />
                                 </button>
-                                {/* Added Delete Button */}
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setDeletingMemberId(member.id); }} 
                                     className="p-1.5 rounded-lg bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
@@ -407,7 +373,6 @@ const Members: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Slim Stats Grid */}
                         <div className="px-3 pb-3 sm:px-4 sm:pb-4 mt-auto">
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-2 flex items-center justify-between border border-slate-100 dark:border-white/5">
@@ -416,7 +381,6 @@ const Members: React.FC = () => {
                                         <span className="text-[9px] font-bold uppercase">Main</span>
                                     </div>
                                     <span className={`text-xs font-black ${theme.text}`}>
-                                        {/* INTEGER DISPLAY */}
                                         {realtimePlaytime.toFixed(0)}h
                                     </span>
                                 </div>
@@ -435,12 +399,10 @@ const Members: React.FC = () => {
                 );})}
             </div>
         )}
-
-        {/* PAGINATION UI */}
         {renderPagination()}
       </div>
 
-      {/* ADD MEMBER MODAL - (Admin only view, Full Name Allowed) */}
+      {/* ADD MEMBER MODAL */}
       {isAdding && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -450,7 +412,6 @@ const Members: React.FC = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto p-6">
                       <form id="add-member-form" onSubmit={handleAddMember} className="space-y-4">
-                          {/* Photo Upload */}
                           <div className="flex items-center gap-4 mb-4">
                               <div onClick={() => photoInputRef.current?.click()} className="w-24 h-24 rounded-full bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
                                   {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : newPhoto ? <img src={newPhoto} className="w-full h-full object-cover" /> : <Camera className="text-slate-400 group-hover:text-palette-mustard" />}
@@ -463,7 +424,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 1. Nama Lengkap & Panggilan - Full Name input is retained for Admin record */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')} *</label>
@@ -475,7 +435,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 2. No WA & Alamat (Default Nyomplong) */}
                           <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('phone')} (WA)</label>
                               <div className="relative">
@@ -491,7 +450,6 @@ const Members: React.FC = () => {
                                </div>
                           </div>
 
-                          {/* 3. Membership & Tanggal Daftar */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('membership')}</label>
@@ -505,7 +463,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 4. Tanggal Lahir & Bonus */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
@@ -537,7 +494,7 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* EDIT MEMBER MODAL - (Admin only view, Full Name Allowed) */}
+      {/* EDIT MEMBER MODAL */}
       {editingMember && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight w-full max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -547,7 +504,6 @@ const Members: React.FC = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto p-6">
                       <form id="edit-member-form" onSubmit={handleUpdateMember} className="space-y-4">
-                          {/* Photo - Same Layout */}
                           <div className="flex items-center gap-4 mb-4">
                               <div onClick={() => editPhotoInputRef.current?.click()} className="w-24 h-24 rounded-full bg-slate-100 dark:bg-white/5 border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-colors relative overflow-hidden group">
                                   {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : <img src={editingMember.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full object-cover" />}
@@ -559,7 +515,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 1. Nama Lengkap & Panggilan */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')}</label>
@@ -571,7 +526,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
                           
-                          {/* 2. No WA & Alamat */}
                           <div className="space-y-1.5">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">{t('phone')}</label>
                               <div className="relative">
@@ -587,7 +541,6 @@ const Members: React.FC = () => {
                                </div>
                           </div>
 
-                          {/* 3. Membership & Tanggal Daftar */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('membership')}</label>
@@ -601,7 +554,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 4. Tanggal Lahir & Bonus (Edit Only) */}
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-500 uppercase">{t('dob')}</label>
@@ -616,7 +568,6 @@ const Members: React.FC = () => {
                               </div>
                           </div>
 
-                          {/* 5. Catatan */}
                           <div className="space-y-1.5">
                                <label className="text-[10px] font-bold text-slate-500 uppercase">{t('notes')}</label>
                                <div className="relative">
@@ -633,7 +584,6 @@ const Members: React.FC = () => {
           </div>
       )}
 
-      {/* DELETE CONFIRMATION */}
       {deletingMemberId && (
           <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">

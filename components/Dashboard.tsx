@@ -14,28 +14,31 @@ const Dashboard: React.FC = () => {
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todaysTx = transactions.filter(t => t.startTime.startsWith(today));
+    const todaysTx = transactions.filter(t => t.startTime && t.startTime.startsWith(today));
     
     return {
       activeConsoles: consoles.filter(c => c.status === ConsoleStatus.IN_USE).length,
-      revenueToday: todaysTx.reduce((sum, t) => sum + t.cost, 0),
-      hoursToday: todaysTx.reduce((sum, t) => sum + t.durationHours, 0),
+      revenueToday: todaysTx.reduce((sum, t) => sum + (t.cost || 0), 0),
+      hoursToday: todaysTx.reduce((sum, t) => sum + (t.durationHours || 0), 0),
       totalMembers: members.length
     };
   }, [consoles, transactions, members]);
 
   const recentTransactions = transactions.slice(0, 5);
 
-  const consoleUsageData = consoles.map(c => ({
-    name: c.name.split(' - ')[1] || c.name,
-    hours: c.totalHoursUsed
-  }));
+  const consoleUsageData = consoles.map(c => {
+    // FIX: Safe Name Parsing
+    const safeName = c.name || 'Unit';
+    const shortName = safeName.includes(' - ') ? safeName.split(' - ')[1] : safeName;
+    return {
+      name: shortName,
+      hours: c.totalHoursUsed || 0
+    };
+  });
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
     <div className="bg-white dark:bg-[#0f1016] p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-      {/* Decorative background blob */}
       <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500 ${bgClass.replace('/10', '/30').replace('/20', '/40')}`}></div>
-      
       <div className="flex justify-between items-start relative z-10">
         <div className="min-w-0 pr-2">
           <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-wide truncate opacity-70">{title}</p>
@@ -51,13 +54,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in">
-      {/* 1. Header Section */}
       <div className="flex flex-col gap-1">
         <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('dashboard')}</h2>
         <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('overview_subtitle')}</p>
       </div>
 
-      {/* 2. Stats Grid Widget - USING PALETTE COLORS */}
       <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard 
           title={t('active_consoles')}
@@ -93,9 +94,7 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* 3. Main Content Widgets (Table & Chart) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Active Rentals Table / List */}
         <div className="lg:col-span-2 bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
           <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
             <h3 className="font-bold text-sm text-palette-navy dark:text-white flex items-center gap-2">
@@ -112,14 +111,13 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* Mobile View: Vertical Stack */}
                 <div className="md:hidden">
                    {recentTransactions.map(tx => (
                      <div key={tx.id} className="p-4 border-b border-slate-100 dark:border-white/5 last:border-0 bg-white dark:bg-transparent">
                        <div className="flex justify-between items-start mb-2 gap-2">
                          <div className="min-w-0 flex-1">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">{t('members')}</span>
-                            <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName}</span>
+                            <span className="font-bold text-sm text-slate-900 dark:text-white truncate block">{tx.memberName || 'Unknown'}</span>
                          </div>
                          <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 border ${
                             tx.status === 'ACTIVE' 
@@ -132,7 +130,7 @@ const Dashboard: React.FC = () => {
                        <div className="flex justify-between items-end mt-2 pt-2 border-t border-dashed border-slate-100 dark:border-white/5">
                          <div className="min-w-0 flex-1">
                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{t('consoles')}</div>
-                           <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{tx.consoleName}</div>
+                           <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{tx.consoleName || 'Unknown'}</div>
                          </div>
                          <div className="text-right shrink-0 ml-2">
                            <div className="text-xs font-mono font-bold text-palette-mustard">{tx.durationHours} {t('hour_short')}</div>
@@ -142,7 +140,6 @@ const Dashboard: React.FC = () => {
                    ))}
                 </div>
 
-                {/* Desktop View: Table (Styled) */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50/50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5 tracking-wider">
@@ -156,8 +153,8 @@ const Dashboard: React.FC = () => {
                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                       {recentTransactions.map(tx => (
                         <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName}</td>
-                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName}</td>
+                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white text-xs max-w-[150px] truncate" title={tx.memberName}>{tx.memberName || 'Unknown'}</td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs max-w-[150px] truncate" title={tx.consoleName}>{tx.consoleName || 'Unknown'}</td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
                               tx.status === 'ACTIVE' 
@@ -179,7 +176,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Charts Widget - Using Palette Colors */}
         <div className="bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-5 flex flex-col">
           <h3 className="font-bold text-sm text-palette-navy dark:text-white mb-4 flex items-center gap-2">
             <MonitorPlay size={16} className="text-palette-mustard" /> {t('console_util')}
@@ -218,7 +214,7 @@ const Dashboard: React.FC = () => {
                     />
                     <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
                        {consoleUsageData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#facc15'} /> // Mustard & Yellow from Palette
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#facc15'} />
                         ))}
                     </Bar>
                   </BarChart>

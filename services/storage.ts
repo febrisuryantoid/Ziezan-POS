@@ -5,7 +5,6 @@ import { Console, Member, Transaction, AppSettings, User, Role, MembershipConfig
 const DEFAULT_CONSOLES: Console[] = [];
 
 // New 9-Tier "Mobile Legends Style" Configuration
-// UPDATED: Warrior-GM (6h), Legend-Mythic (5h), Honor-Glory (4h), Immortal (3h)
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'WARRIOR', 
@@ -13,7 +12,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 0,
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
+    bonusThreshold: 6,
     bonusReward: 1,     
     isActive: true,
     color: 'orange'
@@ -24,7 +23,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 5, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
+    bonusThreshold: 6,
     bonusReward: 1,    
     isActive: true,
     color: 'slate'
@@ -35,7 +34,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 15, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Rule: Main 6 jam -> Bonus 1 jam
+    bonusThreshold: 6,
     bonusReward: 1,    
     isActive: true,
     color: 'amber'
@@ -46,7 +45,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 30, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 6, // Disamakan dengan GM agar terasa upgrade saat masuk Legend
+    bonusThreshold: 6,
     bonusReward: 1,    
     isActive: true,
     color: 'emerald'
@@ -57,7 +56,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 60, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 5, // Rule: Main 5 jam -> Bonus 1 jam
+    bonusThreshold: 5,
     bonusReward: 1,    
     isActive: true,
     color: 'yellow'
@@ -68,7 +67,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 100, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 5, // Rule: Main 5 jam -> Bonus 1 jam
+    bonusThreshold: 5,
     bonusReward: 1,    
     isActive: true,
     color: 'indigo'
@@ -79,7 +78,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 150, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 4, // Rule: Main 4 jam -> Bonus 1 jam
+    bonusThreshold: 4,
     bonusReward: 1,    
     isActive: true,
     color: 'blue'
@@ -90,7 +89,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 220, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 4, // Rule: Main 4 jam -> Bonus 1 jam
+    bonusThreshold: 4,
     bonusReward: 1,    
     isActive: true,
     color: 'pink'
@@ -101,7 +100,7 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
     minHours: 365, 
     price: 0, 
     durationDays: 0, 
-    bonusThreshold: 3, // Rule: Main 3 Jam -> Gratis 1
+    bonusThreshold: 3,
     bonusReward: 1,    
     isActive: true,
     color: 'rose'
@@ -129,8 +128,12 @@ const K_SETTINGS = 'ziezan_settings';
 const K_MEMBERSHIPS = 'ziezan_memberships';
 
 export const getConsoles = (): Console[] => {
-  const data = localStorage.getItem(K_CONSOLES);
-  return data ? JSON.parse(data) : DEFAULT_CONSOLES;
+  try {
+    const data = localStorage.getItem(K_CONSOLES);
+    return data ? JSON.parse(data) : DEFAULT_CONSOLES;
+  } catch (e) {
+    return DEFAULT_CONSOLES;
+  }
 };
 
 export const saveConsoles = (consoles: Console[]) => {
@@ -138,35 +141,31 @@ export const saveConsoles = (consoles: Console[]) => {
 };
 
 export const getMemberships = (): MembershipConfig[] => {
-  const data = localStorage.getItem(K_MEMBERSHIPS);
-  if (data) {
-      const parsed = JSON.parse(data);
-      // Merge strategy: Use defaults as base, overwrite with saved values if they exist
-      // This ensures if we update code defaults, new keys might appear, 
-      // BUT we prioritize saved values for editable fields (bonusThreshold, etc).
-      // However, for this specific update request, we want to ENFORCE the new defaults 
-      // if the user hasn't explicitly customized them away from previous defaults.
-      // Since tracking "customized" is hard, we will map carefully.
-      
-      const merged = DEFAULT_MEMBERSHIPS.map(def => {
-          const existing = parsed.find((p: any) => p.id === def.id);
-          if (existing) {
-             return { 
-                 ...def, 
-                 isActive: existing.isActive ?? def.isActive,
-                 minHours: existing.minHours ?? def.minHours,
-                 // IMPORTANT: We prefer the saved value, but the UI allows changing it.
-                 bonusThreshold: existing.bonusThreshold ?? def.bonusThreshold,
-                 bonusReward: existing.bonusReward ?? def.bonusReward,
-                 price: existing.price ?? def.price,
-                 durationDays: existing.durationDays ?? def.durationDays
-             }; 
-          }
-          return def;
-      });
-      return merged;
+  try {
+    const data = localStorage.getItem(K_MEMBERSHIPS);
+    if (data) {
+        const parsed = JSON.parse(data);
+        const merged = DEFAULT_MEMBERSHIPS.map(def => {
+            const existing = parsed.find((p: any) => p.id === def.id);
+            if (existing) {
+               return { 
+                   ...def, 
+                   isActive: existing.isActive ?? def.isActive,
+                   minHours: existing.minHours ?? def.minHours,
+                   bonusThreshold: existing.bonusThreshold ?? def.bonusThreshold,
+                   bonusReward: existing.bonusReward ?? def.bonusReward,
+                   price: existing.price ?? def.price,
+                   durationDays: existing.durationDays ?? def.durationDays
+               }; 
+            }
+            return def;
+        });
+        return merged;
+    }
+    return DEFAULT_MEMBERSHIPS;
+  } catch (e) {
+    return DEFAULT_MEMBERSHIPS;
   }
-  return DEFAULT_MEMBERSHIPS;
 };
 
 export const saveMemberships = (configs: MembershipConfig[]) => {
@@ -174,57 +173,66 @@ export const saveMemberships = (configs: MembershipConfig[]) => {
 };
 
 export const getMembers = (): Member[] => {
-  const data = localStorage.getItem(K_MEMBERS);
-  if (!data) return [];
-  
-  let members: Member[] = JSON.parse(data);
-  
-  // Clean Data & Migration
-  const nameMap = new Map<string, Member>();
-  let hasChanges = false;
+  try {
+    const data = localStorage.getItem(K_MEMBERS);
+    if (!data) return [];
+    
+    let members: Member[] = JSON.parse(data);
+    
+    // Clean Data & Migration
+    const nameMap = new Map<string, Member>();
+    let hasChanges = false;
 
-  members.forEach(m => {
-      if (!m.id || !m.name) { hasChanges = true; return; }
+    members.forEach(m => {
+        // SAFETY FIX: Ensure 'name' exists and is a string
+        if (!m || !m.id) { hasChanges = true; return; }
+        
+        const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown Member';
+        const safeNick = (m.nickname && typeof m.nickname === 'string') ? m.nickname : safeName.split(' ')[0];
 
-      // Migration for old tiers to new 9-Tier schema
-      let tier = m.membershipId;
-      if (tier as any === 'BASIC') tier = 'WARRIOR';
-      if (tier as any === 'MASTER') tier = 'GRANDMASTER'; 
-      if (tier as any === 'PLUS') tier = 'EPIC';
-      if (tier as any === 'VIP') tier = 'LEGEND'; 
+        // Migration for old tiers
+        let tier = m.membershipId;
+        if (tier as any === 'BASIC') tier = 'WARRIOR';
+        if (tier as any === 'MASTER') tier = 'GRANDMASTER'; 
+        if (tier as any === 'PLUS') tier = 'EPIC';
+        if (tier as any === 'VIP') tier = 'LEGEND'; 
 
-      const cleaned: Member = {
-        ...m,
-        name: m.name.trim(),
-        nickname: m.nickname || m.name.split(' ')[0], 
-        membershipId: tier,
-        address: m.address || 'Nyomplong', 
-        totalAmountPaid: m.totalAmountPaid || 0,
-        membershipExpiryDate: m.membershipExpiryDate || null,
-        photoUrl: m.photoUrl || undefined,
-        dateOfBirth: m.dateOfBirth || undefined,
-        lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
-        notes: m.notes || ''
-      };
+        const cleaned: Member = {
+          ...m,
+          name: safeName.trim(),
+          nickname: safeNick, 
+          membershipId: tier,
+          address: m.address || 'Nyomplong', 
+          totalAmountPaid: m.totalAmountPaid || 0,
+          membershipExpiryDate: m.membershipExpiryDate || null,
+          photoUrl: m.photoUrl || undefined,
+          dateOfBirth: m.dateOfBirth || undefined,
+          lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
+          notes: m.notes || ''
+        };
 
-      const key = cleaned.name.toLowerCase();
-      if (nameMap.has(key)) {
-          const existing = nameMap.get(key)!;
-          const isBetter = cleaned.totalPlayTime > existing.totalPlayTime;
-          if (isBetter) nameMap.set(key, cleaned);
-          hasChanges = true; 
-      } else {
-          nameMap.set(key, cleaned);
-      }
-  });
+        const key = cleaned.name.toLowerCase();
+        if (nameMap.has(key)) {
+            const existing = nameMap.get(key)!;
+            const isBetter = cleaned.totalPlayTime > existing.totalPlayTime;
+            if (isBetter) nameMap.set(key, cleaned);
+            hasChanges = true; 
+        } else {
+            nameMap.set(key, cleaned);
+        }
+    });
 
-  if (hasChanges || nameMap.size !== members.length) {
-      const cleanList = Array.from(nameMap.values());
-      saveMembers(cleanList);
-      return cleanList;
+    if (hasChanges || nameMap.size !== members.length) {
+        const cleanList = Array.from(nameMap.values());
+        saveMembers(cleanList);
+        return cleanList;
+    }
+
+    return members;
+  } catch (e) {
+    console.error("Failed to load members", e);
+    return [];
   }
-
-  return members;
 };
 
 export const saveMembers = (members: Member[]) => {
@@ -232,8 +240,19 @@ export const saveMembers = (members: Member[]) => {
 };
 
 export const getTransactions = (): Transaction[] => {
-  const data = localStorage.getItem(K_TRANSACTIONS);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(K_TRANSACTIONS);
+    const txs: Transaction[] = data ? JSON.parse(data) : [];
+    
+    // SAFETY FIX: Ensure transactions have valid names for display
+    return txs.map(t => ({
+        ...t,
+        memberName: t.memberName || 'Unknown',
+        consoleName: t.consoleName || 'Unknown Console'
+    }));
+  } catch (e) {
+    return [];
+  }
 };
 
 export const saveTransactions = (txs: Transaction[]) => {
@@ -241,15 +260,19 @@ export const saveTransactions = (txs: Transaction[]) => {
 };
 
 export const getSettings = (): AppSettings => {
-  const data = localStorage.getItem(K_SETTINGS);
-  if (data) {
-      const parsed = JSON.parse(data);
-      return { 
-        ...DEFAULT_SETTINGS, 
-        ...parsed
-      };
+  try {
+    const data = localStorage.getItem(K_SETTINGS);
+    if (data) {
+        const parsed = JSON.parse(data);
+        return { 
+          ...DEFAULT_SETTINGS, 
+          ...parsed
+        };
+    }
+    return DEFAULT_SETTINGS;
+  } catch (e) {
+    return DEFAULT_SETTINGS;
   }
-  return DEFAULT_SETTINGS;
 };
 
 export const saveSettings = (s: AppSettings) => {

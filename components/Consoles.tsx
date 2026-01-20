@@ -19,48 +19,38 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
   const { addToast } = useToast();
   
-  // Header State
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Modal State (Rental)
   const [selectedConsoleId, setSelectedConsoleId] = useState<string | null>(null);
   const [rentalMemberId, setRentalMemberId] = useState('');
   const [rentalDuration, setRentalDuration] = useState(1);
   const [currentStep, setCurrentStep] = useState<'INPUT' | 'PAYMENT' | 'QRIS' | 'CONFIRM'>('INPUT');
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('CASH');
   
-  // Modal State (Checkout / Stop Session)
   const [checkoutTx, setCheckoutTx] = useState<Transaction | null>(null);
   const [extraCost, setExtraCost] = useState(0);
   const [checkoutPayment, setCheckoutPayment] = useState<PaymentMethod>('CASH');
 
-  // Member Search State (Combobox)
   const [memberSearchTerm, setMemberSearchTerm] = useState('');
   const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // New/Edit Console State
   const [isAdding, setIsAdding] = useState(false);
   const [editingConsole, setEditingConsole] = useState<Console | null>(null);
   const [newConsoleName, setNewConsoleName] = useState('');
   const [newConsoleImage, setNewConsoleImage] = useState('');
   
-  // Delete Confirmation State
   const [deletingConsole, setDeletingConsole] = useState<Console | null>(null);
 
-  // Print Selection
   const [printTx, setPrintTx] = useState<Transaction | null>(null);
   
-  // Real-time ticker for progress bars
   const [now, setNow] = useState(new Date());
 
-  // Check for Mobile View
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -74,12 +64,10 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterStatus, sortOption]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -92,16 +80,20 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
   const filteredConsoles = useMemo(() => {
     return consoles.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // FIX: Safe Name
+      const safeName = c.name || '';
+      const matchesSearch = safeName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterStatus === 'ALL' ? true : 
                             filterStatus === 'AVAILABLE' ? c.status === ConsoleStatus.AVAILABLE :
                             filterStatus === 'IN_USE' ? c.status === ConsoleStatus.IN_USE :
                             c.status === ConsoleStatus.MAINTENANCE;
       return matchesSearch && matchesFilter;
     }).sort((a, b) => {
+      const nameA = a.name || '';
+      const nameB = b.name || '';
       switch (sortOption) {
-        case 'NAME_ASC': return a.name.localeCompare(b.name);
-        case 'NAME_DESC': return b.name.localeCompare(a.name);
+        case 'NAME_ASC': return nameA.localeCompare(nameB);
+        case 'NAME_DESC': return nameB.localeCompare(nameA);
         case 'USAGE_DESC': return b.totalHoursUsed - a.totalHoursUsed;
         case 'STATUS': return a.status.localeCompare(b.status);
         default: return 0;
@@ -109,17 +101,17 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     });
   }, [consoles, searchTerm, filterStatus, sortOption]);
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredConsoles.length / itemsPerPage);
   const currentConsoles = filteredConsoles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const sortedAndFilteredMembers = useMemo(() => {
       const activeMembers = members.filter(m => m.status === 'ACTIVE');
-      const sorted = activeMembers.sort((a, b) => a.nickname.localeCompare(b.nickname));
+      const sorted = activeMembers.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''));
       if (!memberSearchTerm) return sorted;
       const lowerTerm = memberSearchTerm.toLowerCase();
-      // Allow searching by Name for convenience, but result list will show Nickname
-      return sorted.filter(m => m.name.toLowerCase().includes(lowerTerm) || m.nickname.toLowerCase().includes(lowerTerm));
+      
+      // FIX: Safe Member Search
+      return sorted.filter(m => (m.name || '').toLowerCase().includes(lowerTerm) || (m.nickname || '').toLowerCase().includes(lowerTerm));
   }, [members, memberSearchTerm]);
 
   const calculation = useMemo(() => {
@@ -131,10 +123,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     let freeHoursUsed = 0;
     let totalBaseCost = rentalDuration * settings.hourlyRate;
 
-    // Check bonus availability (for display)
     const canUseBonus = member.freeHoursBalance >= 1;
 
-    // If SELECTED payment is BONUS, apply it
     if (selectedPayment === 'BONUS') {
         if (member.freeHoursBalance >= rentalDuration) {
             freeHoursUsed = rentalDuration;
@@ -179,7 +169,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
   const initiateCheckout = (tx: Transaction) => {
       setCheckoutTx(tx);
       setExtraCost(0);
-      // Default to existing, but if it was open-ended cash, maybe allow bonus now
       setCheckoutPayment(tx.paymentMethod); 
   };
 
@@ -205,7 +194,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           joinDate: new Date().toISOString()
       });
       setRentalMemberId(newMemberId);
-      setMemberSearchTerm(name.split(' ')[0]); // Set term to nickname
+      setMemberSearchTerm(name.split(' ')[0]); 
       setIsMemberDropdownOpen(false);
       addToast('success', 'Member Baru Ditambahkan', `Member ${name} berhasil dibuat dan dipilih.`);
   };
@@ -214,7 +203,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     e.preventDefault();
     if(newConsoleName.trim()) {
       const normalizedName = newConsoleName.trim().toLowerCase();
-      const isDuplicate = consoles.some(c => c.name.toLowerCase() === normalizedName);
+      const isDuplicate = consoles.some(c => (c.name || '').toLowerCase() === normalizedName);
       if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama console ini sudah ada.'); return; }
       addConsole({ name: newConsoleName.trim(), imageUrl: newConsoleImage });
       setNewConsoleName('');
@@ -228,7 +217,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
     e.preventDefault();
     if(editingConsole && editingConsole.name) {
       const normalizedName = editingConsole.name.trim().toLowerCase();
-      const isDuplicate = consoles.some(c => c.id !== editingConsole.id && c.name.toLowerCase() === normalizedName);
+      const isDuplicate = consoles.some(c => c.id !== editingConsole.id && (c.name || '').toLowerCase() === normalizedName);
       if (isDuplicate) { addToast('error', 'Duplikasi Nama', 'Nama console ini sudah digunakan.'); return; }
       updateConsole(editingConsole.id, editingConsole.name.trim(), editingConsole.imageUrl);
       setEditingConsole(null);
@@ -334,14 +323,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. Header & Toolbar */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0">
           <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
           <p className="text-palette-brown/70 dark:text-palette-cream/60 text-xs">{t('manage_units_desc')}</p>
         </div>
         
-        {/* RESPONSIVE FILTER GRID SYSTEM */}
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -370,9 +357,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       </div>
 
-      {/* 2. Main Content Grid */}
       <div className="space-y-4">
-        {/* Widget Header with Count Badge */}
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard dark:text-palette-yellow shadow-sm"><Gamepad2 size={18} /></div>
           <h3 className="text-lg font-bold text-palette-navy dark:text-white">{t('active_consoles')}</h3>
@@ -388,7 +373,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             
             return (
               <div key={console.id} className={`group relative rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col shadow-sm hover:shadow-xl dark:shadow-none bg-white dark:bg-palette-navyLight ${isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'border-slate-200 dark:border-white/5 hover:border-palette-green/50 hover:-translate-y-1'}`}>
-                {/* Image Container */}
                 <div className="aspect-video w-full bg-slate-100 dark:bg-black/20 relative">
                   <img src={imageUrl} alt={console.name} className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
@@ -457,9 +441,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         {renderPagination()}
       </div>
 
-      {/* --- MODALS --- */}
-
-      {/* 1. CHECKOUT MODAL (NEW FEATURE FOR SAFETY & F&B) */}
       {checkoutTx && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
@@ -472,7 +453,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               </div>
               
               <div className="p-6 overflow-y-auto space-y-5">
-                 {/* Bill Summary */}
                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Member</span>
@@ -487,7 +467,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                         <span className="font-mono dark:text-white">Rp {checkoutTx.cost.toLocaleString()}</span>
                     </div>
                     
-                    {/* Add-ons / F&B Input (Simple Version) */}
                     <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10">
                         <div className="flex items-center gap-2 mb-2">
                             <ShoppingBag size={16} className="text-palette-mustard"/>
@@ -517,11 +496,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     </div>
                  </div>
 
-                 {/* Payment Method Selector */}
                  <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Metode Pembayaran</label>
                     
-                    {/* Member bonus info for Checkout */}
                     {(() => {
                         const member = members.find(m => m.id === checkoutTx.memberId);
                         const canPayWithBonus = member && member.freeHoursBalance > 0;
@@ -547,7 +524,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                         <QrCode size={16} /> QRIS
                                     </button>
                                     
-                                    {/* Bonus Option at Checkout - Deferred Payment Logic */}
                                     <button 
                                         onClick={() => { if(canPayWithBonus) setCheckoutPayment('BONUS'); }}
                                         disabled={!canPayWithBonus}
@@ -574,7 +550,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       )}
 
-      {/* 2. RENTAL MODAL */}
       {selectedConsoleId && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight w-full max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
@@ -584,7 +559,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               </div>
               
               <div className="p-6 overflow-y-auto">
-                 {/* Step 1: Member & Duration */}
                  {currentStep === 'INPUT' && (
                     <div className="space-y-5">
                        <div className="space-y-2">
@@ -599,7 +573,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-palette-navy border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20">
                                    {sortedAndFilteredMembers.length > 0 ? (
                                       sortedAndFilteredMembers.map(m => (
-                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname); setIsMemberDropdownOpen(false); }} className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0">
+                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname || m.name); setIsMemberDropdownOpen(false); }} className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0">
                                             <p className="text-sm font-bold text-slate-900 dark:text-white">{m.nickname}</p>
                                             <p className="text-xs text-slate-500">{m.membershipId}</p>
                                          </div>
@@ -630,7 +604,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     </div>
                  )}
 
-                 {/* Step 2: Payment Method */}
                  {currentStep === 'PAYMENT' && calculation && (
                     <div className="space-y-4">
                        <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl space-y-2">
@@ -666,7 +639,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 <QrCode size={24} />
                                 <span className="font-bold text-xs">QRIS</span>
                             </button>
-                            {/* Explicit Bonus Button */}
                             <button 
                                 onClick={() => { if(calculation.canUseBonus) setSelectedPayment('BONUS'); }}
                                 disabled={!calculation.canUseBonus}
@@ -679,7 +651,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     </div>
                  )}
 
-                 {/* Step 3: QRIS Scan (Mock) */}
                  {currentStep === 'QRIS' && (
                     <div className="flex flex-col items-center justify-center py-4">
                        <div className="w-48 h-48 bg-white p-2 rounded-xl shadow-lg mb-4">
@@ -690,7 +661,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     </div>
                  )}
 
-                 {/* Step 4: Confirm Start */}
                  {currentStep === 'CONFIRM' && (
                     <div className="text-center py-6">
                        <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
@@ -728,7 +698,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
         </div>
       )}
 
-      {/* 3. ADD / EDIT CONSOLE MODAL */}
       {(isAdding || editingConsole) && (
          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
             <div className="bg-white dark:bg-palette-navyLight w-full max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6">
@@ -758,7 +727,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
          </div>
       )}
 
-      {/* 4. DELETE CONFIRMATION */}
       {deletingConsole && (
           <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4 animate-fade-in">
               <div className="bg-white dark:bg-palette-navyLight sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 text-center">
@@ -773,7 +741,6 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           </div>
       )}
 
-      {/* 5. PRINT SELECTION MODAL */}
       {printTx && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-palette-navy/80 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="bg-white dark:bg-palette-navyLight sm:rounded-2xl rounded-t-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-200 dark:border-white/10 text-center">

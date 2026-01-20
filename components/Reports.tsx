@@ -17,8 +17,6 @@ const Reports: React.FC = () => {
   const { isConnected: isBtConnected, connect: connectBt } = useBluetooth();
   const { addToast } = useToast();
   
-  // Default Dates (Local Timezone aware)
-  // We use this trick to get YYYY-MM-DD in local time
   const toLocalDateString = (date: Date) => {
       const offset = date.getTimezoneOffset();
       const localDate = new Date(date.getTime() - (offset * 60 * 1000));
@@ -28,25 +26,15 @@ const Reports: React.FC = () => {
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  // Filters State
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | PaymentMethod>('ALL');
   const [startDate, setStartDate] = useState<string>(toLocalDateString(firstDay));
   const [endDate, setEndDate] = useState<string>(toLocalDateString(today));
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('DATE_DESC');
-  
-  // Printing State
   const [selectedTxForPrint, setSelectedTxForPrint] = useState<Transaction | null>(null);
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-
-  // Date Formatting Helper
-  const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: '2-digit' });
-  };
 
   const formatDateTime = (dateString: string) => {
       const date = new Date(dateString);
@@ -55,17 +43,18 @@ const Reports: React.FC = () => {
       return { datePart, timePart };
   };
 
-  // Filter Logic - ROOT CAUSE FIX for TIMEZONE
   const filteredTransactions = transactions.filter(tx => {
-    // Convert transaction UTC time to LOCAL YYYY-MM-DD for comparison
+    // FIX: Safe strings
+    const memberName = tx.memberName || '';
+    const consoleName = tx.consoleName || '';
     const txDateObj = new Date(tx.startTime);
     const txDateLocal = toLocalDateString(txDateObj);
 
     const isDateInRange = txDateLocal >= startDate && txDateLocal <= endDate;
     const isPaymentMatch = paymentFilter === 'ALL' ? true : tx.paymentMethod === paymentFilter;
     const isSearchMatch = 
-        tx.memberName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        tx.consoleName.toLowerCase().includes(searchQuery.toLowerCase());
+        memberName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        consoleName.toLowerCase().includes(searchQuery.toLowerCase());
 
     return isDateInRange && isPaymentMatch && isSearchMatch;
   }).sort((a, b) => {
@@ -79,13 +68,12 @@ const Reports: React.FC = () => {
   });
 
   const handleExportCSV = () => {
-    // Export memberName (which is nickname)
     const headers = ["ID", "Tanggal", "Member", "Unit", "Durasi (Jam)", "Metode", "Total (Rp)", "Operator", "Status"];
     const rows = filteredTransactions.map(tx => [
         tx.id,
         new Date(tx.startTime).toLocaleDateString() + ' ' + new Date(tx.startTime).toLocaleTimeString(),
-        `"${tx.memberName}"`,
-        `"${tx.consoleName}"`,
+        `"${tx.memberName || 'Unknown'}"`,
+        `"${tx.consoleName || 'Unknown'}"`,
         tx.durationHours,
         tx.paymentMethod,
         tx.cost,
@@ -106,7 +94,6 @@ const Reports: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Printing Handlers
   const handlePrintWifi = () => {
     if (selectedTxForPrint) {
         printReceiptBrowser(selectedTxForPrint, settings);
@@ -137,7 +124,6 @@ const Reports: React.FC = () => {
     }
   };
 
-  // Pagination Logic
   const totalItems = filteredTransactions.length;
   const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(totalItems / itemsPerPage);
 
@@ -153,7 +139,6 @@ const Reports: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      {/* 1. Header & Financial Summary */}
       <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
@@ -162,7 +147,6 @@ const Reports: React.FC = () => {
           <p className="text-slate-500 text-xs font-medium mt-1">Analisa performa bisnis & riwayat transaksi.</p>
         </div>
 
-        {/* Revenue Card (Compact) */}
         <div className="w-full lg:w-auto bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-4 shadow-lg shadow-emerald-900/20 text-white flex items-center gap-4 border border-white/10 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
             <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
@@ -175,11 +159,9 @@ const Reports: React.FC = () => {
         </div>
       </div>
         
-      {/* 2. Control Panel (Filters) - Modernized */}
       <div className="bg-white dark:bg-[#0f1016] rounded-3xl p-4 border border-slate-200 dark:border-white/5 shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-12 gap-3 items-end">
            
-           {/* Date Range - Unified Label */}
            <div className="col-span-2 md:col-span-4 flex gap-2 items-center bg-slate-50 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
               <div className="relative flex-1">
                   <input 
@@ -200,7 +182,6 @@ const Reports: React.FC = () => {
               </div>
            </div>
 
-           {/* Search */}
            <div className="relative col-span-2 md:col-span-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input 
@@ -212,7 +193,6 @@ const Reports: React.FC = () => {
             />
           </div>
 
-          {/* Filters Row */}
           <div className="col-span-1 md:col-span-2">
              <div className="relative">
                 <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -245,7 +225,6 @@ const Reports: React.FC = () => {
              </div>
           </div>
 
-          {/* Export Button - Full on Mobile */}
           <button 
             onClick={handleExportCSV}
             className="col-span-2 md:col-span-1 h-10 w-full rounded-xl flex items-center justify-center bg-palette-mustard text-white hover:bg-palette-mustard/90 transition-all shadow-lg shadow-palette-mustard/20 active:scale-95"
@@ -256,10 +235,7 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Modern Glass Table */}
       <div className="bg-white dark:bg-[#0f1016] rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-          
-          {/* Table Header */}
           <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/[0.02]">
              <div className="flex items-center gap-2">
                 <Receipt size={16} className="text-slate-400" />
@@ -280,7 +256,6 @@ const Reports: React.FC = () => {
              </div>
           </div>
 
-          {/* List Content */}
           <div className="flex-1 overflow-x-auto">
             {currentTransactions.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-64 text-slate-500">
@@ -304,7 +279,6 @@ const Reports: React.FC = () => {
                     const { datePart, timePart } = formatDateTime(tx.startTime);
                     return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                      {/* Time */}
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700 dark:text-slate-200 text-xs">{datePart}</span>
@@ -312,28 +286,25 @@ const Reports: React.FC = () => {
                         </div>
                       </td>
                       
-                      {/* Member - NICKNAME ONLY */}
                       <td className="px-6 py-4">
                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">{tx.memberName}</span>
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">{tx.memberName || 'Unknown'}</span>
                             <span className="text-[10px] text-slate-500 font-mono tracking-wide">#{tx.id.substring(0,8).toUpperCase()}</span>
                          </div>
                       </td>
 
-                      {/* Console & Duration */}
                       <td className="px-6 py-4">
                          <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500">
                                 <Clock size={12} />
                             </div>
                             <div>
-                                <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">{tx.consoleName}</span>
+                                <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">{tx.consoleName || 'Unknown'}</span>
                                 <span className="block text-[10px] text-slate-500">{tx.durationHours} Jam</span>
                             </div>
                          </div>
                       </td>
 
-                      {/* Payment Method */}
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
                             tx.paymentMethod === 'QRIS' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
@@ -344,7 +315,6 @@ const Reports: React.FC = () => {
                         </span>
                       </td>
 
-                      {/* Cost */}
                       <td className="px-6 py-4 text-right">
                         <span className="font-mono text-sm font-bold text-slate-800 dark:text-white">
                            Rp {tx.cost.toLocaleString()}
@@ -356,7 +326,6 @@ const Reports: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Action */}
                       <td className="px-6 py-4 text-center">
                          <button 
                             onClick={() => setSelectedTxForPrint(tx)} 
@@ -373,7 +342,6 @@ const Reports: React.FC = () => {
             )}
           </div>
 
-          {/* Footer Pagination */}
           {totalPages > 1 && (
              <div className="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-center bg-slate-50/50 dark:bg-white/[0.02]">
                 <div className="flex items-center gap-3">
@@ -399,11 +367,9 @@ const Reports: React.FC = () => {
           )}
       </div>
 
-      {/* PRINT OPTION MODAL - RESPONSIVE FIX */}
       {selectedTxForPrint && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-fade-in">
            <div className="bg-white dark:bg-[#0f1016] sm:rounded-3xl rounded-t-3xl w-full max-w-sm shadow-2xl p-6 border border-white/10 text-center relative overflow-hidden">
-              {/* Decorative Blur */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-palette-mustard to-transparent opacity-50"></div>
               
               <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('select_print_method')}</h3>
