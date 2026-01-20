@@ -15,27 +15,27 @@ import { isTV } from './utils/platform';
 import { Loader2 } from 'lucide-react';
 
 // LAZY LOAD COMPONENTS
-// Standard lazy loading is sufficient as default exports are confirmed in component files
 const Consoles = React.lazy(() => import('./components/Consoles'));
 const Members = React.lazy(() => import('./components/Members'));
 const Reports = React.lazy(() => import('./components/Reports'));
 const Settings = React.lazy(() => import('./components/Settings'));
 const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
-const Leaderboard = React.lazy(() => import('./components/Leaderboard')); // NEW
+const Leaderboard = React.lazy(() => import('./components/Leaderboard')); 
 
 const App: React.FC = () => {
-  // 1. Initialize Route/Platform State IMMEDIATELY (Lazy Initializer)
-  // This prevents the "Flash" of Splash screen or Login screen on TV Mode
+  // 1. Initialize Route/Platform State IMMEDIATELY
   const [publicMemberNickname] = useState<string | null>(() => {
      const path = window.location.pathname;
      if (path.startsWith('/member/')) {
         const segments = path.split('/');
-        return segments[2] || null;
+        const rawNick = segments[2];
+        // CRITICAL FIX: Decode URI component to handle spaces (%20) and special chars
+        return rawNick ? decodeURIComponent(rawNick) : null;
      }
      return null;
   });
 
-  // NEW: Detect Rank Page
+  // Detect Rank Page
   const [isRankPage] = useState<boolean>(() => {
       return window.location.pathname === '/rank' || window.location.pathname === '/rank/';
   });
@@ -104,7 +104,7 @@ const App: React.FC = () => {
        );
     }
 
-    // NEW: Leaderboard Page (Priority 1.5)
+    // Leaderboard Page (Priority 1.5)
     if (isRankPage) {
         return (
             <DataProvider>
@@ -116,7 +116,6 @@ const App: React.FC = () => {
     }
 
     // 2. TV Mode (Priority 2 - Skip Splash)
-    // Wrapped in DataProvider because TVReceiver needs access to data context
     if (isTvMode) {
         return (
           <DataProvider>

@@ -426,7 +426,7 @@ const Members: React.FC = () => {
 
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')} *</label>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase">{t('full_name')}</label>
                                   <input required type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-palette-mustard focus:outline-none dark:text-white" autoCapitalize="words" />
                               </div>
                               <div className="space-y-1.5">

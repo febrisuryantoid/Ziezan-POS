@@ -179,7 +179,7 @@ export const getMembers = (): Member[] => {
     
     let members: Member[] = JSON.parse(data);
     
-    // Clean Data & Migration
+    // Clean Data & Migration Logic
     const nameMap = new Map<string, Member>();
     let hasChanges = false;
 
@@ -187,6 +187,7 @@ export const getMembers = (): Member[] => {
         // SAFETY FIX: Ensure 'name' exists and is a string
         if (!m || !m.id) { hasChanges = true; return; }
         
+        // Force strings to avoid crashes on .toLowerCase() or .split()
         const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown Member';
         const safeNick = (m.nickname && typeof m.nickname === 'string') ? m.nickname : safeName.split(' ')[0];
 

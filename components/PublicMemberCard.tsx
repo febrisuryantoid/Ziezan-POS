@@ -18,7 +18,7 @@ const DragonPattern = ({ color }: { color: string }) => {
     <div 
         className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
         style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${safeColor}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M22.485 0l.83.828-1.415 1.415-.828-.828-.828.828-1.415-1.415.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 22.485l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 22.485l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828.828M0 54.627l.828.83-1.415 1.415-.828-.828-.828.828L-3.658 54.627l.828-.828-.828-.828 1.415-1.415.828.828.828-.828 1.415 1.415-.828-.828M54.627 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415 1.415-.828-.828M22.485 60l.83-.828-1.415-1.415-.828.828-.828-.828-1.415 1.415.828.828-.828.828 1.415 1.415-.828-.828.828.828 1.415-1.415-.828-.828M32.118 29.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415zM29.118 32.118l-1.415-1.415 1.415-1.415 1.415 1.415-1.415 1.415z' fill='${safeColor}' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
             maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
         }}
     ></div>
@@ -27,7 +27,6 @@ const DragonPattern = ({ color }: { color: string }) => {
 
 export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string }) => (
   <div className="fixed inset-0 z-0 pointer-events-none bg-[#020205] overflow-hidden">
-    
     {/* CSS Animation for Floating Light */}
     <style>{`
       @keyframes float-light {
@@ -69,8 +68,11 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
 );
 
 // --- LUXURY TIER THEME CONFIGURATION (9 RANKS) ---
-export const getTierTheme = (id: string) => {
-  switch(id) {
+export const getTierTheme = (id: string | undefined) => {
+  // Safe fallback if ID is missing
+  const safeId = id || 'WARRIOR';
+  
+  switch(safeId) {
     case 'MYTHICAL_IMMORTAL': 
       return {
         id: 'MYTHICAL_IMMORTAL',
@@ -263,50 +265,69 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   const stats = useMemo(() => {
     if (!member) return null;
 
-    const activeTx = transactions.find(tx => 
-        tx.memberId === member.id && tx.status === 'ACTIVE'
-    );
+    try {
+        const activeTx = transactions.find(tx => 
+            tx.memberId === member.id && tx.status === 'ACTIVE'
+        );
 
-    let formattedElapsedTime = "00:00:00";
-    if (activeTx) {
-        const startTime = new Date(activeTx.startTime).getTime();
-        const currentTime = now.getTime();
-        const elapsedMs = Math.max(0, currentTime - startTime);
-        const totalSeconds = Math.floor(elapsedMs / 1000);
-        const h = Math.floor(totalSeconds / 3600);
-        const m = Math.floor((totalSeconds % 3600) / 60);
-        const s = totalSeconds % 60;
-        formattedElapsedTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        let formattedElapsedTime = "00:00:00";
+        if (activeTx && activeTx.startTime) {
+            // FIX: Safe Date Parsing
+            const startDate = new Date(activeTx.startTime);
+            if (!isNaN(startDate.getTime())) {
+                const startTime = startDate.getTime();
+                const currentTime = now.getTime();
+                const elapsedMs = Math.max(0, currentTime - startTime);
+                const totalSeconds = Math.floor(elapsedMs / 1000);
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+                formattedElapsedTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+        }
+
+        const projectedHours = activeTx ? activeTx.durationHours : 0;
+        const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours);
+        
+        // FIX: Handle empty config array
+        const config = (membershipConfigs && membershipConfigs.length > 0) 
+            ? membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0]
+            : { bonusThreshold: 10 }; // Fallback dummy
+        
+        // Fallback if config is missing properties
+        const safeBonusThreshold = config?.bonusThreshold || 10; 
+        
+        const currentProgressTotal = member.hoursProgressToNextBonus + projectedHours;
+        const effectiveProgress = currentProgressTotal % safeBonusThreshold;
+        const progressPercent = Math.min(100, (effectiveProgress / safeBonusThreshold) * 100);
+
+        let hoursToNextRank = "MAX";
+        let nextRankName = "Top Rank";
+
+        if (membershipConfigs && membershipConfigs.length > 0) {
+            const nextRankConfig = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours).find(c => c.minHours > member.totalPlayTime);
+            if (nextRankConfig) {
+                hoursToNextRank = (nextRankConfig.minHours - member.totalPlayTime).toFixed(0);
+                nextRankName = nextRankConfig.name;
+            }
+        }
+
+        return {
+            totalPlayTime: Math.floor(totalPlayTimeRealtime), // INTEGER DISPLAY
+            bonusBalance: member.freeHoursBalance,
+            activeTx,
+            formattedElapsedTime,
+            config,
+            progressPercent,
+            joinDate: member.joinDate ? new Date(member.joinDate).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : 'Unknown',
+            hoursToNextBonus: Math.max(0, safeBonusThreshold - effectiveProgress).toFixed(0),
+            hoursToNextRank,
+            nextRankName
+        };
+    } catch (error) {
+        console.error("Error calculating stats:", error);
+        return null;
     }
-
-    const projectedHours = activeTx ? activeTx.durationHours : 0;
-    const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours);
-    const config = membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0];
-    
-    // Fallback if config is missing
-    const safeBonusThreshold = config?.bonusThreshold || 10; 
-    
-    const currentProgressTotal = member.hoursProgressToNextBonus + projectedHours;
-    const effectiveProgress = currentProgressTotal % safeBonusThreshold;
-    const progressPercent = Math.min(100, (effectiveProgress / safeBonusThreshold) * 100);
-
-    const nextRankConfig = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours).find(c => c.minHours > member.totalPlayTime);
-    // Display playtime as INTEGER (toFixed(0))
-    const hoursToNextRank = nextRankConfig ? (nextRankConfig.minHours - member.totalPlayTime).toFixed(0) : "MAX";
-    const nextRankName = nextRankConfig ? nextRankConfig.name : "Top Rank";
-
-    return {
-        totalPlayTime: Math.floor(totalPlayTimeRealtime), // INTEGER DISPLAY
-        bonusBalance: member.freeHoursBalance,
-        activeTx,
-        formattedElapsedTime,
-        config,
-        progressPercent,
-        joinDate: new Date(member.joinDate).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
-        hoursToNextBonus: Math.max(0, safeBonusThreshold - effectiveProgress).toFixed(0),
-        hoursToNextRank,
-        nextRankName
-    };
   }, [member, transactions, now, membershipConfigs]);
 
   if (loading) {
@@ -335,10 +356,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   }
 
   const theme = getTierTheme(member.membershipId);
-  const isMythic = member.membershipId.includes('MYTHIC');
+  const isMythic = member.membershipId?.includes('MYTHIC') || false;
 
   // UPDATE BROWSER ADDRESS BAR COLOR (META THEME-COLOR)
-  // This makes the mobile browser bar match the tier color
   useEffect(() => {
     const metaThemeColor = document.querySelector("meta[name=theme-color]");
     if (metaThemeColor && theme.dragonColor) {
