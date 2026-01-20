@@ -11,7 +11,6 @@ interface PublicMemberCardProps {
 
 // --- BACKGROUND PATTERNS ---
 const DragonPattern = ({ color }: { color: string }) => {
-  // Safe color encoding for SVG data URI
   const safeColor = color ? color.replace('#', '%23') : '%23ffffff';
   
   return (
@@ -27,7 +26,6 @@ const DragonPattern = ({ color }: { color: string }) => {
 
 export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string }) => (
   <div className="fixed inset-0 z-0 pointer-events-none bg-[#020205] overflow-hidden">
-    {/* CSS Animation for Floating Light */}
     <style>{`
       @keyframes float-light {
         0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
@@ -36,11 +34,7 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
         100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
       }
     `}</style>
-
-    {/* Base Vignette */}
     <div className="absolute inset-0 bg-radial-gradient from-[#1a1a2e] via-[#020205] to-black opacity-80"></div>
-
-    {/* DYNAMIC FLOATING GLOW ORB */}
     <div 
         className="absolute top-[-20%] left-[-20%] w-[140vw] h-[140vw] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000 ease-in-out"
         style={{ 
@@ -48,8 +42,6 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
             animation: 'float-light 20s infinite ease-in-out'
         }}
     ></div>
-
-    {/* SEAMLESS GRID PATTERN */}
     <div 
         className="absolute inset-0 opacity-[0.08]"
         style={{
@@ -61,17 +53,12 @@ export const GamingBackground = ({ glowColor = '#7c3aed' }: { glowColor?: string
             maskImage: 'radial-gradient(circle at center, black 0%, transparent 100%)'
         }}
     ></div>
-
-    {/* Scanline Overlay */}
     <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20"></div>
   </div>
 );
 
-// --- LUXURY TIER THEME CONFIGURATION (9 RANKS) ---
 export const getTierTheme = (id: string | undefined) => {
-  // Safe fallback if ID is missing
   const safeId = id || 'WARRIOR';
-  
   switch(safeId) {
     case 'MYTHICAL_IMMORTAL': 
       return {
@@ -212,23 +199,20 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
+    refreshData(); // Ensure fresh data on mount
     return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    refreshData();
   }, [refreshData]);
 
-  // CRITICAL FIX: Safe Member Search
+  // SAFE MEMBER SEARCH LOGIC
   useEffect(() => {
     let checkInterval: ReturnType<typeof setInterval>;
     
     const findMember = () => {
         if (members && members.length > 0) {
-            // FIX: Ensure nickname exists before calling toLowerCase
-            const searchNick = (nickname || '').toLowerCase();
+            const searchNick = (nickname || '').trim().toLowerCase();
             const found = members.find(m => 
                 (m.nickname && m.nickname.toLowerCase() === searchNick) || 
+                (m.name && m.name.toLowerCase() === searchNick) ||
                 m.id === nickname
             );
             if (found) {
@@ -240,14 +224,16 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         return false;
     };
 
+    // Try immediately
     if (findMember()) return;
 
+    // Retry for 5 seconds to allow sync/localstorage to load
     let retries = 0;
     checkInterval = setInterval(() => {
         retries++;
-        if (findMember() || retries > 6) {
+        if (findMember() || retries > 10) {
             clearInterval(checkInterval);
-            setLoading(false);
+            setLoading(false); // Stop loading even if not found
         }
     }, 500);
 
@@ -257,9 +243,10 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   const handleManualRefresh = () => {
       setLoading(true);
       refreshData();
+      // Force reload page as last resort
       setTimeout(() => {
           if (!member) window.location.reload();
-      }, 1500);
+      }, 2000);
   };
 
   const stats = useMemo(() => {
@@ -272,7 +259,6 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
         let formattedElapsedTime = "00:00:00";
         if (activeTx && activeTx.startTime) {
-            // FIX: Safe Date Parsing
             const startDate = new Date(activeTx.startTime);
             if (!isNaN(startDate.getTime())) {
                 const startTime = startDate.getTime();
@@ -289,12 +275,10 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         const projectedHours = activeTx ? activeTx.durationHours : 0;
         const totalPlayTimeRealtime = (member.totalPlayTime + projectedHours);
         
-        // FIX: Handle empty config array
         const config = (membershipConfigs && membershipConfigs.length > 0) 
             ? membershipConfigs.find(c => c.id === member.membershipId) || membershipConfigs[0]
-            : { bonusThreshold: 10 }; // Fallback dummy
+            : { bonusThreshold: 10 };
         
-        // Fallback if config is missing properties
         const safeBonusThreshold = config?.bonusThreshold || 10; 
         
         const currentProgressTotal = member.hoursProgressToNextBonus + projectedHours;
@@ -305,7 +289,8 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         let nextRankName = "Top Rank";
 
         if (membershipConfigs && membershipConfigs.length > 0) {
-            const nextRankConfig = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours).find(c => c.minHours > member.totalPlayTime);
+            const sortedConfigs = [...membershipConfigs].sort((a,b) => a.minHours - b.minHours);
+            const nextRankConfig = sortedConfigs.find(c => c.minHours > member.totalPlayTime);
             if (nextRankConfig) {
                 hoursToNextRank = (nextRankConfig.minHours - member.totalPlayTime).toFixed(0);
                 nextRankName = nextRankConfig.name;
@@ -313,7 +298,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
         }
 
         return {
-            totalPlayTime: Math.floor(totalPlayTimeRealtime), // INTEGER DISPLAY
+            totalPlayTime: Math.floor(totalPlayTimeRealtime),
             bonusBalance: member.freeHoursBalance,
             activeTx,
             formattedElapsedTime,
@@ -332,25 +317,34 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050510] flex flex-col gap-4 items-center justify-center">
+      <div className="min-h-screen bg-[#050510] flex flex-col gap-4 items-center justify-center relative z-50">
         <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
         <p className="text-white/50 text-xs font-mono animate-pulse">SYNCING DATA...</p>
       </div>
     );
   }
 
+  // Ensure this error screen has high z-index and explicit background
   if (!member || !stats) {
     return (
-      <div className="min-h-screen bg-[#050510] flex flex-col items-center justify-center text-slate-400 p-8 text-center font-sans">
+      <div className="min-h-screen bg-[#050510] flex flex-col items-center justify-center text-slate-400 p-8 text-center font-sans relative z-50">
         <AlertCircle size={48} className="mb-4 text-red-500" />
         <h1 className="text-2xl font-bold text-white mb-2">Member Tidak Ditemukan</h1>
         <p className="mb-6">Pastikan link atau nickname yang Anda masukkan benar.</p>
-        <button 
-            onClick={handleManualRefresh}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
-        >
-            <RefreshCw size={18} /> Refresh Data
-        </button>
+        <div className="flex flex-col gap-2">
+           <button 
+              onClick={handleManualRefresh}
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
+           >
+              <RefreshCw size={18} /> Refresh Data
+           </button>
+           <a 
+             href="/"
+             className="px-6 py-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl font-bold text-sm transition-colors"
+           >
+             Kembali ke Home
+           </a>
+        </div>
       </div>
     );
   }
@@ -358,21 +352,9 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   const theme = getTierTheme(member.membershipId);
   const isMythic = member.membershipId?.includes('MYTHIC') || false;
 
-  // UPDATE BROWSER ADDRESS BAR COLOR (META THEME-COLOR)
-  useEffect(() => {
-    const metaThemeColor = document.querySelector("meta[name=theme-color]");
-    if (metaThemeColor && theme.dragonColor) {
-        metaThemeColor.setAttribute("content", theme.dragonColor);
-    }
-    return () => {
-        // Reset to dark default when leaving page
-        if (metaThemeColor) metaThemeColor.setAttribute("content", "#020205");
-    };
-  }, [theme]);
-
   return (
-    <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans p-4 overflow-hidden">
-      {/* Pass the dynamic tier color to the background glow */}
+    <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans p-4 overflow-hidden bg-[#020205]">
+      {/* Background */}
       <GamingBackground glowColor={theme.dragonColor || '#7c3aed'} />
 
       {/* --- CARD WRAPPER --- */}
@@ -397,7 +379,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
               <DragonPattern color={theme.dragonColor} />
               <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${theme.conic} opacity-20 blur-3xl`}></div>
 
-              {/* Floating Tier Icon (Image) */}
+              {/* Floating Tier Icon */}
               <div className={`absolute top-6 right-6 opacity-40 ${isMythic ? 'animate-pulse' : 'opacity-20'} pointer-events-none`}>
                   <img src={theme.iconUrl} alt={member.membershipId} className="w-24 h-24 object-contain drop-shadow-lg" />
               </div>
@@ -424,7 +406,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
                   </div>
               </div>
 
-              {/* Stats Grid - Glassmorphism */}
+              {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3 w-full mb-6 relative z-10">
                   <div className="relative group/box rounded-2xl bg-white/5 backdrop-blur-md overflow-hidden p-4 flex flex-col items-center justify-center gap-1 border border-white/10 hover:bg-white/10 transition-colors">
                       <div className={`absolute -inset-10 bg-gradient-to-tr ${theme.conic} opacity-0 group-hover/box:opacity-20 blur-xl transition-opacity`}></div>
@@ -485,7 +467,7 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
       </div>
 
       {/* Button to Leaderboard */}
-      <a href="/rank" className="mt-6 text-xs font-bold text-slate-500 hover:text-white transition-colors flex items-center gap-2 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md bg-black/20">
+      <a href="/rank" className="mt-6 text-xs font-bold text-slate-500 hover:text-white transition-colors flex items-center gap-2 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md bg-black/20 z-10">
           <Trophy size={14} /> Global Leaderboard
       </a>
 
