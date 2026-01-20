@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2, LayoutGrid, Edit3 } from 'lucide-react';
+import { Save, Crown, Star, Shield, Coins, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Mail, Phone, Code, Database, Upload, Download, CloudLightning, FileJson, AlertTriangle, Wifi, Gift, ChevronRight, ChevronLeft, ArrowLeft, Banknote, Building2, MapPin, Image as ImageIcon, Camera, Loader2, Link as LinkIcon, WifiOff, RefreshCw, CheckCircle2, XCircle, Clock, Trophy, Zap, Sparkles, Hexagon, Gamepad2, Swords, Medal, Trash2, LayoutGrid, Edit3, HardDrive } from 'lucide-react';
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
@@ -58,6 +58,7 @@ const Settings: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('BUSINESS');
   const [isSaving, setIsSaving] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const restoreInputRef = useRef<HTMLInputElement>(null);
 
   // Mobile Navigation State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true);
@@ -112,6 +113,66 @@ const Settings: React.FC = () => {
             addToast('error', 'Upload Failed', 'Could not process image.');
         }
     }
+  };
+
+  // --- BACKUP & RESTORE LOGIC ---
+  const handleBackup = () => {
+      try {
+          const data = {
+              consoles: Storage.getConsoles(),
+              members: Storage.getMembers(),
+              transactions: Storage.getTransactions(),
+              settings: Storage.getSettings(),
+              memberships: Storage.getMemberships(),
+              timestamp: new Date().toISOString(),
+              version: "1.1.0"
+          };
+          
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `ZiezanBackup_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          addToast('success', 'Backup Berhasil', 'File database telah diunduh.');
+      } catch (e) {
+          addToast('error', 'Backup Gagal', 'Terjadi kesalahan saat memproses data.');
+      }
+  };
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          try {
+              const json = JSON.parse(event.target?.result as string);
+              
+              // Simple validation
+              if (!json.members || !json.transactions) {
+                  throw new Error(t('invalid_file'));
+              }
+
+              if (confirm(t('restore_confirm', { date: new Date(json.timestamp || Date.now()).toLocaleDateString() }))) {
+                  if(json.consoles) Storage.saveConsoles(json.consoles);
+                  if(json.members) Storage.saveMembers(json.members);
+                  if(json.transactions) Storage.saveTransactions(json.transactions);
+                  if(json.settings) Storage.saveSettings(json.settings);
+                  if(json.memberships) Storage.saveMemberships(json.memberships);
+                  
+                  addToast('success', 'Restore Berhasil', t('restore_success'));
+                  setTimeout(() => window.location.reload(), 1500);
+              }
+          } catch (err) {
+              addToast('error', 'Restore Gagal', t('invalid_file'));
+          }
+      };
+      reader.readAsText(file);
+      // Reset input
+      if (restoreInputRef.current) restoreInputRef.current.value = '';
   };
 
   const navigateToSection = (section: SettingsSection) => {
@@ -289,6 +350,8 @@ const Settings: React.FC = () => {
   const renderDataManagement = () => (
     <div className="space-y-8 animate-fade-in pb-8 lg:pb-0">
          <SectionHeader title={t('data_management')} sub="Optimasi penyimpanan dan backup lokal." />
+         
+         {/* Cloud Optimizer */}
          <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5">
              <div className="flex items-center gap-3 mb-6">
                  <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl"><Database size={24}/></div>
@@ -317,6 +380,50 @@ const Settings: React.FC = () => {
                         <span className="relative z-10">{opt.label}</span>
                     </button>
                 ))}
+             </div>
+         </div>
+
+         {/* Backup & Restore Section - PREVIOUSLY MISSING */}
+         <div className="bg-[#0f1016] p-6 rounded-3xl border border-white/5">
+             <div className="flex items-center gap-3 mb-6">
+                 <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl"><HardDrive size={24}/></div>
+                 <div>
+                    <h4 className="font-bold text-white">Local Backup</h4>
+                    <p className="text-xs text-slate-500 whitespace-pre-wrap">{t('backup_restore_desc')}</p>
+                 </div>
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {/* Backup Button */}
+                 <button 
+                    onClick={handleBackup}
+                    className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-black/30 border border-white/5 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all group"
+                 >
+                     <div className="p-3 bg-white/5 rounded-full group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                         <Download size={24} />
+                     </div>
+                     <span className="font-bold text-sm text-slate-300 group-hover:text-white">{t('download_data')} (.json)</span>
+                 </button>
+
+                 {/* Restore Button */}
+                 <div className="relative">
+                     <input 
+                        type="file" 
+                        ref={restoreInputRef} 
+                        onChange={handleRestore} 
+                        accept=".json" 
+                        className="hidden" 
+                     />
+                     <button 
+                        onClick={() => restoreInputRef.current?.click()}
+                        className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-black/30 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group"
+                     >
+                         <div className="p-3 bg-white/5 rounded-full group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                             <Upload size={24} />
+                         </div>
+                         <span className="font-bold text-sm text-slate-300 group-hover:text-white">{t('upload_data')}</span>
+                     </button>
+                 </div>
              </div>
          </div>
     </div>

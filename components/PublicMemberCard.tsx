@@ -327,6 +327,19 @@ const PublicMemberCard: React.FC<PublicMemberCardProps> = ({ nickname }) => {
   const theme = getTierTheme(member.membershipId);
   const isMythic = member.membershipId.includes('MYTHIC');
 
+  // UPDATE BROWSER ADDRESS BAR COLOR (META THEME-COLOR)
+  // This makes the mobile browser bar match the tier color
+  useEffect(() => {
+    const metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (metaThemeColor && theme.dragonColor) {
+        metaThemeColor.setAttribute("content", theme.dragonColor);
+    }
+    return () => {
+        // Reset to dark default when leaving page
+        if (metaThemeColor) metaThemeColor.setAttribute("content", "#020205");
+    };
+  }, [theme]);
+
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans p-4 overflow-hidden">
       {/* Pass the dynamic tier color to the background glow */}

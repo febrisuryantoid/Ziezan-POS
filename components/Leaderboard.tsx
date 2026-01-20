@@ -23,6 +23,18 @@ const Leaderboard: React.FC = () => {
     };
   }, [refreshData]);
 
+  // Dynamic Address Bar Color (Gold for Leaderboard)
+  useEffect(() => {
+    const metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", "#fbbf24"); // Gold Color
+    }
+    return () => {
+        // Reset to default dark on exit
+        if (metaThemeColor) metaThemeColor.setAttribute("content", "#020205");
+    };
+  }, []);
+
   // Helper: Calculate Realtime Score
   const getRealtimeScore = (member: Member) => {
       const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
