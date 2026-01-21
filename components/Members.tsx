@@ -48,10 +48,13 @@ const Members: React.FC = () => {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTier, sortOption]);
 
+  // UPDATED: Only add active hours if transaction is NOT Bonus
   const getRealtimePlaytime = (member: Member) => {
      let total = member.totalPlayTime || 0;
      const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
-     if (activeTx) total += activeTx.durationHours;
+     if (activeTx && activeTx.paymentMethod !== 'BONUS') {
+         total += activeTx.durationHours;
+     }
      return total;
   };
 
@@ -89,8 +92,8 @@ const Members: React.FC = () => {
               const optimized = await optimizeImage(file, { maxWidth: 300, maxHeight: 300 });
               if (isEdit && editingMember) setEditingMember({ ...editingMember, photoUrl: optimized });
               else setNewPhoto(optimized);
-              addToast('success', 'Foto Berhasil', 'Gambar diperbarui.');
-          } catch (err) { addToast('error', 'Gagal', 'Terjadi kesalahan.'); } finally { setIsProcessingPhoto(false); }
+              addToast('success', t('photo_member'), t('saved'));
+          } catch (err) { addToast('error', 'Error', 'Upload Failed'); } finally { setIsProcessingPhoto(false); }
       }
   };
 
@@ -103,31 +106,31 @@ const Members: React.FC = () => {
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (newName.trim()) {
-      if (newPhone && members.some(m => m.phone === newPhone)) { addToast('error', 'Gagal', 'Nomor HP sudah terdaftar.'); return; }
+      if (newPhone && members.some(m => m.phone === newPhone)) { addToast('error', 'Error', 'Phone number exists'); return; }
       addMember({ name: newName, nickname: newNickname || newName.split(' ')[0], phone: newPhone, address: newAddress, photoUrl: newPhoto, dateOfBirth: newDob || undefined, membershipId: newTier, status: MemberStatus.ACTIVE, joinDate: newJoinDate ? new Date(newJoinDate).toISOString() : new Date().toISOString(), notes: newNotes, freeHoursBalance: newBonusBalance });
-      addToast('success', 'Member Ditambahkan', `Selamat datang, ${newNickname || newName}!`);
+      addToast('success', t('member_added'), `${t('welcome')} ${newNickname || newName}`);
       resetForm();
     }
   };
 
   const handleUpdateMember = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingMember?.id) { updateMember(editingMember); setEditingMember(null); addToast('success', 'Data Diperbarui', 'Perubahan disimpan.'); }
-    else addToast('error', 'Gagal Update', 'ID Member tidak ditemukan.');
+    if (editingMember?.id) { updateMember(editingMember); setEditingMember(null); addToast('success', t('member_updated'), t('saved')); }
+    else addToast('error', 'Error', 'ID Not Found');
   };
 
   const handleDeleteMember = () => {
     if (deletingMemberId) {
       const success = deleteMember(deletingMemberId);
-      if (success) addToast('info', 'Member Dihapus', 'Data telah dihapus.');
-      else addToast('error', 'Gagal Hapus', 'Member sedang bermain!');
+      if (success) addToast('info', t('member_deleted'), t('saved'));
+      else addToast('error', 'Error', 'Member Active!');
       setDeletingMemberId(null);
     }
   };
 
   const handleCopyLink = (nickname: string) => {
       const url = `${window.location.origin}/member/${encodeURIComponent(nickname)}`;
-      navigator.clipboard.writeText(url).then(() => addToast('success', 'Link Disalin', 'Siap dibagikan.'));
+      navigator.clipboard.writeText(url).then(() => addToast('success', t('link_copied'), t('saved')));
   };
 
   const renderPagination = () => {
@@ -142,11 +145,11 @@ const Members: React.FC = () => {
     };
     return (
         <div className="flex justify-center items-center gap-2 mt-8 animate-fade-in pb-12">
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 backdrop-blur-md disabled:opacity-30"><ChevronLeft size={18} /></button>
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="btn-icon disabled:opacity-30"><ChevronLeft size={18} /></button>
             {getPageNumbers().map((page, idx) => (
-                <button key={idx} onClick={() => typeof page === 'number' && setCurrentPage(page)} disabled={typeof page !== 'number'} className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs transition-all backdrop-blur-md ${page === currentPage ? 'bg-palette-mustard text-white shadow-xl shadow-palette-mustard/30 scale-110' : typeof page === 'number' ? 'bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-slate-600 dark:text-slate-300' : 'text-slate-400'}`}>{page}</button>
+                <button key={idx} onClick={() => typeof page === 'number' && setCurrentPage(page)} disabled={typeof page !== 'number'} className={`w-[30px] h-[30px] sm:w-[40px] sm:h-[40px] rounded-full flex items-center justify-center font-black text-[10px] sm:text-xs transition-all backdrop-blur-md ${page === currentPage ? 'bg-palette-mustard text-white shadow-xl shadow-palette-mustard/30 scale-110' : typeof page === 'number' ? 'bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300' : 'text-slate-400'}`}>{page}</button>
             ))}
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 backdrop-blur-md disabled:opacity-30"><ChevronRight size={18} /></button>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="btn-icon disabled:opacity-30"><ChevronRight size={18} /></button>
         </div>
     );
   };
@@ -154,20 +157,20 @@ const Members: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* Search Bar - Glass Effect */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white/30 dark:bg-white/[0.02] p-4 rounded-[2.5rem] border border-white/20 dark:border-white/5 backdrop-blur-xl shadow-sm">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white/40 dark:bg-white/[0.02] p-4 rounded-[2.5rem] border border-slate-300 dark:border-white/5 backdrop-blur-xl shadow-sm">
         <div className="mb-2 xl:mb-0 px-2">
           <h2 className="text-xl font-black text-palette-navy dark:text-white uppercase tracking-tight">{t('members')}</h2>
-          <p className="text-palette-brown/70 dark:text-palette-cream/60 text-[10px] uppercase font-black tracking-widest">{t('manage_members_desc')}</p>
+          <p className="text-label">{t('manage_members_desc')}</p>
         </div>
 
         <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
             <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="h-11 pl-11 pr-4 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-sm font-bold w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-inner text-slate-900 dark:text-white placeholder:text-slate-400 backdrop-blur-md" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-11" />
             </div>
             <div className="relative col-span-1 md:col-span-6 lg:w-48">
-                <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="h-11 pl-11 pr-8 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-xs font-bold w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-inner text-slate-900 dark:text-white appearance-none cursor-pointer backdrop-blur-md">
+                <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-11 pr-8">
                     <option value="NAME_ASC">{t('sort_name_asc')}</option>
                     <option value="NAME_DESC">{t('sort_name_desc')}</option>
                     <option value="PLAYTIME_DESC">{t('sort_playtime')}</option>
@@ -175,13 +178,13 @@ const Members: React.FC = () => {
                 </select>
             </div>
             <div className="relative col-span-1 md:col-span-6 lg:w-40">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="h-11 pl-11 pr-8 bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/5 rounded-2xl text-xs font-bold w-full focus:outline-none focus:ring-2 focus:ring-palette-mustard shadow-inner text-slate-900 dark:text-white appearance-none cursor-pointer backdrop-blur-md">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="select-glass pl-11 pr-8">
                     <option value="ALL">{t('all')}</option>
                     {membershipConfigs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
             </div>
-            <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto h-11 px-6 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-xl bg-palette-mustard text-white hover:bg-palette-mustard/90 shadow-palette-mustard/30 whitespace-nowrap active:scale-95 uppercase tracking-wider">
+            <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto btn-primary px-6">
                 <UserPlus size={18} /> {t('add_member')}
             </button>
         </div>
@@ -191,11 +194,11 @@ const Members: React.FC = () => {
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard shadow-sm"><Users size={18} /></div>
           <h3 className="text-lg font-bold text-palette-navy dark:text-white uppercase tracking-tight">{t('active_status')}</h3>
-          <span className="ml-auto text-[10px] font-black text-slate-500 bg-white/40 dark:bg-white/5 border border-white/20 px-3 py-1 rounded-full shadow-sm backdrop-blur-md">Total: {filteredMembers.length}</span>
+          <span className="ml-auto text-label bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/20 px-3 py-1 rounded-full shadow-sm backdrop-blur-md normal-case">Total: {filteredMembers.length}</span>
         </div>
 
         {filteredMembers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 bg-white/20 dark:bg-white/[0.02] backdrop-blur-xl rounded-[3rem] border border-dashed border-white/20">
+            <div className="flex flex-col items-center justify-center py-24 bg-white/40 dark:bg-white/[0.02] backdrop-blur-xl rounded-[3rem] border border-dashed border-slate-300 dark:border-white/20">
                 <Users size={64} className="text-slate-300 mb-4 opacity-20" />
                 <p className="text-slate-500 font-black uppercase tracking-widest text-xs opacity-50">{t('no_data_members')}</p>
             </div>
@@ -217,8 +220,8 @@ const Members: React.FC = () => {
                                 <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-xl flex items-center justify-center ${theme.badge} border-2 border-white dark:border-black shadow-xl overflow-hidden`}><img src={theme.iconUrl} className="w-5 h-5 object-contain" /></div>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className={`font-black text-lg leading-tight truncate drop-shadow-sm ${theme.text}`}>{member.nickname || 'Unknown'}</h3>
-                                <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
+                                <h3 className={`font-black text-lg leading-tight truncate drop-shadow-sm ${theme.text}`}>{member.nickname || t('unknown')}</h3>
+                                <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-xs font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
                             </div>
                             <div className="flex flex-col gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                                 <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-palette-mustard shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
@@ -229,11 +232,11 @@ const Members: React.FC = () => {
                         <div className="px-5 pb-5 mt-auto">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">Main</span></div>
+                                    <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">{t('play_stat')}</span></div>
                                     <span className={`text-xs font-black ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
                                 </div>
                                 <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">Bonus</span></div>
+                                    <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">{t('bonus_stat')}</span></div>
                                     <span className="text-xs font-black text-slate-900 dark:text-white">{member.freeHoursBalance}h</span>
                                 </div>
                             </div>
@@ -245,11 +248,11 @@ const Members: React.FC = () => {
         {renderPagination()}
       </div>
 
-      {/* MODALS - ALL GLASS */}
+      {/* MODALS */}
       {(isAdding || editingMember) && (
-          <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
-              <div className="bg-white/90 dark:bg-palette-navyLight/95 w-full max-w-lg sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] backdrop-blur-3xl border border-white/20">
-                  <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/10">
+          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+              <div className="bg-white/95 dark:bg-palette-navyLight/95 w-full max-w-lg sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] backdrop-blur-3xl border border-slate-200 dark:border-white/20">
+                  <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-black/5 dark:bg-white/10">
                       <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
                           <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard"><Users size={24}/></div>
                           {isAdding ? t('add_member') : t('edit_member')}
@@ -263,50 +266,81 @@ const Members: React.FC = () => {
                                   {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : (isAdding ? newPhoto : editingMember?.photoUrl) ? <img src={isAdding ? newPhoto : editingMember?.photoUrl} className="w-full h-full object-cover" /> : <Camera size={32} className="text-slate-400 group-hover:text-palette-mustard" />}
                               </div>
                               <div className="flex-1 space-y-2">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Foto Member</label>
-                                  <input type="text" placeholder="https://..." value={isAdding ? newPhoto : editingMember?.photoUrl || ''} onChange={e => isAdding ? setNewPhoto(e.target.value) : setEditingMember({...editingMember!, photoUrl: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" />
+                                  <label className="text-label">{t('photo_member')}</label>
+                                  <input type="text" placeholder="https://..." value={isAdding ? newPhoto : editingMember?.photoUrl || ''} onChange={e => isAdding ? setNewPhoto(e.target.value) : setEditingMember({...editingMember!, photoUrl: e.target.value})} className="input-standard" />
                                   <input type="file" ref={isAdding ? photoInputRef : editPhotoInputRef} onChange={e => handlePhotoUpload(e, !isAdding)} className="hidden" accept="image/*" />
-                                  <button type="button" onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="text-[10px] font-black text-palette-mustard hover:underline flex items-center gap-2 uppercase tracking-widest"><ImagePlus size={14} /> Upload Galeri</button>
+                                  <button type="button" onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="text-label text-palette-mustard hover:underline flex items-center gap-2"><ImagePlus size={14} /> {t('upload_gallery')}</button>
                               </div>
                           </div>
                           <div className="grid grid-cols-2 gap-5">
-                              <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nama Lengkap</label><input required type="text" value={isAdding ? newName : editingMember?.name} onChange={e => isAdding ? setNewName(e.target.value) : setEditingMember({...editingMember!, name: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
-                              <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nickname</label><input type="text" value={isAdding ? newNickname : editingMember?.nickname} onChange={e => isAdding ? setNewNickname(e.target.value) : setEditingMember({...editingMember!, nickname: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
+                              <div className="space-y-2"><label className="text-label">{t('full_name')}</label><input required type="text" value={isAdding ? newName : editingMember?.name} onChange={e => isAdding ? setNewName(e.target.value) : setEditingMember({...editingMember!, name: e.target.value})} className="input-standard" /></div>
+                              <div className="space-y-2"><label className="text-label">{t('nickname')}</label><input type="text" value={isAdding ? newNickname : editingMember?.nickname} onChange={e => isAdding ? setNewNickname(e.target.value) : setEditingMember({...editingMember!, nickname: e.target.value})} className="input-standard" /></div>
                           </div>
-                          <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nomor HP</label><input type="tel" value={isAdding ? newPhone : editingMember?.phone || ''} onChange={e => isAdding ? setNewPhone(e.target.value) : setEditingMember({...editingMember!, phone: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-mono font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
-                          <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Alamat</label><textarea rows={2} value={isAdding ? newAddress : editingMember?.address || ''} onChange={e => isAdding ? setNewAddress(e.target.value) : setEditingMember({...editingMember!, address: e.target.value})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md resize-none" /></div>
+                          <div className="space-y-2">
+                              <label className="text-label">{t('phone_number')}</label>
+                              <input 
+                                  type="tel" 
+                                  value={isAdding ? newPhone : editingMember?.phone || ''} 
+                                  onChange={e => {
+                                      const val = e.target.value.replace(/\D/g, ''); // ONLY NUMBERS
+                                      isAdding ? setNewPhone(val) : setEditingMember({...editingMember!, phone: val});
+                                  }} 
+                                  className="input-standard font-mono" 
+                                  placeholder="08xxxxxxxxxx"
+                              />
+                          </div>
+                          <div className="space-y-2"><label className="text-label">{t('address')}</label><textarea rows={4} value={isAdding ? newAddress : editingMember?.address || ''} onChange={e => isAdding ? setNewAddress(e.target.value) : setEditingMember({...editingMember!, address: e.target.value})} className="textarea-standard" /></div>
                           <div className="grid grid-cols-2 gap-5">
                               <div className="space-y-2">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membership</label>
+                                  <label className="text-label">{t('membership')}</label>
                                   <select 
                                       value={isAdding ? newTier : editingMember?.membershipId} 
                                       onChange={e => isAdding ? setNewTier(e.target.value as MembershipTierId) : setEditingMember({...editingMember!, membershipId: e.target.value as MembershipTierId})} 
-                                      className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-4 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md"
+                                      className="input-standard"
                                   >
                                       {membershipConfigs.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                   </select>
                               </div>
-                              <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Join Date</label><input type="date" value={isAdding ? newJoinDate : editingMember?.joinDate.split('T')[0]} onChange={e => isAdding ? setNewJoinDate(e.target.value) : setEditingMember({...editingMember!, joinDate: new Date(e.target.value).toISOString()})} className="w-full bg-white/50 dark:bg-black/40 border border-white/40 rounded-2xl px-4 py-4 text-sm font-black focus:ring-2 focus:ring-palette-mustard shadow-inner backdrop-blur-md" /></div>
+                              <div className="space-y-2">
+                                  <label className="text-label">{t('join_date')}</label>
+                                  <input 
+                                      type="date" 
+                                      max={new Date().toISOString().split('T')[0]} // Cannot be future
+                                      value={isAdding ? newJoinDate : editingMember?.joinDate.split('T')[0]} 
+                                      onChange={e => isAdding ? setNewJoinDate(e.target.value) : setEditingMember({...editingMember!, joinDate: new Date(e.target.value).toISOString()})} 
+                                      className="input-standard" 
+                                  />
+                              </div>
+                          </div>
+                          <div className="space-y-2">
+                              <label className="text-label">{t('dob')}</label>
+                              <input 
+                                type="date" 
+                                max={new Date().toISOString().split('T')[0]} // Cannot be future
+                                value={isAdding ? newDob : editingMember?.dateOfBirth?.split('T')[0] || ''} 
+                                onChange={e => isAdding ? setNewDob(e.target.value) : setEditingMember({...editingMember!, dateOfBirth: new Date(e.target.value).toISOString()})} 
+                                className="input-standard" 
+                              />
                           </div>
                       </form>
                   </div>
-                  <div className="p-6 border-t border-white/10 bg-black/5 shrink-0">
-                      <button type="submit" form="member-form" className="w-full py-4.5 bg-palette-mustard text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-palette-mustard/30 active:scale-95 transition-all">{t('save')}</button>
+                  <div className="p-6 border-t border-slate-200 dark:border-white/10 bg-black/5 shrink-0">
+                      <button type="submit" form="member-form" className="w-full btn-primary">{t('save')}</button>
                   </div>
               </div>
           </div>
       )}
       
-      {/* DELETE MODAL - GLASS STYLE */}
+      {/* DELETE MODAL */}
       {deletingMemberId && (
-          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
-              <div className="bg-white/90 dark:bg-palette-navyLight/95 sm:rounded-[2rem] rounded-t-[2rem] w-full max-w-sm shadow-2xl p-8 text-center border border-white/20 backdrop-blur-3xl">
+          <div className="fixed inset-0 z-[210] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
+              <div className="bg-white/95 dark:bg-palette-navyLight/95 sm:rounded-[2rem] rounded-t-[2rem] w-full max-w-sm shadow-2xl p-8 text-center border border-slate-200 dark:border-white/20 backdrop-blur-3xl">
                   <div className="w-20 h-20 bg-red-100 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl border border-red-500/20"><AlertTriangle size={36} /></div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('delete_confirm')}</h3>
-                  <p className="text-sm font-bold text-slate-500 mb-8">Data member akan dihapus dari seluruh record transaksi.</p>
+                  <p className="text-sm font-bold text-slate-500 mb-8">{t('delete_member_msg')}</p>
                   <div className="grid grid-cols-2 gap-4">
-                      <button onClick={() => setDeletingMemberId(null)} className="py-4 rounded-2xl border-2 border-white/40 dark:border-white/10 font-black text-xs uppercase tracking-widest">{t('cancel')}</button>
-                      <button onClick={handleDeleteMember} className="py-4 rounded-2xl bg-red-500 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-red-500/30 active:scale-95 transition-all">Hapus Member</button>
+                      <button onClick={() => setDeletingMemberId(null)} className="btn-glass border-2 text-xs flex items-center justify-center">{t('cancel')}</button>
+                      <button onClick={handleDeleteMember} className="btn-primary bg-red-500 text-white text-xs shadow-red-500/30 flex items-center justify-center">{t('delete')}</button>
                   </div>
               </div>
           </div>

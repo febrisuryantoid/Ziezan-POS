@@ -130,14 +130,21 @@ const K_MEMBERSHIPS = 'ziezan_memberships';
 export const getConsoles = (): Console[] => {
   try {
     const data = localStorage.getItem(K_CONSOLES);
-    return data ? JSON.parse(data) : DEFAULT_CONSOLES;
+    if (!data) return DEFAULT_CONSOLES;
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : DEFAULT_CONSOLES;
   } catch (e) {
+    console.warn("Failed to parse consoles:", e);
     return DEFAULT_CONSOLES;
   }
 };
 
 export const saveConsoles = (consoles: Console[]) => {
-  localStorage.setItem(K_CONSOLES, JSON.stringify(consoles));
+  try {
+    localStorage.setItem(K_CONSOLES, JSON.stringify(consoles));
+  } catch (e) {
+    console.error("Failed to save consoles", e);
+  }
 };
 
 export const getMemberships = (): MembershipConfig[] => {
@@ -145,8 +152,11 @@ export const getMemberships = (): MembershipConfig[] => {
     const data = localStorage.getItem(K_MEMBERSHIPS);
     if (data) {
         const parsed = JSON.parse(data);
+        // CRITICAL FIX: Ensure parsed is an array before mapping
+        if (!Array.isArray(parsed)) return DEFAULT_MEMBERSHIPS;
+
         const merged = DEFAULT_MEMBERSHIPS.map(def => {
-            const existing = parsed.find((p: any) => p.id === def.id);
+            const existing = parsed.find((p: any) => p && p.id === def.id);
             if (existing) {
                return { 
                    ...def, 
@@ -164,6 +174,7 @@ export const getMemberships = (): MembershipConfig[] => {
     }
     return DEFAULT_MEMBERSHIPS;
   } catch (e) {
+    console.warn("Failed to load memberships, using defaults", e);
     return DEFAULT_MEMBERSHIPS;
   }
 };
@@ -177,44 +188,40 @@ export const getMembers = (): Member[] => {
     const data = localStorage.getItem(K_MEMBERS);
     if (!data) return [];
     
-    let rawMembers: any[] = JSON.parse(data);
+    let rawMembers: any = JSON.parse(data);
+    // CRITICAL FIX: Explicit check for array
     if (!Array.isArray(rawMembers)) return [];
 
-    // Validasi dan Clean Data tanpa Merging Nama (ID is King)
-    const cleanedMembers: Member[] = rawMembers.map(m => {
-        if (!m || !m.id) return null;
+    const cleanedMembers: Member[] = rawMembers.map((m: any) => {
+        if (!m || typeof m !== 'object' || !m.id) return null;
         
         const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown';
         const safeNick = (m.nickname && typeof m.nickname === 'string') ? m.nickname : safeName.split(' ')[0];
 
-        // Migration for old tiers
         let tier = m.membershipId;
-        if (tier as any === 'BASIC') tier = 'WARRIOR';
-        if (tier as any === 'MASTER') tier = 'GRANDMASTER'; 
-        if (tier as any === 'PLUS') tier = 'EPIC';
-        if (tier as any === 'VIP') tier = 'LEGEND'; 
+        if (tier === 'BASIC') tier = 'WARRIOR';
+        if (tier === 'MASTER') tier = 'GRANDMASTER'; 
+        if (tier === 'PLUS') tier = 'EPIC';
+        if (tier === 'VIP') tier = 'LEGEND'; 
 
         return {
           ...m,
           name: safeName.trim(),
           nickname: safeNick, 
-          membershipId: tier,
+          membershipId: tier || 'WARRIOR',
           address: m.address || 'Nyomplong', 
-          totalAmountPaid: m.totalAmountPaid || 0,
-          totalPlayTime: m.totalPlayTime || 0, // Ensure playtime is number
+          totalAmountPaid: Number(m.totalAmountPaid) || 0,
+          totalPlayTime: Number(m.totalPlayTime) || 0, 
           membershipExpiryDate: m.membershipExpiryDate || null,
           photoUrl: m.photoUrl || undefined,
           dateOfBirth: m.dateOfBirth || undefined,
           lastBirthdayBonusYear: m.lastBirthdayBonusYear || undefined,
           notes: m.notes || '',
-          synced: m.synced !== undefined ? m.synced : false, // Default to false if missing to trigger sync
+          synced: m.synced !== undefined ? m.synced : false, 
           updatedAt: m.updatedAt || new Date().toISOString()
         };
-    }).filter(m => m !== null) as Member[];
+    }).filter((m: any) => m !== null) as Member[];
 
-    // Removed the dangerously loose "nameMap" deduplication logic.
-    // We trust that IDs are unique. If there are duplicates in localStorage, 
-    // we assume the last one in the array is the most recent state or filter by ID.
     const uniqueMembers = Array.from(new Map(cleanedMembers.map(item => [item.id, item])).values());
 
     return uniqueMembers;
@@ -231,15 +238,23 @@ export const saveMembers = (members: Member[]) => {
 export const getTransactions = (): Transaction[] => {
   try {
     const data = localStorage.getItem(K_TRANSACTIONS);
-    const txs: Transaction[] = data ? JSON.parse(data) : [];
+    if (!data) return [];
     
-    return txs.map(t => ({
+    const txs: any = JSON.parse(data);
+    // CRITICAL FIX: Explicit check for array
+    if (!Array.isArray(txs)) return [];
+
+    return txs.map((t: any) => ({
         ...t,
         memberName: t.memberName || 'Unknown',
         consoleName: t.consoleName || 'Unknown Console',
+        cost: Number(t.cost) || 0,
+        durationHours: Number(t.durationHours) || 0,
+        discountApplied: Number(t.discountApplied) || 0,
         updatedAt: t.updatedAt || new Date().toISOString()
     }));
   } catch (e) {
+    console.warn("Failed to load transactions", e);
     return [];
   }
 };
@@ -253,6 +268,7 @@ export const getSettings = (): AppSettings => {
     const data = localStorage.getItem(K_SETTINGS);
     if (data) {
         const parsed = JSON.parse(data);
+        if (typeof parsed !== 'object' || parsed === null) return DEFAULT_SETTINGS;
         return { 
           ...DEFAULT_SETTINGS, 
           ...parsed

@@ -37,9 +37,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
         {onBack && (
             <button 
                 onClick={onBack} 
-                className="absolute -top-12 left-0 text-slate-400 hover:text-white flex items-center gap-2 text-sm font-bold transition-colors z-20 cursor-pointer"
+                className="absolute -top-12 left-0 text-slate-400 hover:text-white flex items-center gap-2 text-xs font-bold transition-colors z-20 cursor-pointer h-control-sm uppercase tracking-widest"
             >
-                <ArrowLeft size={16} /> Kembali
+                <ArrowLeft size={16} /> {t('back')}
             </button>
         )}
 
@@ -47,73 +47,76 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow opacity-60"></div>
         </div>
 
-        <div className="relative z-10 bg-white/10 dark:bg-black/30 backdrop-blur-3xl rounded-[22px] px-6 py-6 sm:py-8 shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-white/20 dark:border-white/10">
+        {/* Updated Background Opacity: bg-white/90 for better text readability */}
+        <div className="relative z-10 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-[22px] px-6 py-8 shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-slate-200 dark:border-white/10">
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-400 hover:text-palette-mustard transition-colors px-2 py-1.5 bg-white/5 rounded-lg flex items-center gap-1.5 backdrop-blur-md border border-white/10"
+            className="absolute top-4 right-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-palette-mustard transition-colors px-2 h-7 bg-white/50 dark:bg-white/5 rounded-lg flex items-center gap-1.5 backdrop-blur-md border border-slate-300 dark:border-white/10"
           >
             <Globe size={12} />
             {language.toUpperCase()}
           </button>
 
-          <div className="text-center mb-4 sm:mb-6 shrink-0">
+          <div className="text-center mb-6 shrink-0">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-palette-mustard blur-2xl opacity-40 rounded-full scale-125"></div>
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-3 sm:mb-4 shadow-lg relative z-10 object-cover bg-black ring-1 ring-white/20"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-4 shadow-lg relative z-10 object-cover bg-black ring-1 ring-white/20"
               />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('welcome')}</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">{t('login_title')}</p>
+            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mt-1">{t('login_title')}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('username')}</label>
+              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide ml-1">{t('username')}</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                {/* Fixed Icon Visibility: darker slate-600 for light mode */}
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400" size={16} />
                 <input 
                     type="text" 
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-white/5 dark:bg-black/40 border border-white/10 dark:border-white/5 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner backdrop-blur-md"
+                    className="input-standard w-full pl-10 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white"
                     placeholder={t('enter_username')}
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('password')}</label>
+              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide ml-1">{t('password')}</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400" size={16} />
                 <input 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 dark:bg-black/40 border border-white/10 dark:border-white/5 text-slate-900 dark:text-white pl-10 pr-3 py-3 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner backdrop-blur-md"
+                    className="input-standard w-full pl-10 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white"
                     placeholder={t('enter_password')}
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-xs text-center font-bold animate-pulse flex items-center justify-center gap-2">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-500 p-3 rounded-xl text-xs text-center font-bold animate-pulse flex items-center justify-center gap-2">
                 <Lock size={14} /> {error}
               </div>
             )}
 
+            {/* Apply Design System Class: btn-primary */}
             <button 
               type="submit" 
-              className="w-full bg-palette-mustard hover:bg-palette-mustard/90 text-white font-black py-3.5 rounded-xl transition-all shadow-xl shadow-palette-mustard/30 hover:-translate-y-0.5 mt-2 text-sm sm:text-base flex items-center justify-center gap-2 active:scale-95 uppercase tracking-widest"
+              className="btn-primary w-full mt-2"
             >
-              <LogIn size={18} /> {t('sign_in')}
+              <LogIn size={16} /> {t('sign_in')}
             </button>
           </form>
 
-          <div className="mt-4 sm:mt-6 text-center shrink-0">
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">
+          <div className="mt-6 text-center shrink-0">
+            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-black uppercase tracking-[0.2em]">
               &copy; {currentYear} Ziezan Station
             </p>
           </div>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Console, Member, Transaction, AppSettings, ConsoleStatus, MemberStatus, PaymentMethod, MembershipConfig, MembershipTierId 
@@ -38,28 +39,30 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [rawConsoles, setRawConsoles] = useState<Console[]>(() => Storage.getConsoles());
-  const [rawMembers, setRawMembers] = useState<Member[]>(() => Storage.getMembers());
-  const [membershipConfigs, setMembershipConfigs] = useState<MembershipConfig[]>(() => Storage.getMemberships());
-  const [transactions, setTransactions] = useState<Transaction[]>(() => Storage.getTransactions());
+  // SAFE INITIALIZATION: Ensure we never start with undefined
+  const [rawConsoles, setRawConsoles] = useState<Console[]>(() => Storage.getConsoles() || []);
+  const [rawMembers, setRawMembers] = useState<Member[]>(() => Storage.getMembers() || []);
+  const [membershipConfigs, setMembershipConfigs] = useState<MembershipConfig[]>(() => Storage.getMemberships() || []);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => Storage.getTransactions() || []);
   const [settings, setSettings] = useState<AppSettings>(() => Storage.getSettings());
   
   const [isInitialSyncComplete, setIsInitialSyncComplete] = useState(false);
   const { sendCommand, isConnected: isBtConnected } = useBluetooth();
 
   const refreshData = useCallback(() => {
-    setRawConsoles(Storage.getConsoles());
-    setRawMembers(Storage.getMembers());
-    setMembershipConfigs(Storage.getMemberships());
-    setTransactions(Storage.getTransactions());
+    // FORCE ARRAYS on refresh
+    setRawConsoles(Storage.getConsoles() || []);
+    setRawMembers(Storage.getMembers() || []);
+    setMembershipConfigs(Storage.getMemberships() || []);
+    setTransactions(Storage.getTransactions() || []);
     setSettings(Storage.getSettings());
   }, []);
 
   // --- SOURCE OF TRUTH: COMPUTED CONSOLES ---
-  // Memastikan UI Konsol selalu singkron dengan Transaksi Aktif
   const computedConsoles = useMemo(() => {
+    if (!Array.isArray(rawConsoles) || !Array.isArray(transactions)) return [];
+
     return rawConsoles.map(console => {
-        // Cari apakah ada transaksi aktif untuk konsol ini
         const activeTx = transactions.find(t => t.consoleId === console.id && t.status === 'ACTIVE');
         
         if (activeTx) {
@@ -70,8 +73,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
         }
         
-        // Jika tidak ada transaksi aktif tapi status konsol adalah IN_USE (data korup/desync), 
-        // paksa menjadi AVAILABLE kecuali jika sedang MAINTENANCE
         if (console.status === ConsoleStatus.IN_USE) {
             return {
                 ...console,
@@ -86,19 +87,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // --- SOURCE OF TRUTH: COMPUTED MEMBERS ---
   const computedMembers = useMemo(() => {
+    if (!Array.isArray(rawMembers) || !Array.isArray(membershipConfigs) || !Array.isArray(transactions)) return [];
+
     return rawMembers.map(member => {
         const memberHistory = transactions.filter(t => t.memberId === member.id && t.status === 'COMPLETED');
-        const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => sum + t.durationHours, 0);
-        const calculatedTotalPaid = memberHistory.reduce((sum, t) => sum + t.cost, 0);
+        
+        // UPDATED LOGIC: Total Play Time ONLY counts CASH or QRIS. BONUS is excluded.
+        const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => {
+            if (t.paymentMethod === 'BONUS') return sum;
+            return sum + (t.durationHours || 0);
+        }, 0);
 
+        const calculatedTotalPaid = memberHistory.reduce((sum, t) => sum + (t.cost || 0), 0);
+
+        // Defensive copy and sort for configs
         const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
-        const correctTier = sortedConfigs.find(c => calculatedTotalPlayTime >= c.minHours) || sortedConfigs[sortedConfigs.length - 1];
-        const configForBonus = membershipConfigs.find(c => c.id === correctTier.id) || membershipConfigs[0];
+        const correctTier = sortedConfigs.find(c => calculatedTotalPlayTime >= c.minHours) || sortedConfigs[sortedConfigs.length - 1] || membershipConfigs[0];
+        const configForBonus = membershipConfigs.find(c => c.id === correctTier?.id) || membershipConfigs[0];
         
         let generatedBonus = 0;
         let progress = 0;
 
-        if (configForBonus.bonusThreshold > 0) {
+        if (configForBonus && configForBonus.bonusThreshold > 0) {
             const cycles = Math.floor(calculatedTotalPlayTime / configForBonus.bonusThreshold);
             generatedBonus = cycles * configForBonus.bonusReward;
             progress = calculatedTotalPlayTime % configForBonus.bonusThreshold;
@@ -106,14 +116,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const bonusUsed = memberHistory
             .filter(t => t.paymentMethod === 'BONUS')
-            .reduce((sum, t) => sum + t.durationHours, 0);
+            .reduce((sum, t) => sum + (t.durationHours || 0), 0);
 
         const manualBonus = member.freeHoursBalance || 0;
         const calculatedBalance = (generatedBonus - bonusUsed) + manualBonus;
 
         return {
             ...member,
-            membershipId: correctTier.id,
+            membershipId: correctTier?.id || 'WARRIOR',
             totalPlayTime: calculatedTotalPlayTime,
             totalAmountPaid: calculatedTotalPaid,
             hoursProgressToNextBonus: progress,
@@ -158,7 +168,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Automatic Birthday Check
   useEffect(() => {
-    if (!isInitialSyncComplete || rawMembers.length === 0) return;
+    if (!isInitialSyncComplete || !Array.isArray(rawMembers) || rawMembers.length === 0) return;
     
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -219,7 +229,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString(),
       synced: false
     };
-    const updated = [...rawConsoles, newConsole];
+    const updated = [...(rawConsoles || []), newConsole];
     safeSave(() => Storage.saveConsoles(updated));
     setRawConsoles(updated);
     syncService.syncNow();
@@ -267,7 +277,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString()
     };
     
-    const updated = [...rawMembers, newMember];
+    const updated = [...(rawMembers || []), newMember];
     safeSave(() => Storage.saveMembers(updated));
     setRawMembers(updated);
     syncService.syncNow();
@@ -365,7 +375,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRawConsoles(newConsoles);
     safeSave(() => Storage.saveConsoles(newConsoles));
 
-    const newTransactions = [transaction, ...transactions];
+    const newTransactions = [transaction, ...(transactions || [])];
     setTransactions(newTransactions);
     safeSave(() => Storage.saveTransactions(newTransactions));
 
@@ -432,9 +442,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <DataContext.Provider value={{
-      consoles: computedConsoles, // Kembalikan versi yang sudah dikalkulasi
+      consoles: computedConsoles, 
       members: computedMembers,
-      membershipConfigs, transactions, settings,
+      membershipConfigs: membershipConfigs || [],
+      transactions: transactions || [],
+      settings,
       refreshData, updateSettings, updateMembershipConfig,
       addConsole, updateConsole, updateConsoleStatus, deleteConsole,
       addMember, updateMember, deleteMember, upgradeMember, resetSeason,

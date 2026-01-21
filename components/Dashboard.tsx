@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { ConsoleStatus } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2 } from 'lucide-react';
+import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 const Dashboard: React.FC = () => {
@@ -27,8 +27,9 @@ const Dashboard: React.FC = () => {
   const recentTransactions = transactions.slice(0, 5);
 
   const consoleUsageData = consoles.map(c => {
-    const safeName = c.name || 'Unit';
-    const shortName = safeName.includes(' - ') ? safeName.split(' - ')[1] : safeName;
+    const safeName = c.name || t('unit');
+    // More robust short name logic
+    const shortName = safeName.length > 8 ? (safeName.includes('-') ? safeName.split('-').pop()?.trim() : safeName.substring(0, 6) + '..') : safeName;
     return {
       name: shortName,
       hours: c.totalHoursUsed || 0
@@ -36,32 +37,32 @@ const Dashboard: React.FC = () => {
   });
 
   const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl p-5 sm:p-6 rounded-[2rem] border border-white/20 dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group">
-      <div className={`absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
+    <div className="glass-card p-6 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+      <div className={`absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
       <div className="flex justify-between items-start relative z-10">
         <div className="min-w-0 pr-2">
-          <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] opacity-80 mb-2">{title}</p>
-          <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} truncate tracking-tighter`}>{value}</h3>
+          <p className="text-label mb-2 opacity-80">{title}</p>
+          <h3 className={`text-3xl font-extrabold ${colorClass} truncate tracking-tight`}>{value}</h3>
         </div>
-        <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
-          <Icon size={20} className="sm:w-6 sm:h-6" />
+        <div className={`p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
+          <Icon size={24} />
         </div>
       </div>
       <div className="mt-4 flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')} animate-pulse`}></div>
-          <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{sub}</p>
+          <div className={`w-2 h-2 rounded-full ${bgClass.replace('/10', '/100')} animate-pulse`}></div>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{sub}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in">
+    <div className="flex flex-col gap-8 animate-fade-in">
       <div className="flex flex-col gap-1 px-1">
-        <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase">{t('dashboard')}</h2>
-        <p className="text-palette-brown/70 dark:text-palette-cream/50 text-[10px] font-black uppercase tracking-widest">{t('overview_subtitle')}</p>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-palette-navy dark:text-white tracking-tight uppercase">{t('dashboard')}</h2>
+        <p className="text-sm text-slate-500 font-medium">{t('overview_subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 min-[450px]:grid-cols-2 xl:grid-cols-4 gap-5">
         <StatCard 
           title={t('active_consoles')}
           value={`${stats.activeConsoles} / ${consoles.length}`}
@@ -96,58 +97,88 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        <div className="lg:col-span-2 bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-sm overflow-hidden flex flex-col min-h-[450px]">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/10 dark:bg-white/5">
-            <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white flex items-center gap-3 uppercase tracking-wider">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* RECENT TRANSACTIONS: Responsive (Card List on Mobile, Table on Desktop) */}
+        <div className="lg:col-span-2 glass-panel overflow-hidden flex flex-col min-h-[450px]">
+          <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-white/40 dark:bg-white/5">
+            <h3 className="font-bold text-base text-palette-navy dark:text-white flex items-center gap-3 uppercase tracking-wider">
               <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><Activity size={18} /></div>
               {t('recent_tx')}
             </h3>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 p-0 sm:p-2">
             {recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-slate-500 opacity-40">
+              <div className="flex flex-col items-center justify-center h-full py-12 text-slate-400 opacity-50">
                 <Activity className="w-12 h-12 mb-4" />
-                <p className="font-black text-xs uppercase tracking-widest">{t('no_tx')}</p>
+                <p className="text-label">{t('no_tx')}</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead className="text-[10px] text-slate-500 font-black uppercase bg-white/5 dark:bg-white/[0.02] border-b border-white/10 tracking-widest">
-                    <tr>
-                      <th className="px-8 py-5">{t('members')}</th>
-                      <th className="px-8 py-5">{t('consoles')}</th>
-                      <th className="px-8 py-5">{t('status')}</th>
-                      <th className="px-8 py-5 text-right">{t('duration')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
+              <>
+                {/* Mobile View: Card List */}
+                <div className="block sm:hidden space-y-3 p-4">
                     {recentTransactions.map(tx => (
-                      <tr key={tx.id} className="hover:bg-palette-mustard/5 transition-colors group">
-                        <td className="px-8 py-5 font-black text-slate-900 dark:text-white text-xs max-w-[200px] truncate">{tx.memberName || 'Unknown'}</td>
-                        <td className="px-8 py-5 text-slate-500 dark:text-slate-400 font-bold text-xs">{tx.consoleName || 'Unknown'}</td>
-                        <td className="px-8 py-5">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                            tx.status === 'ACTIVE' 
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' 
-                              : 'bg-white/5 text-slate-400 border-white/10'
-                          }`}>
-                            {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"/>}
-                            {tx.status}
-                          </span>
-                        </td>
-                        <td className="px-8 py-5 text-slate-700 dark:text-slate-300 text-right text-xs font-mono font-black">{tx.durationHours} {t('hour_short')}</td>
-                      </tr>
+                        <div key={tx.id} className="bg-white/60 dark:bg-white/5 rounded-2xl p-4 border border-slate-200 dark:border-white/5 shadow-sm">
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{tx.memberName || t('unknown')}</h4>
+                                    <span className="text-[10px] text-slate-500 font-medium">{tx.consoleName}</span>
+                                </div>
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                                    tx.status === 'ACTIVE' 
+                                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10'
+                                }`}>
+                                    {tx.status}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
+                                <span className="font-mono text-slate-500">{tx.durationHours} {t('hour_short')}</span>
+                                <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-lg">Rp {tx.cost.toLocaleString()}</span>
+                            </div>
+                        </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                </div>
+
+                {/* Desktop View: Table */}
+                <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                    <thead className="text-[10px] text-slate-500 font-bold uppercase bg-slate-50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5 tracking-widest">
+                        <tr>
+                        <th className="px-8 py-5">{t('members')}</th>
+                        <th className="px-8 py-5">{t('consoles')}</th>
+                        <th className="px-8 py-5">{t('status')}</th>
+                        <th className="px-8 py-5 text-right">{t('duration')}</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                        {recentTransactions.map(tx => (
+                        <tr key={tx.id} className="hover:bg-palette-mustard/5 transition-colors group">
+                            <td className="px-8 py-5 font-bold text-slate-900 dark:text-white text-sm max-w-[200px] truncate">{tx.memberName || t('unknown')}</td>
+                            <td className="px-8 py-5 text-slate-500 dark:text-slate-400 text-xs font-medium">{tx.consoleName || t('unknown')}</td>
+                            <td className="px-8 py-5">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider border shadow-sm ${
+                                tx.status === 'ACTIVE' 
+                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                                : 'bg-slate-100 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10'
+                            }`}>
+                                {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"/>}
+                                {tx.status}
+                            </span>
+                            </td>
+                            <td className="px-8 py-5 text-slate-700 dark:text-slate-300 text-right text-xs font-mono font-bold">{tx.durationHours} {t('hour_short')}</td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        <div className="bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-sm p-6 sm:p-8 flex flex-col">
-          <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white mb-6 flex items-center gap-3 uppercase tracking-wider">
+        {/* CHART SECTION */}
+        <div className="glass-panel p-6 sm:p-8 flex flex-col">
+          <h3 className="font-bold text-base text-palette-navy dark:text-white mb-6 flex items-center gap-3 uppercase tracking-wider">
             <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><MonitorPlay size={18} /></div>
             {t('console_util')}
           </h3>
@@ -160,47 +191,46 @@ const Dashboard: React.FC = () => {
                     <XAxis 
                       dataKey="name" 
                       stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={9} 
+                      fontSize={10} 
                       tickLine={false} 
                       axisLine={false}
                       dy={10}
                       fontFamily='Plus Jakarta Sans'
-                      fontWeight='800'
+                      fontWeight='600'
                     />
                     <YAxis 
                       stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={9} 
+                      fontSize={10} 
                       tickLine={false} 
                       axisLine={false} 
                       fontFamily='Plus Jakarta Sans'
-                      fontWeight='800'
+                      fontWeight='600'
                     />
                     <Tooltip 
                       cursor={{ fill: 'rgba(124, 58, 237, 0.1)', radius: 10 }}
                       contentStyle={{ 
-                        backgroundColor: theme === 'dark' ? 'rgba(15, 7, 32, 0.9)' : 'rgba(255, 255, 255, 0.9)', 
+                        backgroundColor: theme === 'dark' ? 'rgba(15, 7, 32, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
                         borderColor: 'rgba(255,255,255,0.1)',
                         color: theme === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderRadius: '20px',
-                        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)',
+                        borderRadius: '16px',
+                        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)',
                         fontSize: '11px',
-                        padding: '16px',
-                        backdropFilter: 'blur(20px)',
-                        fontWeight: '800',
+                        padding: '12px 16px',
+                        fontWeight: '700',
                         textTransform: 'uppercase'
                       }}
                     />
-                    <Bar dataKey="hours" radius={[10, 10, 0, 0]} barSize={35}>
+                    <Bar dataKey="hours" radius={[8, 8, 8, 8]} barSize={28}>
                        {consoleUsageData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#ec4899'} fillOpacity={0.8} />
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#ec4899'} fillOpacity={0.9} />
                         ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-30">
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-40">
                     <MonitorPlay size={48} className="mb-4"/>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('no_data_consoles')}</span>
+                    <span className="text-label">{t('no_data_consoles')}</span>
                 </div>
              )}
           </div>
