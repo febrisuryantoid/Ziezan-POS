@@ -1,14 +1,13 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet, Receipt, DollarSign, Clock, Gamepad2, Share2, CheckCircle2, Loader2, Scissors } from 'lucide-react';
+import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet, Receipt, DollarSign, Clock } from 'lucide-react';
 import { PaymentMethod, Transaction } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
 import { bluetoothService } from '../services/bluetooth';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import html2canvas from 'html2canvas';
 
 type SortOption = 'DATE_DESC' | 'DATE_ASC' | 'COST_DESC' | 'COST_ASC';
 
@@ -33,10 +32,6 @@ const Reports: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('DATE_DESC');
   const [selectedTxForPrint, setSelectedTxForPrint] = useState<Transaction | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
-  
-  // Ref for the Modern Receipt HTML Element
-  const receiptRef = useRef<HTMLDivElement>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
@@ -113,62 +108,6 @@ const Reports: React.FC = () => {
     const rawData = generateEscPosCommand(selectedTxForPrint, settings);
     const success = await bluetoothService.sendRawData(rawData);
     if (success) { addToast('success', t('print'), t('saved')); setSelectedTxForPrint(null); } else { addToast('error', 'Error', 'Print Failed'); }
-  };
-
-  const handleShareImage = async () => {
-    if (!receiptRef.current || !selectedTxForPrint) return;
-    setIsSharing(true);
-
-    try {
-        // Force high resolution rendering
-        const canvas = await html2canvas(receiptRef.current, {
-            scale: 3, // High DPI
-            useCORS: true, 
-            backgroundColor: '#ffffff', // Force white background for image
-            logging: false,
-            allowTaint: true,
-        });
-
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                setIsSharing(false);
-                return;
-            }
-
-            const fileName = `Receipt_${selectedTxForPrint.id.substring(0,8)}.png`;
-            const file = new File([blob], fileName, { type: 'image/png' });
-
-            // Check if Web Share API is available and can share files
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Struk Pembayaran',
-                        text: `Struk Transaksi #${selectedTxForPrint.id}`
-                    });
-                    addToast('success', 'Shared', 'Struk berhasil dibagikan');
-                } catch (err) {
-                    console.error("Share failed", err); // User cancelled or error
-                }
-            } else {
-                // Fallback: Download Image
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                addToast('success', 'Downloaded', 'Struk disimpan ke galeri');
-            }
-            setIsSharing(false);
-            setSelectedTxForPrint(null);
-        }, 'image/png');
-
-    } catch (e) {
-        console.error("Receipt generation failed", e);
-        addToast('error', 'Error', 'Gagal membuat gambar struk');
-        setIsSharing(false);
-    }
   };
 
   const totalItems = filteredTransactions.length;
@@ -301,57 +240,7 @@ const Reports: React.FC = () => {
                   <p className="text-[10px] font-black uppercase tracking-widest">{t('no_tx')}</p>
                </div>
             ) : (
-              <>
-              {/* MOBILE CARD VIEW (Visible on < sm) */}
-              <div className="block sm:hidden p-4 space-y-3">
-                  {currentTransactions.map(tx => {
-                      const { datePart, timePart } = formatDateTime(tx.startTime);
-                      return (
-                          <div key={tx.id} className="bg-white/60 dark:bg-white/5 rounded-[1.5rem] p-5 border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group">
-                              <div className="flex justify-between items-start mb-3 relative z-10">
-                                  <div>
-                                      <div className="flex items-center gap-2 mb-1">
-                                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{datePart}</span>
-                                          <span className="text-[10px] font-bold text-slate-400">{timePart}</span>
-                                      </div>
-                                      <h4 className="text-base font-black text-slate-900 dark:text-white leading-tight">{tx.memberName || t('unknown')}</h4>
-                                      <p className="font-mono text-[9px] text-palette-mustard mt-0.5 tracking-wider">#{tx.id.substring(0,8)}</p>
-                                  </div>
-                                  <button onClick={() => setSelectedTxForPrint(tx)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-400 active:bg-palette-mustard active:text-white transition-colors">
-                                      <Printer size={18}/>
-                                  </button>
-                              </div>
-                              
-                              <div className="flex items-center gap-3 mb-4 bg-slate-50 dark:bg-black/20 p-3 rounded-xl border border-slate-100 dark:border-white/5">
-                                  <div className="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-slate-500">
-                                      <Gamepad2 size={16} />
-                                  </div>
-                                  <div>
-                                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{tx.consoleName}</p>
-                                      <p className="text-[10px] text-slate-500">{tx.durationHours} {t('jam_main')}</p>
-                                  </div>
-                              </div>
-
-                              <div className="flex justify-between items-end border-t border-dashed border-slate-200 dark:border-white/10 pt-3">
-                                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
-                                      tx.paymentMethod === 'QRIS' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
-                                      tx.paymentMethod === 'BONUS' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                      'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                  }`}>
-                                      {tx.paymentMethod || 'CASH'}
-                                  </span>
-                                  <div className="text-right">
-                                      <span className="block text-lg font-black font-mono text-slate-900 dark:text-white tracking-tighter">Rp {tx.cost.toLocaleString()}</span>
-                                      {tx.discountApplied > 0 && <span className="block text-[9px] text-red-400 line-through">Rp {(tx.cost + tx.discountApplied).toLocaleString()}</span>}
-                                  </div>
-                              </div>
-                          </div>
-                      );
-                  })}
-              </div>
-
-              {/* DESKTOP TABLE VIEW (Hidden on < sm) */}
-              <table className="hidden sm:table w-full text-left text-sm whitespace-nowrap">
+              <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-transparent text-slate-500 text-[10px] font-black uppercase border-b border-slate-300 dark:border-white/10 tracking-widest">
                   <tr>
                     <th className="px-8 py-5">{t('tx_time')}</th>
@@ -418,7 +307,6 @@ const Reports: React.FC = () => {
                   );})}
                 </tbody>
               </table>
-              </>
             )}
           </div>
 
@@ -433,94 +321,6 @@ const Reports: React.FC = () => {
           )}
       </div>
 
-      {/* Modern Receipt V2.0 - Hidden from View */}
-      {selectedTxForPrint && (
-        <div className="absolute top-[-9999px] left-[-9999px] pointer-events-none">
-            <div ref={receiptRef} className="w-[380px] bg-white text-slate-900 font-mono relative overflow-hidden flex flex-col">
-                
-                {/* Header Section */}
-                <div className="p-8 pb-4 flex flex-col items-center text-center relative z-10">
-                    <img 
-                        src={settings.businessLogo || "https://beeimg.com/images/t47564105964.png"} 
-                        className="w-16 h-16 rounded-full mb-4 object-cover border-2 border-slate-900 shadow-sm" 
-                        crossOrigin="anonymous"
-                    />
-                    <h1 className="text-xl font-black uppercase tracking-tight text-slate-900 leading-none mb-2">{settings.businessName}</h1>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide px-4 leading-tight">{settings.businessAddress}</p>
-                </div>
-
-                {/* Main Content */}
-                <div className="px-6 pb-8 relative z-10">
-                    {/* Status Badge */}
-                    <div className="flex justify-center mb-6">
-                        <div className="px-6 py-2 border-2 border-slate-900 rounded-full flex items-center gap-2 transform -rotate-2">
-                            <CheckCircle2 size={14} className="text-slate-900" />
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">PAID / LUNAS</span>
-                        </div>
-                    </div>
-
-                    {/* Metadata Grid */}
-                    <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <div className="flex justify-between items-center text-[11px]">
-                            <span className="font-bold text-slate-400 uppercase tracking-wider">Date</span>
-                            <span className="font-black text-slate-900">{new Date(selectedTxForPrint.startTime).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                            <span className="font-bold text-slate-400 uppercase tracking-wider">Time</span>
-                            <span className="font-black text-slate-900">{new Date(selectedTxForPrint.startTime).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                            <span className="font-bold text-slate-400 uppercase tracking-wider">Order ID</span>
-                            <span className="font-black text-slate-900">#{selectedTxForPrint.id.substring(0,8).toUpperCase()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                            <span className="font-bold text-slate-400 uppercase tracking-wider">Member</span>
-                            <span className="font-black text-slate-900 truncate max-w-[120px]">{selectedTxForPrint.memberName}</span>
-                        </div>
-                    </div>
-
-                    {/* Item Details - Compact */}
-                    <div className="mb-6 border-t-2 border-dashed border-slate-200 pt-4">
-                        <div className="flex justify-between items-baseline mb-1">
-                            <span className="text-sm font-black text-slate-900 uppercase">{selectedTxForPrint.consoleName}</span>
-                            <span className="text-sm font-black text-slate-900">Rp {(selectedTxForPrint.durationHours * settings.hourlyRate).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold">
-                            <span>{selectedTxForPrint.durationHours} Hours x Rp {settings.hourlyRate.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    {/* Totals */}
-                    <div className="space-y-2 mb-6">
-                        {selectedTxForPrint.discountApplied > 0 && (
-                            <div className="flex justify-between items-center text-xs text-red-500 font-bold">
-                                <span>Discount</span>
-                                <span>- Rp {selectedTxForPrint.discountApplied.toLocaleString()}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between items-end pt-2 border-t-2 border-slate-900">
-                            <span className="text-sm font-black uppercase tracking-widest text-slate-900">Total</span>
-                            <span className="text-3xl font-black text-slate-900 tracking-tighter">Rp {selectedTxForPrint.cost.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    {/* Footer / QR */}
-                    <div className="flex flex-col items-center pt-2">
-                        <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VERIFY-${selectedTxForPrint.id}`} 
-                            className="w-20 h-20 mix-blend-multiply opacity-90 mb-3" 
-                            crossOrigin="anonymous"
-                        />
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Terima Kasih</p>
-                    </div>
-                </div>
-
-                {/* Bottom Rip Effect */}
-                <div className="w-full h-4 bg-[linear-gradient(45deg,transparent_33.333%,#ffffff_33.333%,#ffffff_66.667%,transparent_66.667%),linear-gradient(-45deg,transparent_33.333%,#ffffff_33.333%,#ffffff_66.667%,transparent_66.667%)] bg-[length:12px_24px] bg-repeat-x bg-bottom rotate-180 transform translate-y-[1px]"></div>
-            </div>
-        </div>
-      )}
-
       {/* Print Method Modal */}
       {selectedTxForPrint && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
@@ -531,16 +331,6 @@ const Reports: React.FC = () => {
               <p className="text-xs text-slate-500 mb-8 font-bold uppercase tracking-widest">{selectedTxForPrint.memberName}</p>
               
               <div className="flex flex-col gap-4">
-                 <button onClick={handleShareImage} disabled={isSharing} className="flex items-center gap-5 p-5 rounded-[2rem] border-2 border-slate-200 dark:border-white/10 hover:border-green-500/50 hover:bg-green-500/10 transition-all group backdrop-blur-md shadow-lg">
-                    <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-[1.2rem] text-slate-500 group-hover:text-green-500 group-hover:bg-white/20 transition-all">
-                        {isSharing ? <Loader2 size={24} className="animate-spin" /> : <Share2 size={24} />}
-                    </div>
-                    <div className="text-left">
-                        <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Share Image</h4>
-                        <p className="text-[10px] text-slate-500 font-bold">WhatsApp / Gallery</p>
-                    </div>
-                 </button>
-
                  <button onClick={handlePrintWifi} className="flex items-center gap-5 p-5 rounded-[2rem] border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard/50 hover:bg-palette-mustard/10 transition-all group backdrop-blur-md shadow-lg">
                     <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-[1.2rem] text-slate-500 group-hover:text-palette-mustard group-hover:bg-white/20 transition-all"><Printer size={24} /></div>
                     <div className="text-left">
@@ -548,7 +338,6 @@ const Reports: React.FC = () => {
                         <p className="text-[10px] text-slate-500 font-bold">{t('standard_pc')}</p>
                     </div>
                  </button>
-                 
                  <button onClick={handlePrintBluetooth} className="flex items-center gap-5 p-5 rounded-[2rem] border-2 border-slate-200 dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all group backdrop-blur-md shadow-lg">
                     <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-[1.2rem] text-slate-500 group-hover:text-blue-500 group-hover:bg-white/20 transition-all"><Bluetooth size={24} /></div>
                     <div className="text-left">

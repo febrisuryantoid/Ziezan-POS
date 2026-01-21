@@ -98,18 +98,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             </button>
         </div>
 
-        {/* Footer Section - Optimized for small screens (No Wrap) */}
-        <div className="mt-16 w-full flex flex-col items-center gap-2">
-            <div className="flex items-center gap-4 opacity-40">
-                <div className="w-8 h-[1px] bg-white/20"></div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap font-mono">
-                    {t('system_version')}
-                </span>
-                <div className="w-8 h-[1px] bg-white/20"></div>
+        <div className="mt-16 text-slate-600 text-[10px] font-mono uppercase tracking-[0.3em] flex flex-col items-center gap-3">
+            <div className="flex items-center gap-4">
+                <div className="w-8 h-[1px] bg-white/10"></div>
+                <span>{t('system_version')}</span>
+                <div className="w-8 h-[1px] bg-white/10"></div>
             </div>
-            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest text-center whitespace-nowrap">
-                &copy; 2026 Febri Suryanto
-            </span>
+            <span className="opacity-50">&copy; 2026 Febri Suryanto</span>
         </div>
       </div>
     </div>

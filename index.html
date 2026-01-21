@@ -35,22 +35,21 @@
               sans: ['"Plus Jakarta Sans"', 'sans-serif'],
               mono: ['"Space Mono"', 'monospace'],
             },
-            // WORLD CLASS TYPOGRAPHY SYSTEM v2.0 (Optimized for readability)
+            // COMPACT TYPOGRAPHY SYSTEM v1.0
             fontSize: {
-              'xs': ['11px', { lineHeight: '16px' }],      // Label kecil / Tag
-              'sm': ['13px', { lineHeight: '20px' }],      // Secondary text / Body Small
-              'base': ['15px', { lineHeight: '24px' }],     // Standard Body Text (Readable)
-              'lg': ['16px', { lineHeight: '26px' }],       // Sub-heading
-              'xl': ['18px', { lineHeight: '28px' }],       // Standard Heading
-              '2xl': ['22px', { lineHeight: '30px' }],      // Large Heading
-              '3xl': ['26px', { lineHeight: '34px' }],      // Extra Large
-              '4xl': ['32px', { lineHeight: '40px' }],      // Hero Title
-              '5xl': ['40px', { lineHeight: '48px' }],      // Display
+              'xs': ['10px', { lineHeight: '14px' }],      // Label kecil / Tag
+              'sm': ['11px', { lineHeight: '16px' }],      // Secondary text
+              'base': ['13px', { lineHeight: '18px' }],     // Standard Body Text (Max Body)
+              'lg': ['14px', { lineHeight: '20px' }],       // Sub-heading / Emphasized Body
+              'xl': ['16px', { lineHeight: '24px' }],       // Standard Heading
+              '2xl': ['18px', { lineHeight: '26px' }],      // Large Heading (Requested Max)
+              '3xl': ['20px', { lineHeight: '28px' }],      // Extra Large (Stats/Landing)
+              '4xl': ['24px', { lineHeight: '32px' }],      // Hero Title only
+              '5xl': ['30px', { lineHeight: '36px' }],      // Display only
             },
             height: {
-              'control': '48px',      // UPDATED: 48px Standard Touch Target (iOS/Android Standard)
-              'control-sm': '36px',   // Compact button
-              'control-textArea': '160px', 
+              'control': '40px',      // Standard Height (All Devices)
+              'control-textArea': '160px', // 4x Standard
             },
             zIndex: {
               'glass': '10',
@@ -78,23 +77,23 @@
                 yellow: '#facc15',
                 brown: '#2e1065',
                 cream: '#ede9fe',
-                creamLight: '#f8fafc', // Cleaner light bg
+                creamLight: '#f5f3ff',
               },
             },
             animation: {
-              'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)', // Smooth Apple-like easing
-              'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-              'zoom-in': 'zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              'spin-slow': 'spin 8s linear infinite',
+              'fade-in': 'fadeIn 0.3s ease-out',
+              'slide-in': 'slideIn 0.3s ease-out',
+              'zoom-in': 'zoomIn 0.2s ease-out',
+              'spin-slow': 'spin 6s linear infinite',
               'spin-border': 'spin 7s linear infinite',
               'float': 'float 6s ease-in-out infinite',
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'shimmer': 'shimmer 2.5s infinite linear',
+              'shimmer': 'shimmer 3s infinite linear',
             },
             keyframes: {
               fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              slideIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-              zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+              slideIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { opacity: '1' } },
+              zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { opacity: '1' } },
               shimmer: { '0%': { transform: 'translateX(-150%) skewX(-20deg)' }, '100%': { transform: 'translateX(200%) skewX(-20deg)' } },
               float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
             }
@@ -105,60 +104,62 @@
     <style type="text/tailwindcss">
       @layer base {
         html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-        body { @apply bg-palette-creamLight text-slate-800 dark:bg-palette-navy dark:text-palette-cream transition-colors duration-300 text-base antialiased; }
-        
-        /* Modern Scrollbar */
+        body { @apply bg-palette-creamLight text-palette-brown dark:bg-palette-navy dark:text-palette-cream transition-colors duration-300 text-base; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-palette-mustard transition-colors; }
+        ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.8); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
-        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
-        
-        /* --- ZIEZAN DESIGN SYSTEM v2.0 (Audit Visibility & Comfort) --- */
+        /* --- ZIEZAN DESIGN SYSTEM v1.6 (Audit Visibility) --- */
         
         /* 1. Containers & Panels */
+        /* Increased border contrast in Light Mode (slate-300) */
         .glass-panel {
-          @apply bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-sm hover:shadow-md transition-shadow duration-300;
+          @apply bg-white/40 dark:bg-[#0f1016]/60 backdrop-blur-xl border border-slate-300 dark:border-white/10 rounded-[2rem] shadow-sm;
         }
         .glass-card {
-          @apply bg-white/70 dark:bg-[#0f1016]/70 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-[1.75rem] shadow-sm transition-all duration-300;
+          @apply bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl border border-slate-300 dark:border-white/10 rounded-[1.5rem] shadow-sm transition-all duration-300;
         }
 
         /* 2. Typography */
         .text-label {
-          @apply text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500;
+          @apply text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-500;
         }
 
-        /* 3. Input Fields (Fixed 48px for Accessibility) */
+        /* 3. Input Fields (Fixed 40px, Compact Text) */
+        /* Darker placeholder for visibility in light mode */
         .input-standard {
-          @apply h-control w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-palette-mustard/50 focus:border-palette-mustard transition-all shadow-sm text-slate-900 dark:text-white placeholder:text-slate-400;
+          @apply h-control w-full bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/10 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-inner backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400;
         }
         .input-glass {
-          @apply h-control w-full bg-white/60 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-palette-mustard/50 transition-all shadow-sm backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-400;
+          @apply h-control w-full bg-white/50 dark:bg-black/40 border border-slate-300 dark:border-white/10 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-inner backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400;
         }
         .select-glass {
-          @apply h-control w-full bg-white/60 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-palette-mustard/50 transition-all shadow-sm backdrop-blur-md text-slate-900 dark:text-white appearance-none cursor-pointer truncate;
+          @apply h-control w-full bg-white/50 dark:bg-black/40 border border-slate-300 dark:border-white/10 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-palette-mustard transition-all shadow-inner backdrop-blur-md text-slate-900 dark:text-white appearance-none cursor-pointer truncate;
         }
         
         /* 4. Text Areas */
         .textarea-standard {
-          @apply w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-[1.5rem] p-5 text-base font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-palette-mustard focus:ring-2 focus:ring-palette-mustard/20 transition-all placeholder:text-slate-400 resize-none shadow-inner;
+          @apply h-control-textArea w-full bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/10 rounded-[1.5rem] p-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-palette-mustard/60 focus:ring-2 focus:ring-palette-mustard/20 transition-all placeholder:text-slate-500 dark:placeholder:text-slate-400 resize-none backdrop-blur-md shadow-inner;
         }
 
         /* 5. Buttons */
         .btn-primary {
-          @apply h-control bg-palette-mustard text-white rounded-2xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-palette-mustard/25 hover:shadow-palette-mustard/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 px-6;
+          @apply h-control bg-palette-mustard text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-palette-mustard/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2;
         }
         .btn-glass {
-          @apply h-control px-6 rounded-2xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white font-bold text-sm tracking-wider hover:bg-white/80 dark:hover:bg-white/10 transition-all active:scale-95 shadow-sm backdrop-blur-md flex items-center justify-center gap-2.5;
+          @apply h-control px-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white font-black text-xs tracking-widest hover:bg-white/60 transition-all active:scale-95 shadow-sm backdrop-blur-md flex items-center justify-center gap-2;
         }
         .btn-icon {
-          @apply h-control w-[48px] flex items-center justify-center rounded-2xl bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-palette-cream transition-all hover:bg-white dark:hover:bg-white/10 hover:scale-105 active:scale-95 shadow-sm backdrop-blur-md;
+          @apply h-control w-[40px] flex items-center justify-center rounded-xl bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-palette-yellow transition-all hover:scale-105 active:scale-90 shadow-sm backdrop-blur-md;
         }
       }
       .holo-gradient {
         background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%);
+      }
+      .noise {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
       }
     </style>
     <script type="importmap">
@@ -173,8 +174,7 @@
     "recharts": "https://esm.sh/recharts@2.10.4?external=react,react-dom",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>

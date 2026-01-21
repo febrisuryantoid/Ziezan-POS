@@ -48,13 +48,10 @@ const Members: React.FC = () => {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTier, sortOption]);
 
-  // UPDATED: Only add active hours if transaction is NOT Bonus
   const getRealtimePlaytime = (member: Member) => {
      let total = member.totalPlayTime || 0;
      const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
-     if (activeTx && activeTx.paymentMethod !== 'BONUS') {
-         total += activeTx.durationHours;
-     }
+     if (activeTx) total += activeTx.durationHours;
      return total;
   };
 

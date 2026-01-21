@@ -91,13 +91,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return rawMembers.map(member => {
         const memberHistory = transactions.filter(t => t.memberId === member.id && t.status === 'COMPLETED');
-        
-        // UPDATED LOGIC: Total Play Time ONLY counts CASH or QRIS. BONUS is excluded.
-        const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => {
-            if (t.paymentMethod === 'BONUS') return sum;
-            return sum + (t.durationHours || 0);
-        }, 0);
-
+        const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => sum + (t.durationHours || 0), 0);
         const calculatedTotalPaid = memberHistory.reduce((sum, t) => sum + (t.cost || 0), 0);
 
         // Defensive copy and sort for configs
