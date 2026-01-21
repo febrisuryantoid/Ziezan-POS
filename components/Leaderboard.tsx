@@ -6,6 +6,7 @@ import { getTierTheme } from '../utils/tierTheme';
 import GamingBackground from './GamingBackground';
 import { Trophy, Search, Loader2, Flame, Medal, Hexagon, ChevronUp, ChevronDown } from 'lucide-react';
 import { Member } from '../types';
+import DragonIcon from './DragonIcon';
 
 // --- SUB-COMPONENTS ---
 
@@ -65,11 +66,6 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
     const containerWidth = isFirst ? "w-[40%] sm:w-[36%]" : "flex-1";
     const zIndex = isFirst ? "z-30" : "z-20";
     
-    // Vertical offset: Push Rank 1 visually higher than others using flexbox alignment is handled by height,
-    // but we add margin-bottom to Rank 1 to separate it slightly from the 'floor' compared to others?
-    // Actually items-end handles it. We just need correct heights.
-    // Making Rank 1 taller (h-96) vs Rank 2/3 (h-72) creates the step effect.
-    
     // INCREASED HEIGHTS: Ensures pillars go deep behind the sheet
     const podiumHeight = isFirst ? 'h-96 sm:h-[28rem]' : 'h-72 sm:h-80'; 
     
@@ -121,6 +117,11 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
                      
                      {/* LUXURY SHIMMER EFFECT (On Hover) */}
                      <div className="absolute inset-0 -translate-x-[150%] group-hover:animate-[shimmer_1s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] pointer-events-none z-10"></div>
+
+                     {/* DRAGON WATERMARK (NEW) */}
+                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full flex items-end justify-center overflow-hidden opacity-20 pointer-events-none z-0 pb-10">
+                         <DragonIcon className={`w-32 h-32 sm:w-48 sm:h-48 ${theme.text}`} />
+                     </div>
 
                      {/* Content Container - STACKED FROM TOP */}
                      <div className="relative z-20 flex flex-col items-center pt-5 px-1 h-full">
