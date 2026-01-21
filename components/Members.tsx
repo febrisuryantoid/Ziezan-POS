@@ -156,7 +156,7 @@ const Members: React.FC = () => {
       {/* Search Bar - Glass Effect */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white/40 dark:bg-white/[0.02] p-4 rounded-[2.5rem] border border-slate-300 dark:border-white/5 backdrop-blur-xl shadow-sm">
         <div className="mb-2 xl:mb-0 px-2">
-          <h2 className="text-xl font-black text-palette-navy dark:text-white uppercase tracking-tight">{t('members')}</h2>
+          <h2 className="text-2xl font-black text-palette-navy dark:text-white uppercase tracking-tight">{t('members')}</h2>
           <p className="text-label">{t('manage_members_desc')}</p>
         </div>
 

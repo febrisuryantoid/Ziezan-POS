@@ -73,6 +73,7 @@ const dictionary = {
     filter_avail: "Tersedia",
     filter_in_use: "Dipakai",
     add_unit: "Tambah Console",
+    edit_unit: "Edit Console", 
     session_active: "Sesi Aktif",
     maintenance: "Perbaikan",
     available_status: "TERSEDIA",
@@ -123,6 +124,7 @@ const dictionary = {
     payment_settlement: "Metode Pelunasan",
     finish_save: "Selesaikan & Simpan",
     session_ended_toast: "Sesi Selesai",
+    cash: "Tunai",
     
     // --- MEMBERS ---
     manage_members_desc: "Kelola data pelanggan dan riwayat main.",
@@ -173,6 +175,7 @@ const dictionary = {
     
     // --- SETTINGS ---
     system_settings: "Pengaturan Sistem",
+    general_settings: "Umum & Tarif",
     config_subtitle: "Konfigurasi harga, perangkat keras, dan loyalty.",
     business_profile: "Profil Bisnis",
     id_card_rental: "Kartu Identitas Rental",
@@ -204,6 +207,7 @@ const dictionary = {
     forever: "Selamanya",
     manual_backup: "Manual Offline Backup",
     backup_restore_desc: "Gunakan fitur ini untuk memindahkan data antar perangkat.\n1. Backup data di perangkat lama.\n2. Kirim file .json ke perangkat baru.\n3. Restore di perangkat baru.",
+    invalid_file: "File Tidak Valid",
     download_data: "Download Data",
     membership_settings: "Konfigurasi Membership",
     ranking_hierarchy: "Ranking & Hierarchy",
@@ -304,6 +308,7 @@ const dictionary = {
     filter_avail: "Available",
     filter_in_use: "In Use",
     add_unit: "Add Console",
+    edit_unit: "Edit Console",
     session_active: "Session Active",
     maintenance: "Maintenance",
     available_status: "AVAILABLE",
@@ -354,6 +359,7 @@ const dictionary = {
     payment_settlement: "Settlement Method",
     finish_save: "Finish & Save",
     session_ended_toast: "Session Ended",
+    cash: "Cash",
 
     // --- MEMBERS ---
     manage_members_desc: "Manage customers and play history.",
@@ -404,6 +410,7 @@ const dictionary = {
 
     // --- SETTINGS ---
     system_settings: "System Settings",
+    general_settings: "General & Rates",
     config_subtitle: "Configure pricing, hardware, and loyalty.",
     business_profile: "Business Profile",
     id_card_rental: "Rental Identity Card",
@@ -435,6 +442,7 @@ const dictionary = {
     forever: "Forever",
     manual_backup: "Manual Offline Backup",
     backup_restore_desc: "Use this to move data between devices.\n1. Backup on old device.\n2. Send .json file to new device.\n3. Restore on new device.",
+    invalid_file: "Invalid File",
     download_data: "Download Data",
     membership_settings: "Membership Config",
     ranking_hierarchy: "Ranking & Hierarchy",

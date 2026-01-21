@@ -336,7 +336,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       {/* Control Bar with Glass Effect */}
       <div className="glass-panel p-4 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0 px-2">
-          <h2 className="text-lg sm:text-xl font-bold text-palette-navy dark:text-white">{t('consoles')}</h2>
+          <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase">{t('consoles')}</h2>
           <p className="text-label">{t('manage_units_desc')}</p>
         </div>
         

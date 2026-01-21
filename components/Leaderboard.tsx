@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme } from '../utils/tierTheme';
 import GamingBackground from './GamingBackground';
-import { Trophy, Search, Loader2, Flame, Medal, Hexagon } from 'lucide-react';
+import { Trophy, Search, Loader2, Flame, Medal, Hexagon, ChevronUp, ChevronDown } from 'lucide-react';
 import { Member } from '../types';
 
 // --- SUB-COMPONENTS ---
@@ -54,7 +54,7 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
     if (!member) {
         return (
             <div className={`flex flex-col items-center justify-end ${isFirst ? 'w-[40%] sm:w-[36%] z-10' : 'flex-1 z-0'} h-full opacity-30`}>
-                 <div className={`w-full ${isFirst ? 'h-48' : 'h-32'} bg-white/5 rounded-t-3xl border-t border-white/10 mx-2`}></div>
+                 <div className={`w-full ${isFirst ? 'h-80' : 'h-64'} bg-white/5 rounded-t-3xl border-t border-white/10 mx-2`}></div>
             </div>
         );
     }
@@ -62,22 +62,25 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
     const theme = getTierTheme(member.membershipId);
     
     // Layout Calculation
-    // UPDATED: Rank 1 gets 40% (mobile) / 36% (desktop), Rank 2 & 3 take flex-1 (equal remaining space)
-    // This ensures full width alignment with the list below.
     const containerWidth = isFirst ? "w-[40%] sm:w-[36%]" : "flex-1";
     const zIndex = isFirst ? "z-30" : "z-20";
-    const verticalOffset = isFirst ? "-mt-10" : "translate-y-4"; 
     
-    // Height & Structure
-    const podiumHeight = isFirst ? 'h-52' : 'h-32'; 
-    const avatarSize = isFirst ? "w-24 h-24 sm:w-28 sm:h-28" : "w-16 h-16 sm:w-20 sm:h-20";
+    // Vertical offset: Push Rank 1 visually higher than others using flexbox alignment is handled by height,
+    // but we add margin-bottom to Rank 1 to separate it slightly from the 'floor' compared to others?
+    // Actually items-end handles it. We just need correct heights.
+    // Making Rank 1 taller (h-96) vs Rank 2/3 (h-72) creates the step effect.
+    
+    // INCREASED HEIGHTS: Ensures pillars go deep behind the sheet
+    const podiumHeight = isFirst ? 'h-96 sm:h-[28rem]' : 'h-72 sm:h-80'; 
+    
+    const avatarSize = isFirst ? "w-24 h-24 sm:w-32 sm:h-32" : "w-16 h-16 sm:w-20 sm:h-20";
     const glowColor = isFirst ? 'rgba(234, 179, 8, 0.5)' : rank === 2 ? 'rgba(148, 163, 184, 0.3)' : 'rgba(234, 88, 12, 0.3)';
 
     return (
-        <a href={`/member/${encodeURIComponent(member.nickname)}`} className={`relative flex flex-col items-center group transition-transform duration-500 hover:-translate-y-2 ${containerWidth} ${zIndex} ${verticalOffset}`}>
+        <a href={`/member/${encodeURIComponent(member.nickname)}`} className={`relative flex flex-col items-center group transition-transform duration-500 hover:-translate-y-2 ${containerWidth} ${zIndex}`}>
             
             {/* --- AVATAR AREA --- */}
-            <div className="relative mb-4 z-50">
+            <div className="relative mb-3 z-50"> {/* Reduced mb for tighter lockup */}
                 {/* Ambient Glow behind head */}
                 <div className="absolute inset-0 rounded-full blur-2xl opacity-60 animate-pulse-slow" style={{ backgroundColor: glowColor }}></div>
                 
@@ -111,7 +114,6 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
             </div>
 
             {/* --- PODIUM BODY --- */}
-            {/* Removed mx-1 to ensure edge-to-edge fit if needed */}
             <div className={`w-full ${podiumHeight} relative flex flex-col items-center`}>
                  
                  {/* Glass Body with Shimmer */}
@@ -120,29 +122,32 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
                      {/* LUXURY SHIMMER EFFECT (On Hover) */}
                      <div className="absolute inset-0 -translate-x-[150%] group-hover:animate-[shimmer_1s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] pointer-events-none z-10"></div>
 
-                     {/* Content Container */}
-                     <div className="relative z-20 flex flex-col items-center pt-6 px-2 h-full">
+                     {/* Content Container - STACKED FROM TOP */}
+                     <div className="relative z-20 flex flex-col items-center pt-5 px-1 h-full">
                          
                          {/* Name */}
-                         <h3 className={`font-black text-white uppercase tracking-tight truncate w-full text-center drop-shadow-md ${isFirst ? 'text-lg' : 'text-xs text-slate-300'}`}>
+                         <h3 className={`font-black text-white uppercase tracking-tight truncate w-full text-center drop-shadow-md ${isFirst ? 'text-lg sm:text-xl' : 'text-xs sm:text-sm text-slate-200'}`}>
                             {member.nickname}
                          </h3>
                          
                          {/* Tier Badge */}
-                         <div className="flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/5 relative z-20">
+                         <div className="flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/5 relative z-20 mb-2">
                              <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-tr ${theme.conic}`}></div>
                              <span className={`text-[8px] font-bold uppercase ${theme.text}`}>{theme.name}</span>
                          </div>
 
-                         {/* SCORE */}
-                         <div className={`absolute ${isFirst ? 'bottom-16' : 'bottom-10'} flex items-baseline justify-center gap-1.5 z-30 w-full px-2`}>
-                            <span className={`font-mono font-black leading-none ${isFirst ? 'text-4xl text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]' : 'text-2xl text-slate-200'}`}>
+                         {/* SCORE - ALWAYS VISIBLE AT TOP */}
+                         <div className="flex flex-col items-center justify-center gap-0.5 z-30 w-full px-1 py-1.5 bg-white/5 rounded-xl border border-white/5 backdrop-blur-sm mx-auto max-w-[90%]">
+                            <span className={`font-mono font-black leading-none ${isFirst ? 'text-3xl sm:text-4xl text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]' : 'text-lg sm:text-2xl text-slate-100'}`}>
                                 {score.toFixed(0)}
                             </span>
-                            <span className={`font-bold uppercase tracking-wider ${isFirst ? 'text-xs text-yellow-600' : 'text-[9px] text-slate-500'}`}>
+                            <span className={`font-bold uppercase tracking-wider ${isFirst ? 'text-[10px] text-yellow-600' : 'text-[7px] sm:text-[8px] text-slate-500'}`}>
                                 JAM
                             </span>
                          </div>
+                         
+                         {/* Decorative Element to fill space */}
+                         <div className="flex-1 w-[1px] bg-gradient-to-b from-white/10 to-transparent mt-4"></div>
                      </div>
                  </div>
             </div>
@@ -213,6 +218,9 @@ const Leaderboard: React.FC = () => {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // NEW: State for Bottom Sheet
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     refreshData();
@@ -268,57 +276,83 @@ const Leaderboard: React.FC = () => {
             <GamingBackground />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80"></div>
             {/* Spotlight for Top Rank */}
-            <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[60vw] h-[60vw] bg-purple-600/10 blur-[100px] rounded-full"></div>
+            <div className={`absolute top-[-10%] left-1/2 -translate-x-1/2 w-[60vw] h-[60vw] bg-purple-600/10 blur-[100px] rounded-full transition-all duration-700 ${isExpanded ? 'opacity-30' : 'opacity-100'}`}></div>
         </div>
 
-        {/* Layer 1: Content */}
+        {/* Layer 1: Content Wrapper */}
         <div className="relative z-10 flex flex-col h-full w-full max-w-lg mx-auto md:max-w-4xl">
             
-            {/* Header Area */}
-            <div className="shrink-0 pt-8 pb-4 flex flex-col items-center z-50">
-                 <div className="flex items-center gap-3 mb-1 animate-fade-in">
-                    <Trophy size={24} className="text-palette-mustard drop-shadow-[0_0_15px_rgba(124,58,237,0.8)]" />
-                    <h1 className="text-2xl font-black uppercase tracking-[0.2em] text-white drop-shadow-lg">
-                        {t('leaderboard_title')}
-                    </h1>
-                 </div>
-                 <div className="flex items-center gap-2 opacity-60">
-                    <div className="w-6 h-[1px] bg-white/20"></div>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-palette-mustard">{t('season_label')} 1</span>
-                    <div className="w-6 h-[1px] bg-white/20"></div>
-                 </div>
-            </div>
+            {/* --- TOP SECTION (HEADER & PODIUM) --- */}
+            {/* Using flex-1 to push the podium to fill available space until the sheet covers it */}
+            <div className={`flex-1 flex flex-col transition-all duration-500 ease-in-out ${isExpanded ? 'opacity-30 scale-95 blur-[2px]' : 'opacity-100 scale-100'}`}>
+                
+                {/* Header Area */}
+                <div className="shrink-0 pt-10 sm:pt-12 pb-4 flex flex-col items-center z-50">
+                    <div className="flex items-center gap-3 mb-1 animate-fade-in">
+                        <Trophy size={24} className="text-palette-mustard drop-shadow-[0_0_15px_rgba(124,58,237,0.8)]" />
+                        <h1 className="text-2xl font-black uppercase tracking-[0.2em] text-white drop-shadow-lg">
+                            {t('leaderboard_title')}
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-2 opacity-60">
+                        <div className="w-6 h-[1px] bg-white/20"></div>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-palette-mustard">{t('season_label')} 1</span>
+                        <div className="w-6 h-[1px] bg-white/20"></div>
+                    </div>
+                </div>
 
-            {/* PODIUM STAGE */}
-            {/* UPDATED: w-full and removed horizontal padding to ensure full alignment with list below */}
-            <div className="shrink-0 flex flex-col items-center w-full relative z-40 md:mb-4 transition-transform duration-500">
-                <div className="flex items-end justify-center w-full gap-2 sm:gap-4 pb-0 px-2 sm:px-0">
-                    <PodiumCard 
-                        member={podiumOrder[0]} 
-                        rank={2} 
-                        score={podiumOrder[0] ? getRealtimeScore(podiumOrder[0]) : 0} 
-                        isPlaying={podiumOrder[0] ? getIsPlaying(podiumOrder[0]) : false} 
-                    />
-                    <PodiumCard 
-                        member={podiumOrder[1]} 
-                        rank={1} 
-                        score={podiumOrder[1] ? getRealtimeScore(podiumOrder[1]) : 0} 
-                        isPlaying={podiumOrder[1] ? getIsPlaying(podiumOrder[1]) : false} 
-                    />
-                    <PodiumCard 
-                        member={podiumOrder[2]} 
-                        rank={3} 
-                        score={podiumOrder[2] ? getRealtimeScore(podiumOrder[2]) : 0} 
-                        isPlaying={podiumOrder[2] ? getIsPlaying(podiumOrder[2]) : false} 
-                    />
+                {/* PODIUM STAGE */}
+                {/* Ensure items align to the bottom of this flexible space */}
+                {/* Increased pb to 25vh to lift the podium higher relative to the sheet */}
+                <div className="flex-1 flex items-end justify-center w-full overflow-hidden pb-[25vh] sm:pb-[20vh]"> 
+                    {/* Padding bottom pushes the podium up so the pillars go 'under' the sheet */}
+                    <div className="flex items-end justify-center w-full gap-2 sm:gap-6 px-4 sm:px-0 translate-y-10 sm:translate-y-0">
+                        <PodiumCard 
+                            member={podiumOrder[0]} 
+                            rank={2} 
+                            score={podiumOrder[0] ? getRealtimeScore(podiumOrder[0]) : 0} 
+                            isPlaying={podiumOrder[0] ? getIsPlaying(podiumOrder[0]) : false} 
+                        />
+                        <PodiumCard 
+                            member={podiumOrder[1]} 
+                            rank={1} 
+                            score={podiumOrder[1] ? getRealtimeScore(podiumOrder[1]) : 0} 
+                            isPlaying={podiumOrder[1] ? getIsPlaying(podiumOrder[1]) : false} 
+                        />
+                        <PodiumCard 
+                            member={podiumOrder[2]} 
+                            rank={3} 
+                            score={podiumOrder[2] ? getRealtimeScore(podiumOrder[2]) : 0} 
+                            isPlaying={podiumOrder[2] ? getIsPlaying(podiumOrder[2]) : false} 
+                        />
+                    </div>
                 </div>
             </div>
 
-            {/* CHALLENGER LIST CONTAINER */}
-            <div className="flex-1 min-h-0 w-full bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-t-[3rem] border-t border-white/10 shadow-[0_-20px_60px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden animate-slide-in relative z-50 -mt-12 md:-mt-8 md:flex-none md:h-[45vh]">
-                
+            {/* --- BOTTOM SHEET (CHALLENGER LIST) --- */}
+            <div 
+                className={`
+                    absolute bottom-0 left-0 right-0 z-50 
+                    bg-[#0a0a0a]/95 backdrop-blur-3xl 
+                    rounded-t-[2.5rem] border-t border-white/10 
+                    shadow-[0_-20px_60px_rgba(0,0,0,0.9)] 
+                    flex flex-col overflow-hidden 
+                    transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1)
+                `}
+                // Reduced default height slightly to show more of the podium
+                style={{ height: isExpanded ? '85vh' : '42vh' }}
+            >
+                {/* Drag Handle (Clickable Area) */}
+                <div 
+                    className="w-full h-8 flex flex-col items-center justify-center shrink-0 cursor-pointer active:bg-white/5 transition-colors group"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    <div className="w-12 h-1.5 bg-white/20 rounded-full mb-1 group-hover:bg-white/40 transition-colors"></div>
+                    {isExpanded ? <ChevronDown size={12} className="text-white/20" /> : <ChevronUp size={12} className="text-white/20" />}
+                </div>
+
                 {/* Search Header */}
-                <div className="px-6 py-5 flex items-center justify-between shrink-0 bg-gradient-to-b from-white/5 to-transparent">
+                <div className="px-6 pb-4 pt-1 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2">
                         <Flame size={16} className="text-orange-500 fill-orange-500 animate-pulse" />
                         <span className="text-xs font-black uppercase tracking-widest text-slate-300">{t('challengers_title')}</span>
