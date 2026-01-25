@@ -85,44 +85,87 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [rawConsoles, transactions]);
 
-  // --- SOURCE OF TRUTH: COMPUTED MEMBERS ---
+  // --- SOURCE OF TRUTH: COMPUTED MEMBERS (CORE BUSINESS LOGIC) ---
   const computedMembers = useMemo(() => {
     if (!Array.isArray(rawMembers) || !Array.isArray(membershipConfigs) || !Array.isArray(transactions)) return [];
 
     return rawMembers.map(member => {
+        // 1. Calculate History
         const memberHistory = transactions.filter(t => t.memberId === member.id && t.status === 'COMPLETED');
-        const calculatedTotalPlayTime = memberHistory.reduce((sum, t) => sum + (t.durationHours || 0), 0);
+        
+        // STRICT RULE: Only CASH or QRIS counts for Tier Progress
+        const paidTransactions = memberHistory.filter(t => t.paymentMethod === 'CASH' || t.paymentMethod === 'QRIS');
+        const calculatedTotalPlayTime = paidTransactions.reduce((sum, t) => sum + (t.durationHours || 0), 0);
+        
         const calculatedTotalPaid = memberHistory.reduce((sum, t) => sum + (t.cost || 0), 0);
 
-        // Defensive copy and sort for configs
+        // 2. Determine Tier based on PAID Hours
         const sortedConfigs = [...membershipConfigs].sort((a, b) => b.minHours - a.minHours);
         const correctTier = sortedConfigs.find(c => calculatedTotalPlayTime >= c.minHours) || sortedConfigs[sortedConfigs.length - 1] || membershipConfigs[0];
-        const configForBonus = membershipConfigs.find(c => c.id === correctTier?.id) || membershipConfigs[0];
         
+        // 3. Segmented Bonus Calculation (Progressive)
+        let hoursForBonus = calculatedTotalPlayTime;
         let generatedBonus = 0;
-        let progress = 0;
 
-        if (configForBonus && configForBonus.bonusThreshold > 0) {
-            const cycles = Math.floor(calculatedTotalPlayTime / configForBonus.bonusThreshold);
-            generatedBonus = cycles * configForBonus.bonusReward;
-            progress = calculatedTotalPlayTime % configForBonus.bonusThreshold;
+        // Segment 1: Warrior - Grandmaster (0 - 30 hrs) -> Rate: 6h get 1
+        const seg1 = Math.min(hoursForBonus, 30);
+        generatedBonus += Math.floor(seg1 / 6);
+        hoursForBonus -= seg1;
+
+        // Segment 2: Epic - Mythic (31 - 120 hrs) -> Rate: 5h get 1
+        // Note: 120 - 30 = 90 hours range
+        if (hoursForBonus > 0) {
+            const seg2 = Math.min(hoursForBonus, 90);
+            generatedBonus += Math.floor(seg2 / 5);
+            hoursForBonus -= seg2;
         }
 
+        // Segment 3: Mythical Honor - Mythical Glory (121 - 300 hrs) -> Rate: 4h get 1
+        // Note: 300 - 120 = 180 hours range
+        if (hoursForBonus > 0) {
+            const seg3 = Math.min(hoursForBonus, 180);
+            generatedBonus += Math.floor(seg3 / 4);
+            hoursForBonus -= seg3;
+        }
+
+        // Segment 4: Mythical Immortal (301+ hrs) -> Rate: 3h get 1
+        if (hoursForBonus > 0) {
+            generatedBonus += Math.floor(hoursForBonus / 3);
+        }
+
+        // 4. Calculate Usage and Balance
         const bonusUsed = memberHistory
             .filter(t => t.paymentMethod === 'BONUS')
             .reduce((sum, t) => sum + (t.durationHours || 0), 0);
 
-        const manualBonus = member.freeHoursBalance || 0;
-        const calculatedBalance = (generatedBonus - bonusUsed) + manualBonus;
+        // Include manual adjustments (e.g. Birthday bonus) from the raw member data
+        const manualBonus = member.freeHoursBalance || 0; 
+        
+        // Strict Cap: Max 3 hours stored
+        const rawBalance = (generatedBonus - bonusUsed) + manualBonus;
+        const cappedBalance = Math.max(0, Math.min(rawBalance, 3)); 
+
+        // 5. Determine current cycle progress for UI
+        let currentCycleTarget = 6; // Default
+        if (calculatedTotalPlayTime >= 301) currentCycleTarget = 3;
+        else if (calculatedTotalPlayTime >= 121) currentCycleTarget = 4;
+        else if (calculatedTotalPlayTime >= 31) currentCycleTarget = 5;
+        
+        // Simplified progress calculation for the *current* active segment
+        let progress = 0;
+        if (calculatedTotalPlayTime < 30) progress = calculatedTotalPlayTime % 6;
+        else if (calculatedTotalPlayTime < 120) progress = (calculatedTotalPlayTime - 30) % 5;
+        else if (calculatedTotalPlayTime < 300) progress = (calculatedTotalPlayTime - 120) % 4;
+        else progress = (calculatedTotalPlayTime - 300) % 3;
 
         return {
             ...member,
             membershipId: correctTier?.id || 'WARRIOR',
-            totalPlayTime: calculatedTotalPlayTime,
+            totalPlayTime: calculatedTotalPlayTime, // SHOW PAID HOURS ONLY
             totalAmountPaid: calculatedTotalPaid,
-            hoursProgressToNextBonus: progress,
+            hoursProgressToNextBonus: progress, // Dynamic based on current tier rule
             totalBonusHoursUsed: bonusUsed,
-            freeHoursBalance: calculatedBalance
+            freeHoursBalance: cappedBalance
         };
     });
   }, [rawMembers, transactions, membershipConfigs]);
@@ -179,6 +222,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (dob.getMonth() === currentMonth && dob.getDate() === currentDate) {
                 if (updatedMember.lastBirthdayBonusYear !== currentYear) {
                     const bonus = settings.birthdayBonusHours || 2;
+                    // Adding to the manual balance component
                     updatedMember.freeHoursBalance = (updatedMember.freeHoursBalance || 0) + bonus;
                     updatedMember.lastBirthdayBonusYear = currentYear;
                     updatedMember.notes = (updatedMember.notes ? updatedMember.notes + '\n' : '') + `[System] HPBD ${currentYear}: +${bonus} Jam`;
@@ -314,6 +358,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedMembers = rawMembers.map(m => ({
           ...m,
           membershipId: 'WARRIOR' as MembershipTierId,
+          totalPlayTime: 0, // Reset Total Play Time
+          freeHoursBalance: 0, // Reset Bonuses
+          totalBonusHoursUsed: 0,
           synced: false,
           updatedAt: new Date().toISOString()
       }));

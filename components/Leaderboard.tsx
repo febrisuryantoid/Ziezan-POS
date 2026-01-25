@@ -235,6 +235,9 @@ const Leaderboard: React.FC = () => {
 
   const getRealtimeScore = (member: Member) => {
       const activeTx = transactions.find(t => t.memberId === member.id && t.status === 'ACTIVE');
+      // ONLY COUNT IF PAID SESSION (Should adhere to same rule as DataContext)
+      // But typically Active Session is not final paid/bonus yet until checkout.
+      // Assuming Active Session counts for leaderboard hype, but DataContext reconciles strictly.
       return member.totalPlayTime + (activeTx ? activeTx.durationHours : 0);
   };
   

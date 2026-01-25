@@ -8,7 +8,7 @@ import GamingBackground from './GamingBackground';
 import DragonIcon from './DragonIcon';
 
 const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
-  const { members, transactions } = useData();
+  const { members, transactions, membershipConfigs } = useData();
   const { t, language } = useLanguage();
 
   // Find member
@@ -35,6 +35,29 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
       month: 'long',
       year: 'numeric'
   });
+
+  // Calculate Logic for Next Tier
+  const isMaxTier = member.membershipId === 'MYTHICAL_IMMORTAL';
+  let nextTierName = '';
+  let hoursToNext = 0;
+  
+  if (!isMaxTier) {
+      const currentConfig = membershipConfigs.find(c => c.id === member.membershipId);
+      // Sort to find next
+      const sortedConfigs = [...membershipConfigs].sort((a, b) => a.minHours - b.minHours);
+      const currentIndex = sortedConfigs.findIndex(c => c.id === member.membershipId);
+      if (currentIndex !== -1 && currentIndex < sortedConfigs.length - 1) {
+          const nextConfig = sortedConfigs[currentIndex + 1];
+          nextTierName = nextConfig.name;
+          hoursToNext = nextConfig.minHours - member.totalPlayTime;
+      }
+  }
+
+  // Bonus Logic Display
+  let currentTarget = 6;
+  if (member.totalPlayTime >= 301) currentTarget = 3;
+  else if (member.totalPlayTime >= 121) currentTarget = 4;
+  else if (member.totalPlayTime >= 31) currentTarget = 5;
 
   return (
     <div className="h-[100dvh] w-full bg-[#050505] text-white font-sans relative flex items-center justify-center overflow-hidden">
@@ -78,6 +101,11 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
                                   {t('live_status')}
                               </div>
                           )}
+                          {isMaxTier && !isPlaying && (
+                              <div className="px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                  Status: MAX TIER
+                              </div>
+                          )}
                       </div>
                       <div className="mt-6">
                           <h2 className="text-3xl font-black uppercase tracking-tight leading-none drop-shadow-lg">{member.nickname}</h2>
@@ -88,16 +116,27 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
                   <div className="space-y-4">
                        <div className="grid grid-cols-2 gap-3">
                           <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('total_play')}</p>
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Total Main (Berbayar)</p>
                               <p className="text-2xl font-black font-mono">{member.totalPlayTime}h</p>
                           </div>
-                          <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('bonus_balance')}</p>
+                          <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden">
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Bonus Jam</p>
                               <p className={`text-2xl font-black font-mono ${member.freeHoursBalance > 0 ? 'text-emerald-400' : 'text-white'}`}>{member.freeHoursBalance}h</p>
+                              <div className="absolute bottom-2 right-2 text-[8px] text-slate-500 font-bold opacity-60">
+                                  Main {currentTarget} Jam → +1
+                              </div>
                           </div>
                        </div>
-                       <div className="text-center">
-                          <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{t('joined')} {joinDate}</p>
+                       
+                       {!isMaxTier && (
+                           <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                               <div className={`h-full bg-gradient-to-r ${theme.conic}`} style={{ width: `${Math.min(100, (member.hoursProgressToNextBonus / currentTarget) * 100)}%` }}></div>
+                           </div>
+                       )}
+                       
+                       <div className="text-center flex justify-between items-center text-[9px] font-bold uppercase tracking-widest opacity-50 px-1">
+                          <span>{t('joined')} {joinDate}</span>
+                          {!isMaxTier && <span>Menuju {nextTierName}: {hoursToNext}h</span>}
                        </div>
                   </div>
               </div>

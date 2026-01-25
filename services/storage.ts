@@ -4,25 +4,26 @@ import { Console, Member, Transaction, AppSettings, User, Role, MembershipConfig
 // Initial Data Seeding - CLEARED FOR PRODUCTION
 const DEFAULT_CONSOLES: Console[] = [];
 
-// New 9-Tier "Mobile Legends Style" Configuration
+// STRICT 9-TIER CONFIGURATION (FINAL - DO NOT CHANGE)
+// Note: bonusThreshold is kept for UI reference, but actual calculation logic is in DataContext
 const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'WARRIOR', 
     name: 'Warrior', 
     minHours: 0,
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 6,
     bonusReward: 1,     
     isActive: true,
-    color: 'orange'
+    color: 'slate'
   },
   { 
     id: 'ELITE', 
     name: 'Elite', 
-    minHours: 5, 
+    minHours: 6, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 6,
     bonusReward: 1,    
     isActive: true,
@@ -30,10 +31,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   },
   { 
     id: 'GRANDMASTER', 
-    name: 'Grand Master', 
-    minHours: 15, 
+    name: 'Grandmaster', 
+    minHours: 16, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 6,
     bonusReward: 1,    
     isActive: true,
@@ -42,10 +43,10 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'EPIC', 
     name: 'Epic', 
-    minHours: 30, 
+    minHours: 31, 
     price: 0, 
-    durationDays: 0, 
-    bonusThreshold: 6,
+    durationDays: 365, 
+    bonusThreshold: 5,
     bonusReward: 1,    
     isActive: true,
     color: 'emerald'
@@ -53,9 +54,9 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'LEGEND', 
     name: 'Legend', 
-    minHours: 60, 
+    minHours: 51, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 5,
     bonusReward: 1,    
     isActive: true,
@@ -64,9 +65,9 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHIC', 
     name: 'Mythic', 
-    minHours: 100, 
+    minHours: 81, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 5,
     bonusReward: 1,    
     isActive: true,
@@ -75,9 +76,9 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_HONOR', 
     name: 'Mythical Honor', 
-    minHours: 150, 
+    minHours: 121, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 4,
     bonusReward: 1,    
     isActive: true,
@@ -86,9 +87,9 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_GLORY', 
     name: 'Mythical Glory', 
-    minHours: 220, 
+    minHours: 181, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 4,
     bonusReward: 1,    
     isActive: true,
@@ -97,9 +98,9 @@ const DEFAULT_MEMBERSHIPS: MembershipConfig[] = [
   { 
     id: 'MYTHICAL_IMMORTAL', 
     name: 'Mythical Immortal', 
-    minHours: 365, 
+    minHours: 301, 
     price: 0, 
-    durationDays: 0, 
+    durationDays: 365, 
     bonusThreshold: 3,
     bonusReward: 1,    
     isActive: true,
@@ -152,29 +153,23 @@ export const getMemberships = (): MembershipConfig[] => {
     const data = localStorage.getItem(K_MEMBERSHIPS);
     if (data) {
         const parsed = JSON.parse(data);
-        // CRITICAL FIX: Ensure parsed is an array before mapping
         if (!Array.isArray(parsed)) return DEFAULT_MEMBERSHIPS;
 
-        const merged = DEFAULT_MEMBERSHIPS.map(def => {
+        // Force update defaults to ensure rules are strict
+        return DEFAULT_MEMBERSHIPS.map(def => {
             const existing = parsed.find((p: any) => p && p.id === def.id);
             if (existing) {
                return { 
                    ...def, 
+                   // Only allow updating visual/minor things, rules are strict in defaults
                    isActive: existing.isActive ?? def.isActive,
-                   minHours: existing.minHours ?? def.minHours,
-                   bonusThreshold: existing.bonusThreshold ?? def.bonusThreshold,
-                   bonusReward: existing.bonusReward ?? def.bonusReward,
-                   price: existing.price ?? def.price,
-                   durationDays: existing.durationDays ?? def.durationDays
                }; 
             }
             return def;
         });
-        return merged;
     }
     return DEFAULT_MEMBERSHIPS;
   } catch (e) {
-    console.warn("Failed to load memberships, using defaults", e);
     return DEFAULT_MEMBERSHIPS;
   }
 };
@@ -189,7 +184,6 @@ export const getMembers = (): Member[] => {
     if (!data) return [];
     
     let rawMembers: any = JSON.parse(data);
-    // CRITICAL FIX: Explicit check for array
     if (!Array.isArray(rawMembers)) return [];
 
     const cleanedMembers: Member[] = rawMembers.map((m: any) => {
@@ -198,6 +192,7 @@ export const getMembers = (): Member[] => {
         const safeName = (m.name && typeof m.name === 'string') ? m.name : 'Unknown';
         const safeNick = (m.nickname && typeof m.nickname === 'string') ? m.nickname : safeName.split(' ')[0];
 
+        // Map legacy tiers if exists
         let tier = m.membershipId;
         if (tier === 'BASIC') tier = 'WARRIOR';
         if (tier === 'MASTER') tier = 'GRANDMASTER'; 
@@ -209,7 +204,7 @@ export const getMembers = (): Member[] => {
           name: safeName.trim(),
           nickname: safeNick, 
           membershipId: tier || 'WARRIOR',
-          address: m.address || 'Nyomplong', 
+          address: m.address || '-', 
           totalAmountPaid: Number(m.totalAmountPaid) || 0,
           totalPlayTime: Number(m.totalPlayTime) || 0, 
           membershipExpiryDate: m.membershipExpiryDate || null,
@@ -241,7 +236,6 @@ export const getTransactions = (): Transaction[] => {
     if (!data) return [];
     
     const txs: any = JSON.parse(data);
-    // CRITICAL FIX: Explicit check for array
     if (!Array.isArray(txs)) return [];
 
     return txs.map((t: any) => ({
@@ -254,7 +248,6 @@ export const getTransactions = (): Transaction[] => {
         updatedAt: t.updatedAt || new Date().toISOString()
     }));
   } catch (e) {
-    console.warn("Failed to load transactions", e);
     return [];
   }
 };
