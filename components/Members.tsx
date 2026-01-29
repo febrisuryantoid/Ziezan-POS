@@ -4,15 +4,15 @@ import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera, History, Banknote, Gamepad2, PlusCircle, MinusCircle } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 import { getTierTheme } from '../utils/tierTheme';
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
 const Members: React.FC = () => {
-  const { members, transactions, membershipConfigs, addMember, deleteMember, updateMember } = useData();
-  const { t } = useLanguage();
+  const { members, transactions, membershipConfigs, addMember, deleteMember, updateMember, adjustBonusHours } = useData();
+  const { t, language } = useLanguage();
   const { addToast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +37,7 @@ const Members: React.FC = () => {
   const [newNotes, setNewNotes] = useState('');
   const [newBonusBalance, setNewBonusBalance] = useState<number>(0); 
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const [bonusAdjustment, setBonusAdjustment] = useState(0);
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +55,14 @@ const Members: React.FC = () => {
      if (activeTx) total += activeTx.durationHours;
      return total;
   };
+  
+  const memberTransactions = useMemo(() => {
+    if (!editingMember) return [];
+    return transactions
+        .filter(tx => tx.memberId === editingMember.id)
+        .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  }, [transactions, editingMember]);
+
 
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
@@ -114,6 +123,16 @@ const Members: React.FC = () => {
     e.preventDefault();
     if (editingMember?.id) { updateMember(editingMember); setEditingMember(null); addToast('success', t('member_updated'), t('saved')); }
     else addToast('error', 'Error', 'ID Not Found');
+  };
+
+  const handleBonusAdjustment = () => {
+    if (!editingMember || bonusAdjustment === 0) return;
+    adjustBonusHours(editingMember.id, bonusAdjustment);
+    addToast('success', 'Bonus Diperbarui', `Saldo bonus ${editingMember.nickname} disesuaikan.`);
+    setBonusAdjustment(0);
+    // Refresh member data in modal
+    const updatedMember = members.find(m => m.id === editingMember.id);
+    if(updatedMember) setEditingMember(updatedMember);
   };
 
   const handleDeleteMember = () => {
@@ -286,7 +305,7 @@ const Members: React.FC = () => {
                                   placeholder="08xxxxxxxxxx"
                               />
                           </div>
-                          <div className="space-y-2"><label className="text-label">{t('address')}</label><textarea rows={4} value={isAdding ? newAddress : editingMember?.address || ''} onChange={e => isAdding ? setNewAddress(e.target.value) : setEditingMember({...editingMember!, address: e.target.value})} className="textarea-standard" /></div>
+                          <div className="space-y-2"><label className="text-label">{t('address')}</label><input type="text" value={isAdding ? newAddress : editingMember?.address || ''} onChange={e => isAdding ? setNewAddress(e.target.value) : setEditingMember({...editingMember!, address: e.target.value})} className="input-standard" /></div>
                           <div className="grid grid-cols-2 gap-5">
                               <div className="space-y-2">
                                   <label className="text-label">{t('membership')}</label>
@@ -320,6 +339,63 @@ const Members: React.FC = () => {
                               />
                           </div>
                       </form>
+
+                      {editingMember && (
+                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+                            <h3 className="text-label flex items-center gap-2 mb-4"><Gift size={14} /> Penyesuaian Bonus</h3>
+                             <div className="p-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200 dark:border-white/5 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => setBonusAdjustment(prev => prev - 1)} className="btn-icon bg-red-500/10 text-red-500 border-red-500/20"><MinusCircle size={18}/></button>
+                                    <input type="number" value={bonusAdjustment} onChange={e => setBonusAdjustment(parseInt(e.target.value) || 0)} className="input-standard text-center font-black text-lg" />
+                                    <button onClick={() => setBonusAdjustment(prev => prev + 1)} className="btn-icon bg-emerald-500/10 text-emerald-500 border-emerald-500/20"><PlusCircle size={18}/></button>
+                                </div>
+                                <button onClick={handleBonusAdjustment} disabled={bonusAdjustment === 0} className="w-full btn-primary disabled:opacity-50 text-xs">Simpan Penyesuaian</button>
+                            </div>
+                        </div>
+                      )}
+
+                      {editingMember && (
+                          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+                              <h3 className="text-label flex items-center gap-2 mb-4"><History size={14} /> {t('riwayat_aktivitas')}</h3>
+                              {memberTransactions.length > 0 ? (
+                                  <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                                      {memberTransactions.map(tx => {
+                                          const isBonus = tx.paymentMethod === 'BONUS';
+                                          const Icon = isBonus ? Gift : tx.cost > 0 ? Banknote : Gamepad2;
+                                          const color = isBonus ? 'text-emerald-500' : tx.cost > 0 ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500';
+
+                                          return (
+                                              <div key={tx.id} className="flex items-center gap-4 p-3 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200 dark:border-white/5">
+                                                  <div className={`p-2 rounded-lg ${
+                                                      isBonus ? 'bg-emerald-500/10 text-emerald-500' 
+                                                      : tx.cost > 0 ? 'bg-palette-mustard/10 text-palette-mustard'
+                                                      : 'bg-slate-500/10 text-slate-500'
+                                                  }`}>
+                                                      <Icon size={16} />
+                                                  </div>
+                                                  <div className="flex-1 min-w-0">
+                                                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+                                                          {`Main di ${tx.consoleName}`}
+                                                      </p>
+                                                      <p className="text-xs text-slate-500 font-medium">
+                                                          {new Date(tx.startTime).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                                      </p>
+                                                  </div>
+                                                  <div className="text-right shrink-0">
+                                                      <p className={`text-sm font-black ${color}`}>
+                                                          {isBonus ? `-${tx.durationHours} Jam` : `Rp ${tx.cost.toLocaleString('id-ID')}`}
+                                                      </p>
+                                                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{tx.paymentMethod}</p>
+                                                  </div>
+                                              </div>
+                                          );
+                                      })}
+                                  </div>
+                              ) : (
+                                  <p className="text-xs text-slate-500 mt-4 text-center py-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl">{t('no_activity_history')}</p>
+                              )}
+                          </div>
+                      )}
                   </div>
                   <div className="p-6 border-t border-slate-200 dark:border-white/10 bg-black/5 shrink-0">
                       <button type="submit" form="member-form" className="w-full btn-primary">{t('save')}</button>

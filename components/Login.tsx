@@ -47,11 +47,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow opacity-60"></div>
         </div>
 
-        {/* Updated Background Opacity: bg-white/90 for better text readability */}
-        <div className="relative z-10 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-3xl rounded-[22px] px-6 py-8 shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-slate-200 dark:border-white/10">
+        <div className="relative z-10 bg-popover/90 backdrop-blur-3xl rounded-[22px] px-6 py-8 shadow-2xl flex flex-col justify-between h-auto shrink-0 overflow-hidden border border-border">
           <button
             onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            className="absolute top-4 right-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-palette-mustard transition-colors px-2 h-7 bg-white/50 dark:bg-white/5 rounded-lg flex items-center gap-1.5 backdrop-blur-md border border-slate-300 dark:border-white/10"
+            className="absolute top-4 right-4 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors px-2 h-7 bg-secondary rounded-lg flex items-center gap-1.5 backdrop-blur-md border border-border"
           >
             <Globe size={12} />
             {language.toUpperCase()}
@@ -59,42 +58,41 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
           <div className="text-center mb-6 shrink-0">
             <div className="relative inline-block">
-              <div className="absolute inset-0 bg-palette-mustard blur-2xl opacity-40 rounded-full scale-125"></div>
+              <div className="absolute inset-0 bg-primary blur-2xl opacity-40 rounded-full scale-125"></div>
               <img 
                   src="https://beeimg.com/images/t47564105964.png" 
                   alt="Ziezan POS" 
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] mx-auto mb-4 shadow-lg relative z-10 object-cover bg-black ring-1 ring-white/20"
               />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('welcome')}</h1>
-            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mt-1">{t('login_title')}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-tight">{t('welcome')}</h1>
+            <p className="text-muted-foreground text-xs font-medium mt-1">{t('login_title')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide ml-1">{t('username')}</label>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wide ml-1">{t('username')}</label>
               <div className="relative">
-                {/* Fixed Icon Visibility: darker slate-600 for light mode */}
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400" size={16} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                 <input 
                     type="text" 
                     autoCapitalize="none"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="input-standard w-full pl-10 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white"
+                    className="input-standard w-full pl-10"
                     placeholder={t('enter_username')}
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide ml-1">{t('password')}</label>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wide ml-1">{t('password')}</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400" size={16} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                 <input 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input-standard w-full pl-10 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white"
+                    className="input-standard w-full pl-10"
                     placeholder={t('enter_password')}
                 />
               </div>
@@ -106,7 +104,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
               </div>
             )}
 
-            {/* Apply Design System Class: btn-primary */}
             <button 
               type="submit" 
               className="btn-primary w-full mt-2"
@@ -116,7 +113,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
           </form>
 
           <div className="mt-6 text-center shrink-0">
-            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-black uppercase tracking-[0.2em]">
+            <p className="text-[10px] text-muted-foreground/50 font-black uppercase tracking-[0.2em]">
               &copy; {currentYear} Ziezan Station
             </p>
           </div>

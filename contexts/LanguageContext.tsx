@@ -154,6 +154,8 @@ const dictionary = {
     total_play: "Total Main",
     bonus_balance: "Saldo Bonus",
     joined: "Bergabung",
+    riwayat_aktivitas: "Riwayat Aktivitas",
+    no_activity_history: "Belum ada aktivitas.",
 
     // --- REPORTS ---
     audit_desc: "Audit Keuangan & Sesi Terminal",
@@ -389,6 +391,8 @@ const dictionary = {
     total_play: "Total Play",
     bonus_balance: "Bonus Balance",
     joined: "Joined",
+    riwayat_aktivitas: "Activity History",
+    no_activity_history: "No activity history yet.",
 
     // --- REPORTS ---
     audit_desc: "Financial Audit & Terminal Sessions",

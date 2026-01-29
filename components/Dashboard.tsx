@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
       </div>
       <div className="mt-4 flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')} animate-pulse`}></div>
-          <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{sub}</p>
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold uppercase tracking-widest truncate">{sub}</p>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in">
       <div className="flex flex-col gap-1 px-1">
-        <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase">{t('dashboard')}</h2>
+        <h2 className="text-2xl font-black text-foreground tracking-tight uppercase">{t('dashboard')}</h2>
         <p className="text-label">{t('overview_subtitle')}</p>
       </div>
 
@@ -75,8 +75,8 @@ const Dashboard: React.FC = () => {
           value={`Rp ${stats.revenueToday.toLocaleString('id-ID')}`}
           sub={t('gross_revenue')}
           icon={CreditCard}
-          colorClass="text-palette-mustard"
-          bgClass="bg-palette-mustard/10"
+          colorClass="text-primary"
+          bgClass="bg-primary/10"
         />
         <StatCard 
           title={t('duration')} 
@@ -98,22 +98,22 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 glass-panel overflow-hidden flex flex-col min-h-[450px]">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/10 dark:bg-white/5">
-            <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white flex items-center gap-3 uppercase tracking-wider">
-              <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><Activity size={18} /></div>
+          <div className="p-6 border-b border-border flex justify-between items-center bg-card/10">
+            <h3 className="font-black text-sm sm:text-base text-foreground flex items-center gap-3 uppercase tracking-wider">
+              <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-inner"><Activity size={18} /></div>
               {t('recent_tx')}
             </h3>
           </div>
           <div className="flex-1">
             {recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-slate-500 opacity-40">
+              <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground opacity-40">
                 <Activity className="w-12 h-12 mb-4" />
                 <p className="text-label">{t('no_tx')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead className="text-[10px] text-slate-500 font-black uppercase bg-white/5 dark:bg-white/[0.02] border-b border-white/10 tracking-widest">
+                  <thead className="text-[10px] text-muted-foreground font-black uppercase bg-secondary/50 border-b border-border tracking-widest">
                     <tr>
                       <th className="px-8 py-5">{t('members')}</th>
                       <th className="px-8 py-5">{t('consoles')}</th>
@@ -121,22 +121,22 @@ const Dashboard: React.FC = () => {
                       <th className="px-8 py-5 text-right">{t('duration')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody className="divide-y divide-border">
                     {recentTransactions.map(tx => (
-                      <tr key={tx.id} className="hover:bg-palette-mustard/5 transition-colors group">
-                        <td className="px-8 py-5 font-black text-slate-900 dark:text-white text-xs max-w-[200px] truncate">{tx.memberName || t('unknown')}</td>
-                        <td className="px-8 py-5 text-slate-500 dark:text-slate-400 font-bold text-xs">{tx.consoleName || t('unknown')}</td>
+                      <tr key={tx.id} className="hover:bg-primary/5 transition-colors group">
+                        <td className="px-8 py-5 font-black text-foreground text-xs max-w-[200px] truncate">{tx.memberName || t('unknown')}</td>
+                        <td className="px-8 py-5 text-muted-foreground font-bold text-xs">{tx.consoleName || t('unknown')}</td>
                         <td className="px-8 py-5">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${
                             tx.status === 'ACTIVE' 
                               ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' 
-                              : 'bg-white/5 text-slate-400 border-white/10'
+                              : 'bg-secondary text-muted-foreground border-border'
                           }`}>
                             {tx.status === 'ACTIVE' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"/>}
                             {tx.status}
                           </span>
                         </td>
-                        <td className="px-8 py-5 text-slate-700 dark:text-slate-300 text-right text-xs font-mono font-black">{tx.durationHours} {t('hour_short')}</td>
+                        <td className="px-8 py-5 text-foreground/80 text-right text-xs font-mono font-black">{tx.durationHours} {t('hour_short')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -147,8 +147,8 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="glass-panel p-6 sm:p-8 flex flex-col">
-          <h3 className="font-black text-sm sm:text-base text-palette-navy dark:text-white mb-6 flex items-center gap-3 uppercase tracking-wider">
-            <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard shadow-inner"><MonitorPlay size={18} /></div>
+          <h3 className="font-black text-sm sm:text-base text-foreground mb-6 flex items-center gap-3 uppercase tracking-wider">
+            <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-inner"><MonitorPlay size={18} /></div>
             {t('console_util')}
           </h3>
           
@@ -156,31 +156,22 @@ const Dashboard: React.FC = () => {
              {consoleUsageData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={consoleUsageData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="5 5" vertical={false} stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
+                    <CartesianGrid strokeDasharray="5 5" vertical={false} stroke={theme === 'dark' ? 'hsl(var(--border))' : 'hsl(var(--border))'} />
                     <XAxis 
                       dataKey="name" 
-                      stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={9} 
-                      tickLine={false} 
-                      axisLine={false}
-                      dy={10}
-                      fontFamily='Plus Jakarta Sans'
-                      fontWeight='800'
+                      stroke={theme === 'dark' ? 'hsl(240 5% 65%)' : 'hsl(240 4% 46%)'}
+                      fontSize={9} tickLine={false} axisLine={false} dy={10} fontFamily='Plus Jakarta Sans' fontWeight='800'
                     />
                     <YAxis 
-                      stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} 
-                      fontSize={9} 
-                      tickLine={false} 
-                      axisLine={false} 
-                      fontFamily='Plus Jakarta Sans'
-                      fontWeight='800'
+                      stroke={theme === 'dark' ? 'hsl(240 5% 65%)' : 'hsl(240 4% 46%)'}
+                      fontSize={9} tickLine={false} axisLine={false} fontFamily='Plus Jakarta Sans' fontWeight='800'
                     />
                     <Tooltip 
-                      cursor={{ fill: 'rgba(124, 58, 237, 0.1)', radius: 10 }}
+                      cursor={{ fill: 'hsla(var(--primary), 0.1)', radius: 10 }}
                       contentStyle={{ 
-                        backgroundColor: theme === 'dark' ? 'rgba(15, 7, 32, 0.9)' : 'rgba(255, 255, 255, 0.9)', 
-                        borderColor: 'rgba(255,255,255,0.1)',
-                        color: theme === 'dark' ? '#f8fafc' : '#0f172a',
+                        backgroundColor: 'hsla(var(--popover), 0.9)', 
+                        borderColor: 'hsl(var(--border))',
+                        color: 'hsl(var(--popover-foreground))',
                         borderRadius: '20px',
                         boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)',
                         fontSize: '11px',
@@ -192,13 +183,13 @@ const Dashboard: React.FC = () => {
                     />
                     <Bar dataKey="hours" radius={[10, 10, 0, 0]} barSize={35}>
                        {consoleUsageData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#7c3aed' : '#ec4899'} fillOpacity={0.8} />
+                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'hsl(var(--primary))' : '#ec4899'} fillOpacity={0.8} />
                         ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-30">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-30">
                     <MonitorPlay size={48} className="mb-4"/>
                     <span className="text-label">{t('no_data_consoles')}</span>
                 </div>

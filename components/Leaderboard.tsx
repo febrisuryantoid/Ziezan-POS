@@ -66,8 +66,7 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
     const containerWidth = isFirst ? "w-[40%] sm:w-[36%]" : "flex-1";
     const zIndex = isFirst ? "z-30" : "z-20";
     
-    // INCREASED HEIGHTS: Ensures pillars go deep behind the sheet
-    const podiumHeight = isFirst ? 'h-96 sm:h-[28rem]' : 'h-72 sm:h-80'; 
+    const podiumHeight = isFirst ? 'h-80 sm:h-[26rem]' : 'h-64 sm:h-72'; 
     
     const avatarSize = isFirst ? "w-24 h-24 sm:w-32 sm:h-32" : "w-16 h-16 sm:w-20 sm:h-20";
     const glowColor = isFirst ? 'rgba(234, 179, 8, 0.5)' : rank === 2 ? 'rgba(148, 163, 184, 0.3)' : 'rgba(234, 88, 12, 0.3)';
@@ -287,7 +286,6 @@ const Leaderboard: React.FC = () => {
         <div className="relative z-10 flex flex-col h-full w-full max-w-lg mx-auto md:max-w-4xl">
             
             {/* --- TOP SECTION (HEADER & PODIUM) --- */}
-            {/* Using flex-1 to push the podium to fill available space until the sheet covers it */}
             <div className={`flex-1 flex flex-col transition-all duration-500 ease-in-out ${isExpanded ? 'opacity-30 scale-95 blur-[2px]' : 'opacity-100 scale-100'}`}>
                 
                 {/* Header Area */}
@@ -306,10 +304,7 @@ const Leaderboard: React.FC = () => {
                 </div>
 
                 {/* PODIUM STAGE */}
-                {/* Ensure items align to the bottom of this flexible space */}
-                {/* Increased pb to 25vh to lift the podium higher relative to the sheet */}
-                <div className="flex-1 flex items-end justify-center w-full overflow-hidden pb-[25vh] sm:pb-[20vh]"> 
-                    {/* Padding bottom pushes the podium up so the pillars go 'under' the sheet */}
+                <div className="flex-1 flex items-end justify-center w-full overflow-hidden pb-[40vh]"> 
                     <div className="flex items-end justify-center w-full gap-2 sm:gap-6 px-4 sm:px-0 translate-y-10 sm:translate-y-0">
                         <PodiumCard 
                             member={podiumOrder[0]} 
@@ -343,8 +338,7 @@ const Leaderboard: React.FC = () => {
                     flex flex-col overflow-hidden 
                     transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1)
                 `}
-                // Reduced default height slightly to show more of the podium
-                style={{ height: isExpanded ? '85vh' : '42vh' }}
+                style={{ height: isExpanded ? '85vh' : '38vh' }}
             >
                 {/* Drag Handle (Clickable Area) */}
                 <div 

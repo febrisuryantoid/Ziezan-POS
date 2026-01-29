@@ -28,6 +28,7 @@ interface DataContextType {
   addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
   deleteMember: (id: string) => boolean;
+  adjustBonusHours: (memberId: string, amount: number) => void;
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
   resetSeason: () => void;
 
@@ -332,6 +333,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRawMembers(updatedRaw);
     syncService.syncNow();
   };
+  
+  const adjustBonusHours = (memberId: string, amount: number) => {
+    const updatedRaw = rawMembers.map(m => {
+        if (m.id === memberId) {
+            const currentBalance = m.freeHoursBalance || 0;
+            const newBalance = Math.max(0, currentBalance + amount);
+            const note = `[Admin] Bonus Adjustment: ${amount > 0 ? '+' : ''}${amount} Jam`;
+            return {
+                ...m,
+                freeHoursBalance: newBalance,
+                notes: (m.notes ? m.notes + '\n' : '') + note,
+                synced: false,
+                updatedAt: new Date().toISOString()
+            };
+        }
+        return m;
+    });
+    safeSave(() => Storage.saveMembers(updatedRaw));
+    setRawMembers(updatedRaw);
+    syncService.syncNow();
+  };
 
   const deleteMember = (id: string): boolean => {
     const hasActiveTx = transactions.some(t => t.memberId === id && t.status === 'ACTIVE');
@@ -490,7 +512,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       settings,
       refreshData, updateSettings, updateMembershipConfig,
       addConsole, updateConsole, updateConsoleStatus, deleteConsole,
-      addMember, updateMember, deleteMember, upgradeMember, resetSeason,
+      addMember, updateMember, deleteMember, adjustBonusHours, upgradeMember, resetSeason,
       startRental, stopRental
     }}>
       {children}
