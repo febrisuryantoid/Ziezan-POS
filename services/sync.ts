@@ -31,16 +31,6 @@ class SyncService {
   }
 
   // --- DELETE ACTIONS (Direct to Cloud) ---
-  public async deleteMember(id: string) {
-    if (!navigator.onLine) {
-      console.warn("Offline: Cannot delete member from cloud immediately.");
-      return;
-    }
-    const { error } = await supabase.from('members').delete().eq('id', id);
-    if (error) console.error("Failed to delete member from cloud:", error);
-    else console.log("Member deleted from cloud:", id);
-  }
-
   public async deleteConsole(id: string) {
     if (!navigator.onLine) return;
     const { error } = await supabase.from('consoles').delete().eq('id', id);

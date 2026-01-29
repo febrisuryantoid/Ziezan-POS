@@ -135,10 +135,10 @@ const Members: React.FC = () => {
     if(updatedMember) setEditingMember(updatedMember);
   };
 
-  const handleDeleteMember = () => {
+  const handleDeactivateMember = () => {
     if (deletingMemberId) {
       const success = deleteMember(deletingMemberId);
-      if (success) addToast('info', t('member_deleted'), t('saved'));
+      if (success) addToast('info', t('member_deactivated'), t('saved'));
       else addToast('error', 'Error', 'Member Active!');
       setDeletingMemberId(null);
     }
@@ -404,16 +404,16 @@ const Members: React.FC = () => {
           </div>
       )}
       
-      {/* DELETE MODAL */}
+      {/* DEACTIVATE MODAL */}
       {deletingMemberId && (
           <div className="fixed inset-0 z-[210] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
               <div className="bg-white/95 dark:bg-palette-navyLight/95 sm:rounded-[2rem] rounded-t-[2rem] w-full max-w-sm shadow-2xl p-8 text-center border border-slate-200 dark:border-white/20 backdrop-blur-3xl">
                   <div className="w-20 h-20 bg-red-100 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl border border-red-500/20"><AlertTriangle size={36} /></div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('delete_confirm')}</h3>
-                  <p className="text-sm font-bold text-slate-500 mb-8">{t('delete_member_msg')}</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('deactivate_confirm')}</h3>
+                  <p className="text-sm font-bold text-slate-500 mb-8">{t('deactivate_member_msg')}</p>
                   <div className="grid grid-cols-2 gap-4">
                       <button onClick={() => setDeletingMemberId(null)} className="btn-glass border-2 text-xs flex items-center justify-center">{t('cancel')}</button>
-                      <button onClick={handleDeleteMember} className="btn-primary bg-red-500 text-white text-xs shadow-red-500/30 flex items-center justify-center">{t('delete')}</button>
+                      <button onClick={handleDeactivateMember} className="btn-primary bg-red-500 text-white text-xs shadow-red-500/30 flex items-center justify-center">{t('yes_deactivate')}</button>
                   </div>
               </div>
           </div>

@@ -359,10 +359,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const hasActiveTx = transactions.some(t => t.memberId === id && t.status === 'ACTIVE');
     if (hasActiveTx) return false;
     
-    const updated = rawMembers.filter(m => m.id !== id);
+    // SOFT DELETE: Change status to INACTIVE instead of removing the record
+    const updated = rawMembers.map(m => 
+        m.id === id 
+        ? { ...m, status: MemberStatus.INACTIVE, synced: false, updatedAt: new Date().toISOString() } 
+        : m
+    );
     safeSave(() => Storage.saveMembers(updated));
     setRawMembers(updated);
-    syncService.deleteMember(id);
+    syncService.syncNow(); // Let the regular sync handle the update to the cloud
     return true;
   };
 
