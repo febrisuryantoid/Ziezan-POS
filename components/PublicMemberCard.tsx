@@ -94,7 +94,7 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
 
               {/* Holographic Glare Effect */}
               <div 
-                className="absolute inset-0 z-30 opacity-0 transition-opacity duration-500 card-glow"
+                className="absolute inset-0 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{ background: 'radial-gradient(circle at var(--mouse-x) var(--mouse-y), hsla(0,0%,100%,.12) 0%, transparent 40%)' }}
               ></div>
 
@@ -138,9 +138,6 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
               </div>
           </div>
       </div>
-       <style>{`
-          .card-inner:hover .card-glow { opacity: 1; }
-       `}</style>
     </div>
   );
 };

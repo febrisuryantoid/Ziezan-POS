@@ -12,6 +12,7 @@ import { BluetoothProvider } from './contexts/BluetoothContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { User } from './types';
 import { Loader2 } from 'lucide-react';
+import InstallPrompt from './components/InstallPrompt';
 
 // LAZY LOAD COMPONENTS
 const Consoles = React.lazy(() => import('./components/Consoles'));
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   // Source of truth for navigation
   const [path, setPath] = useState(window.location.pathname);
   const [user, setUser] = useState<User | null>(null);
+  const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
     // Session recovery
@@ -42,7 +44,24 @@ const App: React.FC = () => {
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    
+    // PWA Install Prompt Logic
+    const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPromptEvent(e);
+    };
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (!isStandalone) {
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }
+
+    return () => {
+        window.removeEventListener('popstate', handlePopState);
+        if (!isStandalone) {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        }
+    };
   }, []);
 
   const handleLogin = (u: User) => {
@@ -162,6 +181,7 @@ const App: React.FC = () => {
         <ToastProvider>
           <BluetoothProvider>
              {renderContent()}
+             {installPromptEvent && <InstallPrompt promptEvent={installPromptEvent} onClose={() => setInstallPromptEvent(null)} />}
           </BluetoothProvider>
         </ToastProvider>
       </LanguageProvider>
