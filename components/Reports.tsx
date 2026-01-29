@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet, Receipt, DollarSign, Clock } from 'lucide-react';
+import { FileText, Calendar, Filter, ChevronLeft, ChevronRight, Download, Search, Printer, Bluetooth, ArrowUpDown, Wallet, Receipt, DollarSign, Clock, Share2, Loader2 } from 'lucide-react';
 import { PaymentMethod, Transaction } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { printReceiptBrowser, generateEscPosCommand } from '../utils/receipt';
 import { bluetoothService } from '../services/bluetooth';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
+import { shareReceiptAsImage } from '../utils/shareReceipt';
 
 type SortOption = 'DATE_DESC' | 'DATE_ASC' | 'COST_DESC' | 'COST_ASC';
 
@@ -35,6 +36,7 @@ const Reports: React.FC = () => {
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [isSharing, setIsSharing] = useState<string | null>(null);
 
   const formatDateTime = (dateString: string) => {
       const date = new Date(dateString);
@@ -109,6 +111,20 @@ const Reports: React.FC = () => {
     const success = await bluetoothService.sendRawData(rawData);
     if (success) { addToast('success', t('print'), t('saved')); setSelectedTxForPrint(null); } else { addToast('error', 'Error', 'Print Failed'); }
   };
+  
+  const handleShare = async (tx: Transaction) => {
+    setIsSharing(tx.id);
+    const result = await shareReceiptAsImage(tx, settings);
+    if (result.success) {
+      addToast('success', 'Berhasil', result.message);
+    } else {
+      if (result.message !== 'Dibatalkan.') {
+        addToast('error', 'Gagal', result.message);
+      }
+    }
+    setIsSharing(null);
+  };
+
 
   const totalItems = filteredTransactions.length;
   const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(totalItems / itemsPerPage);
@@ -232,83 +248,134 @@ const Reports: React.FC = () => {
                 </select>
              </div>
           </div>
-
-          <div className="flex-1 overflow-x-auto custom-scrollbar">
-            {currentTransactions.length === 0 ? (
+          
+          {currentTransactions.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-80 text-slate-500 opacity-30">
                   <Search className="w-16 h-16 mb-4" />
                   <p className="text-[10px] font-black uppercase tracking-widest">{t('no_tx')}</p>
                </div>
-            ) : (
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-transparent text-slate-500 text-[10px] font-black uppercase border-b border-slate-300 dark:border-white/10 tracking-widest">
-                  <tr>
-                    <th className="px-8 py-5">{t('tx_time')}</th>
-                    <th className="px-8 py-5">{t('member_identity')}</th>
-                    <th className="px-8 py-5">{t('unit_used')}</th>
-                    <th className="px-8 py-5 text-center">{t('method')}</th>
-                    <th className="px-8 py-5 text-right">{t('nominal')}</th>
-                    <th className="px-8 py-5 text-center">{t('print')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-white/5">
-                  {currentTransactions.map(tx => {
-                    const { datePart, timePart } = formatDateTime(tx.startTime);
-                    return (
-                    <tr key={tx.id} className="group hover:bg-palette-mustard/5 transition-colors">
-                      <td className="px-8 py-5">
-                        <div className="flex flex-col">
-                          <span className="font-black text-slate-800 dark:text-white text-xs">{datePart}</span>
-                          <span className="text-[9px] text-slate-400 font-black uppercase mt-1 tracking-widest opacity-60">{timePart}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                         <div className="flex flex-col">
-                            <span className="font-black text-slate-900 dark:text-white text-sm">{tx.memberName || t('unknown')}</span>
-                            <span className="text-[9px] text-palette-mustard font-mono tracking-widest uppercase mt-0.5">#{tx.id.substring(0,8)}</span>
-                         </div>
-                      </td>
-                      <td className="px-8 py-5">
-                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white/10 rounded-xl text-slate-500 shadow-inner group-hover:text-palette-mustard transition-colors">
-                                <Clock size={14} />
-                            </div>
-                            <div>
-                                <span className="block text-xs font-black text-slate-800 dark:text-slate-300 uppercase">{tx.consoleName || t('unknown')}</span>
-                                <span className="block text-[9px] font-black text-slate-500 opacity-60 uppercase">{tx.durationHours} {t('jam_main')}</span>
-                            </div>
-                         </div>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.15em] border shadow-sm ${
-                            tx.paymentMethod === 'QRIS' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' : 
-                            tx.paymentMethod === 'BONUS' ? 'bg-purple-500/10 text-purple-500 border-purple-500/30' :
-                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                        }`}>
-                          {tx.paymentMethod || 'CASH'}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <span className="font-mono text-base font-black text-slate-900 dark:text-white tracking-tighter">
-                           Rp {tx.cost.toLocaleString()}
-                        </span>
-                        {tx.discountApplied > 0 && (
-                            <div className="text-[9px] text-red-500/60 font-bold line-through uppercase tracking-tighter">
-                                Rp {(tx.cost + tx.discountApplied).toLocaleString()}
-                            </div>
-                        )}
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                         <button onClick={() => setSelectedTxForPrint(tx)} className="p-2.5 rounded-[1rem] text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-90 shadow-md border border-transparent hover:border-slate-200 dark:hover:border-white/20" title="Cetak Struk">
-                            <Printer size={18}/>
-                         </button>
-                      </td>
+          ) : (
+            <>
+              {/* DESKTOP TABLE */}
+              <div className="hidden md:block flex-1 overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-transparent text-slate-500 text-[10px] font-black uppercase border-b border-slate-300 dark:border-white/10 tracking-widest">
+                    <tr>
+                      <th className="px-8 py-5">{t('tx_time')}</th>
+                      <th className="px-8 py-5">{t('member_identity')}</th>
+                      <th className="px-8 py-5">{t('unit_used')}</th>
+                      <th className="px-8 py-5 text-center">{t('method')}</th>
+                      <th className="px-8 py-5 text-right">{t('nominal')}</th>
+                      <th className="px-8 py-5 text-center">Aksi</th>
                     </tr>
-                  );})}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+                    {currentTransactions.map(tx => {
+                      const { datePart, timePart } = formatDateTime(tx.startTime);
+                      return (
+                      <tr key={tx.id} className="group hover:bg-palette-mustard/5 transition-colors">
+                        <td className="px-8 py-5">
+                          <div className="flex flex-col">
+                            <span className="font-black text-slate-800 dark:text-white text-xs">{datePart}</span>
+                            <span className="text-[9px] text-slate-400 font-black uppercase mt-1 tracking-widest opacity-60">{timePart}</span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                           <div className="flex flex-col">
+                              <span className="font-black text-slate-900 dark:text-white text-sm">{tx.memberName || t('unknown')}</span>
+                              <span className="text-[9px] text-palette-mustard font-mono tracking-widest uppercase mt-0.5">#{tx.id.substring(0,8)}</span>
+                           </div>
+                        </td>
+                        <td className="px-8 py-5">
+                           <div className="flex items-center gap-3">
+                              <div className="p-2 bg-white/10 rounded-xl text-slate-500 shadow-inner group-hover:text-palette-mustard transition-colors">
+                                  <Clock size={14} />
+                              </div>
+                              <div>
+                                  <span className="block text-xs font-black text-slate-800 dark:text-slate-300 uppercase">{tx.consoleName || t('unknown')}</span>
+                                  <span className="block text-[9px] font-black text-slate-500 opacity-60 uppercase">{tx.durationHours} {t('jam_main')}</span>
+                              </div>
+                           </div>
+                        </td>
+                        <td className="px-8 py-5 text-center">
+                          <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.15em] border shadow-sm ${
+                              tx.paymentMethod === 'QRIS' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' : 
+                              tx.paymentMethod === 'BONUS' ? 'bg-purple-500/10 text-purple-500 border-purple-500/30' :
+                              'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                          }`}>
+                            {tx.paymentMethod || 'CASH'}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <span className="font-mono text-base font-black text-slate-900 dark:text-white tracking-tighter">
+                             Rp {tx.cost.toLocaleString()}
+                          </span>
+                          {tx.discountApplied > 0 && (
+                              <div className="text-[9px] text-red-500/60 font-bold line-through uppercase tracking-tighter">
+                                  Rp {(tx.cost + tx.discountApplied).toLocaleString()}
+                              </div>
+                          )}
+                        </td>
+                        <td className="px-8 py-5 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => setSelectedTxForPrint(tx)} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-90" title="Cetak Struk">
+                                <Printer size={16}/>
+                            </button>
+                             <button onClick={() => handleShare(tx)} disabled={isSharing === tx.id} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-90 disabled:opacity-50" title="Bagikan Struk">
+                                {isSharing === tx.id ? <Loader2 size={16} className="animate-spin"/> : <Share2 size={16}/>}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );})}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* MOBILE LIST */}
+              <div className="md:hidden flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+                  {currentTransactions.map(tx => {
+                      const { datePart, timePart } = formatDateTime(tx.startTime);
+                      return (
+                          <div key={tx.id} className="bg-white/50 dark:bg-white/5 rounded-2xl p-4 border border-slate-200 dark:border-white/10 shadow-sm space-y-4">
+                              <div className="flex justify-between items-start gap-3">
+                                  <div>
+                                      <h4 className="font-black text-slate-900 dark:text-white">{tx.memberName || t('unknown')}</h4>
+                                      <span className="text-[10px] text-palette-mustard font-mono tracking-widest uppercase">#{tx.id.substring(0, 8)}</span>
+                                  </div>
+                                  <span className="font-mono text-lg font-black text-slate-900 dark:text-white tracking-tighter text-right">
+                                      Rp {tx.cost.toLocaleString()}
+                                  </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 text-xs p-3 bg-slate-100/50 dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5">
+                                  <div className="space-y-1">
+                                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Unit & Durasi</p>
+                                      <p className="font-bold text-slate-700 dark:text-slate-200 truncate">{tx.consoleName}</p>
+                                      <p className="font-bold text-slate-500">{tx.durationHours} Jam</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Waktu & Metode</p>
+                                      <p className="font-bold text-slate-700 dark:text-slate-200">{datePart} {timePart}</p>
+                                      <p className="font-bold text-slate-500">{tx.paymentMethod}</p>
+                                  </div>
+                              </div>
+
+                              <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
+                                  <button onClick={() => setSelectedTxForPrint(tx)} className="flex-1 btn-glass h-10 text-xs">
+                                      <Printer size={16}/> Cetak
+                                  </button>
+                                  <button onClick={() => handleShare(tx)} disabled={isSharing === tx.id} className="flex-1 btn-primary h-10 text-xs disabled:opacity-70">
+                                      {isSharing === tx.id ? <Loader2 size={16} className="animate-spin"/> : <Share2 size={16}/>}
+                                      Bagikan
+                                  </button>
+                              </div>
+                          </div>
+                      );
+                  })}
+              </div>
+            </>
+          )}
 
           {totalPages > 1 && (
              <div className="p-6 border-t border-slate-200 dark:border-white/10 flex items-center justify-center bg-white/20 dark:bg-white/5">

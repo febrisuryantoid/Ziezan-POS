@@ -191,11 +191,6 @@ const Settings: React.FC = () => {
       window.scrollTo(0, 0);
   };
 
-  const handleBackToDashboard = () => {
-      window.history.pushState(null, '', '/dashboard');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-  };
-
   const MobileMenuItem = ({ section, icon: Icon, label, desc }: { section: SettingsSection, icon: any, label: string, desc: string }) => (
     <button onClick={() => navigateToSection(section)} className="w-full glass-panel p-5 flex items-center justify-between group active:scale-95 transition-all shadow-sm mb-4">
         <div className="flex items-center gap-5">
@@ -469,12 +464,7 @@ const Settings: React.FC = () => {
   return (
     <div className="max-w-[1600px] mx-auto h-full lg:h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-10 lg:pb-6 relative px-2">
       <div className={`lg:hidden w-full ${isMobileMenuOpen ? 'block' : 'hidden'} animate-fade-in pb-24`}>
-          <div className="mb-6 px-2 pt-2">
-             <button onClick={handleBackToDashboard} className="w-full btn-glass flex items-center justify-center gap-3 shadow-lg active:scale-95">
-                <ArrowLeft size={18} /> {t('back')}
-             </button>
-          </div>
-          <div className="mb-8 px-2">
+          <div className="mb-8 px-2 pt-8">
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{t('system_settings')}</h2>
             <p className="text-label mt-2">{t('config_subtitle')}</p>
           </div>
@@ -492,12 +482,7 @@ const Settings: React.FC = () => {
          Added flex-shrink-0 to ensure it doesn't collapse. 
       */}
       <nav className="hidden lg:flex w-80 flex-shrink-0 flex-col gap-8">
-          <div className="mb-2 px-2">
-             <button onClick={handleBackToDashboard} className="w-full btn-glass flex items-center justify-center gap-3 shadow-lg">
-                <ArrowLeft size={18} /> {t('back')}
-             </button>
-          </div>
-          <div className="pl-4">
+          <div className="pl-4 pt-4">
             <h2 className="text-3xl font-black text-palette-navy dark:text-white tracking-tight uppercase leading-none">{t('system_settings')}</h2>
             <p className="text-label mt-3">{t('config_subtitle')}</p>
           </div>
