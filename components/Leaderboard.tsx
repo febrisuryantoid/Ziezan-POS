@@ -72,7 +72,7 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
     const glowColor = isFirst ? 'rgba(234, 179, 8, 0.5)' : rank === 2 ? 'rgba(148, 163, 184, 0.3)' : 'rgba(234, 88, 12, 0.3)';
 
     return (
-        <a href={`/member/${encodeURIComponent(member.nickname)}`} className={`relative flex flex-col items-center group transition-transform duration-500 hover:-translate-y-2 ${containerWidth} ${zIndex}`}>
+        <a href={`/member/${encodeURIComponent(member.nickname)}`} className={`relative flex flex-col items-center group transition-transform duration-500 hover:-translate-y-2 ${containerWidth} ${zIndex} ${!isFirst ? 'sm:translate-y-8' : ''}`}>
             
             {/* --- AVATAR AREA --- */}
             <div className="relative mb-3 z-50"> {/* Reduced mb for tighter lockup */}
@@ -222,6 +222,17 @@ const Leaderboard: React.FC = () => {
   // NEW: State for Bottom Sheet
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // NEW: State to detect desktop view
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     refreshData();
     const interval = setInterval(() => refreshData(), 30000);
@@ -259,6 +270,9 @@ const Leaderboard: React.FC = () => {
   
   // Challengers
   const challengers = filteredRankings.filter(m => !top3.map(t => t?.id).includes(m.id));
+  
+  // NEW: Determine which challengers to show
+  const challengersToShow = (isExpanded || !isDesktop) ? challengers : challengers.slice(0, 1);
 
   if (loading) {
       return (
@@ -338,7 +352,7 @@ const Leaderboard: React.FC = () => {
                     flex flex-col overflow-hidden 
                     transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1)
                 `}
-                style={{ height: isExpanded ? '85vh' : '38vh' }}
+                style={{ height: isExpanded ? '85vh' : (isDesktop ? '28vh' : '38vh') }}
             >
                 {/* Drag Handle (Clickable Area) */}
                 <div 
@@ -371,12 +385,12 @@ const Leaderboard: React.FC = () => {
 
                 {/* Scrollable List */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 scroll-smooth">
-                    {challengers.length > 0 ? (
-                        challengers.map((m, idx) => (
+                    {challengersToShow.length > 0 ? (
+                        challengersToShow.map((m, idx) => (
                             <ChallengerRow 
                                 key={m.id} 
                                 member={m} 
-                                rank={idx + 4} 
+                                rank={allRankings.findIndex(rankedMember => rankedMember.id === m.id) + 1} 
                                 score={getRealtimeScore(m)} 
                                 isPlaying={getIsPlaying(m)} 
                             />
