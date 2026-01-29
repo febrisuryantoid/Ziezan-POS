@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera, History, Banknote, Gamepad2, PlusCircle, MinusCircle } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 import { getTierTheme } from '../utils/tierTheme';
+import DragonIcon from './DragonIcon'; // Import DragonIcon
 
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
@@ -225,35 +226,48 @@ const Members: React.FC = () => {
                     const realtimePlaytime = getRealtimePlaytime(member);
                     const isPlaying = transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE');
                     return (
-                    <div key={member.id} className={`group relative rounded-[2rem] border ${theme.borderInner} bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1`}>
-                        <div className={`absolute top-0 inset-x-0 h-24 bg-gradient-to-b ${theme.conic} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
-                        <div className="relative p-5 flex items-center gap-5">
-                            <div className="relative shrink-0">
-                                <div className={`relative w-16 h-16 rounded-full p-1 bg-gradient-to-br ${theme.conic} shadow-2xl`}>
-                                    <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black border border-black/50" />
-                                    {isPlaying && <div className="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-black animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
+                    <div 
+                        key={member.id} 
+                        className="group relative rounded-[2rem] p-[2px] animate-spin-border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                        style={{
+                            '--tier-color': theme.particleColor,
+                            background: `conic-gradient(from 180deg at 50% 50%, transparent 0%, var(--tier-color) 35%, transparent 70%)`
+                        } as React.CSSProperties}
+                    >
+                        <div className="relative w-full h-full rounded-[calc(2rem-2px)] bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl overflow-hidden flex flex-col shimmer-surface">
+                            <div className={`absolute inset-0 ${theme.bg_tint} opacity-50`}></div>
+                            <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
+                               <DragonIcon className={`w-40 h-40 opacity-[0.06] blur-sm -mr-10 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient}`} />
+                            </div>
+
+                            <div className="relative p-5 flex items-center gap-5">
+                                <div className="relative shrink-0">
+                                    <div className={`relative w-16 h-16 rounded-full p-1 bg-gradient-to-br ${theme.conic} shadow-2xl`}>
+                                        <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black border border-black/50" />
+                                        {isPlaying && <div className="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-black animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
+                                    </div>
+                                    <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-xl flex items-center justify-center ${theme.badge} border-2 border-white dark:border-black shadow-xl overflow-hidden`}><img src={theme.iconUrl} className="w-5 h-5 object-contain" /></div>
                                 </div>
-                                <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-xl flex items-center justify-center ${theme.badge} border-2 border-white dark:border-black shadow-xl overflow-hidden`}><img src={theme.iconUrl} className="w-5 h-5 object-contain" /></div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className={`font-black text-lg leading-tight truncate drop-shadow-sm ${theme.text}`}>{member.nickname || t('unknown')}</h3>
-                                <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-xs font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
-                            </div>
-                            <div className="flex flex-col gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                                <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-palette-mustard shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
-                                <button onClick={() => handleCopyLink(member.nickname)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-blue-500 shadow-sm backdrop-blur-md transition-all"><Copy size={14} /></button>
-                                <button onClick={() => setDeletingMemberId(member.id)} className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md transition-all"><Trash2 size={14} /></button>
-                            </div>
-                        </div>
-                        <div className="px-5 pb-5 mt-auto">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">{t('play_stat')}</span></div>
-                                    <span className={`text-xs font-black ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className={`font-black text-lg leading-tight truncate drop-shadow-sm ${theme.text}`}>{member.nickname || t('unknown')}</h3>
+                                    <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-xs font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
                                 </div>
-                                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">{t('bonus_stat')}</span></div>
-                                    <span className="text-xs font-black text-slate-900 dark:text-white">{member.freeHoursBalance}h</span>
+                                <div className="flex flex-col gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 z-20">
+                                    <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-palette-mustard shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
+                                    <button onClick={() => handleCopyLink(member.nickname)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-blue-500 shadow-sm backdrop-blur-md transition-all"><Copy size={14} /></button>
+                                    <button onClick={() => setDeletingMemberId(member.id)} className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md transition-all"><Trash2 size={14} /></button>
+                                </div>
+                            </div>
+                            <div className="px-5 pb-5 mt-auto relative z-10">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
+                                        <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">{t('play_stat')}</span></div>
+                                        <span className={`text-xs font-black ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
+                                    </div>
+                                    <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
+                                        <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">{t('bonus_stat')}</span></div>
+                                        <span className="text-xs font-black text-slate-900 dark:text-white">{member.freeHoursBalance}h</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
