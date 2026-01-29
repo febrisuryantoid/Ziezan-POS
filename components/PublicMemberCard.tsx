@@ -61,7 +61,7 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
   const theme = getTierTheme(member.membershipId);
   const isPlaying = transactions.some(t => t.memberId === member.id && t.status === 'ACTIVE');
   const joinDate = new Date(member.joinDate).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.href)}&bgcolor=0D0D15&color=FFFFFF&qzone=1&margin=0`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.href)}&bgcolor=FFFFFF&color=0D0D15&qzone=2&margin=0`;
 
   return (
     <div 
@@ -132,8 +132,8 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
                           </div>
                           
                           <div className="flex gap-4 items-center bg-black/20 p-3 rounded-xl border border-white/5 shadow-inner">
-                              <div className={`p-2 rounded-lg border-2 ${theme.border_glow} bg-black/50 shadow-lg`}>
-                                 <img src={qrCodeUrl} alt="QR Profile" className="w-16 h-16 sm:w-20 sm:h-20" />
+                              <div className={`p-1.5 rounded-lg border-2 ${theme.border_glow} bg-white shadow-lg`}>
+                                 <img src={qrCodeUrl} alt="QR Profile" className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm" />
                               </div>
                               <div className="flex flex-col">
                                   <QrCode size={16} className={`mb-1 ${theme.text_primary}`} />

@@ -397,7 +397,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                      </div>
                   )}
                   
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-20 translate-y-2 group-hover:translate-y-0">
+                  <div className="absolute top-3 right-3 flex flex-col md:flex-row gap-2 opacity-0 group-hover:opacity-100 transition-all z-20 translate-y-2 group-hover:translate-y-0">
                      <button onClick={() => toggleMaintenance(console)} className={`p-2.5 backdrop-blur-md rounded-full text-white transition-all shadow-lg ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-white/10 hover:bg-white/20 border border-white/10'}`} title={isMaintenance ? t('repair_done') : t('repair_mode')}><Wrench size={14} /></button>
                      <button onClick={() => setEditingConsole(console)} className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 border border-white/10 shadow-lg"><Edit2 size={14} /></button>
                      <button onClick={() => setDeletingConsole(console)} className="p-2.5 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40 border border-red-500/20 shadow-lg"><Trash2 size={14} /></button>
