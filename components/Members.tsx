@@ -220,7 +220,7 @@ const Members: React.FC = () => {
                 <p className="text-slate-500 font-black uppercase tracking-widest text-xs opacity-50">{t('no_data_members')}</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {currentMembers.map(member => {
                     const theme = getTierTheme(member.membershipId);
                     const realtimePlaytime = getRealtimePlaytime(member);
@@ -232,7 +232,7 @@ const Members: React.FC = () => {
                     >
                         <div className={`absolute inset-0 ${theme.bg_tint} opacity-50`}></div>
                         <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
-                           <DragonIcon className={`w-40 h-40 opacity-[0.06] blur-sm -mr-10 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient}`} />
+                           <DragonIcon className={`w-40 h-40 opacity-[0.06] blur-sm -mr-10 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-20 group-hover:blur-[2px]`} />
                         </div>
 
                         <div className="relative p-5 flex items-center gap-5">
@@ -248,7 +248,7 @@ const Members: React.FC = () => {
                                 <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-xs font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
                             </div>
                             <div className="flex flex-col gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 z-20">
-                                <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-palette-mustard shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
+                                <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-primary shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
                                 <button onClick={() => handleCopyLink(member.nickname)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-blue-500 shadow-sm backdrop-blur-md transition-all"><Copy size={14} /></button>
                                 <button onClick={() => setDeletingMemberId(member.id)} className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md transition-all"><Trash2 size={14} /></button>
                             </div>
@@ -257,11 +257,11 @@ const Members: React.FC = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
                                     <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">{t('play_stat')}</span></div>
-                                    <span className={`text-xs font-black ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
+                                    <span className={`text-sm font-black font-mono ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
                                 </div>
                                 <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
                                     <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">{t('bonus_stat')}</span></div>
-                                    <span className="text-xs font-black text-slate-900 dark:text-white">{member.freeHoursBalance}h</span>
+                                    <span className="text-sm font-black text-slate-900 dark:text-white font-mono">{member.freeHoursBalance}h</span>
                                 </div>
                             </div>
                         </div>
@@ -278,7 +278,7 @@ const Members: React.FC = () => {
               <div className="bg-white/95 dark:bg-palette-navyLight/95 w-full max-w-lg sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] backdrop-blur-3xl border border-slate-200 dark:border-white/20">
                   <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-black/5 dark:bg-white/10">
                       <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
-                          <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard"><Users size={24}/></div>
+                          <div className="p-2 bg-primary/10 rounded-xl text-primary"><Users size={24}/></div>
                           {isAdding ? t('add_member') : t('edit_member')}
                       </h3>
                       <button onClick={() => { setIsAdding(false); setEditingMember(null); }} className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full hover:bg-black/10"><X size={20} /></button>
@@ -286,14 +286,14 @@ const Members: React.FC = () => {
                   <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                       <form id="member-form" onSubmit={isAdding ? handleAddMember : handleUpdateMember} className="space-y-6">
                           <div className="flex items-center gap-6 mb-4">
-                              <div onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="w-28 h-28 rounded-full bg-black/10 border-2 border-dashed border-white/40 flex items-center justify-center cursor-pointer hover:border-palette-mustard transition-all shadow-inner overflow-hidden relative group">
-                                  {isProcessingPhoto ? <Loader2 className="animate-spin text-palette-mustard" /> : (isAdding ? newPhoto : editingMember?.photoUrl) ? <img src={isAdding ? newPhoto : editingMember?.photoUrl} className="w-full h-full object-cover" /> : <Camera size={32} className="text-slate-400 group-hover:text-palette-mustard" />}
+                              <div onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="w-28 h-28 rounded-full bg-black/10 border-2 border-dashed border-white/40 flex items-center justify-center cursor-pointer hover:border-primary transition-all shadow-inner overflow-hidden relative group">
+                                  {isProcessingPhoto ? <Loader2 className="animate-spin text-primary" /> : (isAdding ? newPhoto : editingMember?.photoUrl) ? <img src={isAdding ? newPhoto : editingMember?.photoUrl} className="w-full h-full object-cover" /> : <Camera size={32} className="text-slate-400 group-hover:text-primary" />}
                               </div>
                               <div className="flex-1 space-y-2">
                                   <label className="text-label">{t('photo_member')}</label>
                                   <input type="text" placeholder="https://..." value={isAdding ? newPhoto : editingMember?.photoUrl || ''} onChange={e => isAdding ? setNewPhoto(e.target.value) : setEditingMember({...editingMember!, photoUrl: e.target.value})} className="input-standard" />
                                   <input type="file" ref={isAdding ? photoInputRef : editPhotoInputRef} onChange={e => handlePhotoUpload(e, !isAdding)} className="hidden" accept="image/*" />
-                                  <button type="button" onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="text-label text-palette-mustard hover:underline flex items-center gap-2"><ImagePlus size={14} /> {t('upload_gallery')}</button>
+                                  <button type="button" onClick={() => (isAdding ? photoInputRef : editPhotoInputRef).current?.click()} className="text-label text-primary hover:underline flex items-center gap-2"><ImagePlus size={14} /> {t('upload_gallery')}</button>
                               </div>
                           </div>
                           <div className="grid grid-cols-2 gap-5">
@@ -351,10 +351,10 @@ const Members: React.FC = () => {
                       {editingMember && (
                         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
                             <h3 className="text-label flex items-center gap-2 mb-4"><Gift size={14} /> Penyesuaian Bonus</h3>
-                             <div className="p-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200 dark:border-white/5 space-y-4">
+                             <div className="p-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200 dark:border-white/5 space-y-4 shadow-inner">
                                 <div className="flex items-center gap-3">
                                     <button onClick={() => setBonusAdjustment(prev => prev - 1)} className="btn-icon bg-red-500/10 text-red-500 border-red-500/20"><MinusCircle size={18}/></button>
-                                    <input type="number" value={bonusAdjustment} onChange={e => setBonusAdjustment(parseInt(e.target.value) || 0)} className="input-standard text-center font-black text-lg" />
+                                    <input type="number" value={bonusAdjustment} onChange={e => setBonusAdjustment(parseInt(e.target.value) || 0)} className="input-standard text-center font-black text-lg font-mono" />
                                     <button onClick={() => setBonusAdjustment(prev => prev + 1)} className="btn-icon bg-emerald-500/10 text-emerald-500 border-emerald-500/20"><PlusCircle size={18}/></button>
                                 </div>
                                 <button onClick={handleBonusAdjustment} disabled={bonusAdjustment === 0} className="w-full btn-primary disabled:opacity-50 text-xs">Simpan Penyesuaian</button>
@@ -376,7 +376,7 @@ const Members: React.FC = () => {
                                               <div key={tx.id} className="flex items-center gap-4 p-3 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200 dark:border-white/5">
                                                   <div className={`p-2 rounded-lg ${
                                                       isBonus ? 'bg-emerald-500/10 text-emerald-500' 
-                                                      : tx.cost > 0 ? 'bg-palette-mustard/10 text-palette-mustard'
+                                                      : tx.cost > 0 ? 'bg-primary/10 text-primary'
                                                       : 'bg-slate-500/10 text-slate-500'
                                                   }`}>
                                                       <Icon size={16} />
@@ -390,7 +390,7 @@ const Members: React.FC = () => {
                                                       </p>
                                                   </div>
                                                   <div className="text-right shrink-0">
-                                                      <p className={`text-sm font-black ${color}`}>
+                                                      <p className={`text-sm font-black font-mono ${color}`}>
                                                           {isBonus ? `-${tx.durationHours} Jam` : `Rp ${tx.cost.toLocaleString('id-ID')}`}
                                                       </p>
                                                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{tx.paymentMethod}</p>
@@ -421,7 +421,7 @@ const Members: React.FC = () => {
                   <p className="text-sm font-bold text-slate-500 mb-8">{t('deactivate_member_msg')}</p>
                   <div className="grid grid-cols-2 gap-4">
                       <button onClick={() => setDeletingMemberId(null)} className="btn-glass border-2 text-xs flex items-center justify-center">{t('cancel')}</button>
-                      <button onClick={handleDeactivateMember} className="btn-primary bg-red-500 text-white text-xs shadow-red-500/30 flex items-center justify-center">{t('yes_deactivate')}</button>
+                      <button onClick={handleDeactivateMember} className="btn-primary bg-gradient-to-br from-red-500 to-red-700 text-white text-xs shadow-red-500/30 flex items-center justify-center">{t('yes_deactivate')}</button>
                   </div>
               </div>
           </div>

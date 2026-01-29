@@ -141,7 +141,7 @@ const Reports: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
         <div className="px-2">
           <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
-             <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard"><FileText size={24} /></div> {t('reports')}
+             <div className="p-2 bg-primary/10 rounded-xl text-primary"><FileText size={24} /></div> {t('reports')}
           </h2>
           <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">{t('audit_desc')}</p>
         </div>
@@ -153,7 +153,7 @@ const Reports: React.FC = () => {
             </div>
             <div>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('gross_revenue')}</p>
-                <h3 className="text-3xl font-black tracking-tighter">Rp {totalRevenuePeriod.toLocaleString()}</h3>
+                <h3 className="text-3xl font-black tracking-tighter font-mono">Rp {totalRevenuePeriod.toLocaleString()}</h3>
             </div>
         </div>
       </div>
@@ -273,27 +273,27 @@ const Reports: React.FC = () => {
                     {currentTransactions.map(tx => {
                       const { datePart, timePart } = formatDateTime(tx.startTime);
                       return (
-                      <tr key={tx.id} className="group hover:bg-palette-mustard/5 transition-colors">
+                      <tr key={tx.id} className="group hover:bg-primary/5 transition-colors">
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
                             <span className="font-black text-slate-800 dark:text-white text-xs">{datePart}</span>
-                            <span className="text-[9px] text-slate-400 font-black uppercase mt-1 tracking-widest opacity-60">{timePart}</span>
+                            <span className="text-[9px] text-slate-400 font-black uppercase mt-1 tracking-widest opacity-60 font-mono">{timePart}</span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
                            <div className="flex flex-col">
                               <span className="font-black text-slate-900 dark:text-white text-sm">{tx.memberName || t('unknown')}</span>
-                              <span className="text-[9px] text-palette-mustard font-mono tracking-widest uppercase mt-0.5">#{tx.id.substring(0,8)}</span>
+                              <span className="text-[9px] text-primary font-mono tracking-widest uppercase mt-0.5">#{tx.id.substring(0,8)}</span>
                            </div>
                         </td>
                         <td className="px-8 py-5">
                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white/10 rounded-xl text-slate-500 shadow-inner group-hover:text-palette-mustard transition-colors">
+                              <div className="p-2 bg-white/10 rounded-xl text-slate-500 shadow-inner group-hover:text-primary transition-colors">
                                   <Clock size={14} />
                               </div>
                               <div>
                                   <span className="block text-xs font-black text-slate-800 dark:text-slate-300 uppercase">{tx.consoleName || t('unknown')}</span>
-                                  <span className="block text-[9px] font-black text-slate-500 opacity-60 uppercase">{tx.durationHours} {t('jam_main')}</span>
+                                  <span className="block text-[9px] font-black text-slate-500 opacity-60 uppercase font-mono">{tx.durationHours} {t('jam_main')}</span>
                               </div>
                            </div>
                         </td>
@@ -311,17 +311,17 @@ const Reports: React.FC = () => {
                              Rp {tx.cost.toLocaleString()}
                           </span>
                           {tx.discountApplied > 0 && (
-                              <div className="text-[9px] text-red-500/60 font-bold line-through uppercase tracking-tighter">
+                              <div className="text-[9px] text-red-500/60 font-bold line-through uppercase tracking-tighter font-mono">
                                   Rp {(tx.cost + tx.discountApplied).toLocaleString()}
                               </div>
                           )}
                         </td>
                         <td className="px-8 py-5 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => setSelectedTxForPrint(tx)} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-90" title="Cetak Struk">
+                            <button onClick={() => setSelectedTxForPrint(tx)} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-primary transition-all active:scale-90" title="Cetak Struk">
                                 <Printer size={16}/>
                             </button>
-                             <button onClick={() => handleShare(tx)} disabled={isSharing === tx.id} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-palette-mustard transition-all active:scale-90 disabled:opacity-50" title="Bagikan Struk">
+                             <button onClick={() => handleShare(tx)} disabled={isSharing === tx.id} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-primary transition-all active:scale-90 disabled:opacity-50" title="Bagikan Struk">
                                 {isSharing === tx.id ? <Loader2 size={16} className="animate-spin"/> : <Share2 size={16}/>}
                             </button>
                           </div>
@@ -341,7 +341,7 @@ const Reports: React.FC = () => {
                               <div className="flex justify-between items-start gap-3">
                                   <div>
                                       <h4 className="font-black text-slate-900 dark:text-white">{tx.memberName || t('unknown')}</h4>
-                                      <span className="text-[10px] text-palette-mustard font-mono tracking-widest uppercase">#{tx.id.substring(0, 8)}</span>
+                                      <span className="text-[10px] text-primary font-mono tracking-widest uppercase">#{tx.id.substring(0, 8)}</span>
                                   </div>
                                   <span className="font-mono text-lg font-black text-slate-900 dark:text-white tracking-tighter text-right">
                                       Rp {tx.cost.toLocaleString()}
@@ -352,11 +352,11 @@ const Reports: React.FC = () => {
                                   <div className="space-y-1">
                                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Unit & Durasi</p>
                                       <p className="font-bold text-slate-700 dark:text-slate-200 truncate">{tx.consoleName}</p>
-                                      <p className="font-bold text-slate-500">{tx.durationHours} Jam</p>
+                                      <p className="font-bold text-slate-500 font-mono">{tx.durationHours} Jam</p>
                                   </div>
                                   <div className="space-y-1">
                                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Waktu & Metode</p>
-                                      <p className="font-bold text-slate-700 dark:text-slate-200">{datePart} {timePart}</p>
+                                      <p className="font-bold text-slate-700 dark:text-slate-200 font-mono">{datePart} {timePart}</p>
                                       <p className="font-bold text-slate-500">{tx.paymentMethod}</p>
                                   </div>
                               </div>
@@ -392,14 +392,14 @@ const Reports: React.FC = () => {
       {selectedTxForPrint && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
            <div className="bg-white/95 dark:bg-[#0f1016]/95 sm:rounded-[2.5rem] rounded-t-[2.5rem] w-full max-w-sm shadow-2xl p-8 border border-slate-200 dark:border-white/5 text-center relative overflow-hidden backdrop-blur-3xl">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-palette-mustard to-transparent opacity-50"></div>
-              <div className="p-4 bg-palette-mustard/10 rounded-[2rem] w-20 h-20 flex items-center justify-center mx-auto mb-6 text-palette-mustard shadow-2xl shadow-palette-mustard/10"><Printer size={36} /></div>
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
+              <div className="p-4 bg-primary/10 rounded-[2rem] w-20 h-20 flex items-center justify-center mx-auto mb-6 text-primary shadow-2xl shadow-primary/10"><Printer size={36} /></div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('select_print_method')}</h3>
               <p className="text-xs text-slate-500 mb-8 font-bold uppercase tracking-widest">{selectedTxForPrint.memberName}</p>
               
               <div className="flex flex-col gap-4">
-                 <button onClick={handlePrintWifi} className="flex items-center gap-5 p-5 rounded-[2rem] border-2 border-slate-200 dark:border-white/10 hover:border-palette-mustard/50 hover:bg-palette-mustard/10 transition-all group backdrop-blur-md shadow-lg">
-                    <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-[1.2rem] text-slate-500 group-hover:text-palette-mustard group-hover:bg-white/20 transition-all"><Printer size={24} /></div>
+                 <button onClick={handlePrintWifi} className="flex items-center gap-5 p-5 rounded-[2rem] border-2 border-slate-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/10 transition-all group backdrop-blur-md shadow-lg">
+                    <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-[1.2rem] text-slate-500 group-hover:text-primary group-hover:bg-white/20 transition-all"><Printer size={24} /></div>
                     <div className="text-left">
                         <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">{t('wifi_pdf')}</h4>
                         <p className="text-[10px] text-slate-500 font-bold">{t('standard_pc')}</p>

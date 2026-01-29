@@ -36,7 +36,7 @@ const RankBadge = ({ rank }: { rank: number }) => {
 
     return (
       <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 ${bg} ${text} ${border} ${shadow} flex items-center justify-center font-black text-xs rounded-lg rotate-45 border-2 z-50`}>
-          <span className="-rotate-45 drop-shadow-md">{rank}</span>
+          <span className="-rotate-45 drop-shadow-md font-mono">{rank}</span>
       </div>
     );
 };

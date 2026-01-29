@@ -376,7 +376,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
           <span className="ml-auto text-label bg-white/30 dark:bg-white/5 border border-slate-300 dark:border-white/10 px-3 py-1 rounded-full shadow-sm backdrop-blur-md normal-case">Total: {filteredConsoles.length}</span>
         </div>
 
-        <div className="grid grid-cols-1 min-[350px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+        <div className="grid grid-cols-1 min-[350px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {currentConsoles.map(console => {
             const isActive = console.status === ConsoleStatus.IN_USE;
             const isMaintenance = console.status === ConsoleStatus.MAINTENANCE;
@@ -384,7 +384,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
             const imageUrl = console.imageUrl || DEFAULT_CONSOLE_IMAGE;
             
             return (
-              <div key={console.id} className={`glass-card flex flex-col overflow-hidden group hover:shadow-2xl ${isActive ? 'border-palette-mustard ring-2 ring-palette-mustard/30' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'hover:border-palette-mustard/40 hover:-translate-y-1'}`}>
+              <div key={console.id} className={`glass-card flex flex-col overflow-hidden group hover:shadow-2xl rounded-[2rem] ${isActive ? 'border-primary animate-pulse-border' : isMaintenance ? 'border-palette-copper/50 opacity-90' : 'hover:border-primary/40 hover:-translate-y-1 hover:shadow-inner'}`}>
                 <div className="aspect-video w-full bg-slate-100 dark:bg-black/20 relative">
                   <img src={imageUrl} alt={console.name} className={`w-full h-full object-cover transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'} ${isMaintenance ? 'grayscale opacity-50' : ''}`} onError={(e) => (e.currentTarget.src = DEFAULT_CONSOLE_IMAGE)} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-70"></div>
@@ -404,7 +404,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                   </div>
 
                   <div className="absolute top-3 left-3 z-20">
-                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/10 shadow-lg ${isActive ? 'bg-palette-mustard/90 text-white animate-pulse' : isMaintenance ? 'bg-palette-copper/90 text-white' : 'bg-emerald-500/90 text-white'}`}>
+                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/10 shadow-lg ${isActive ? 'bg-primary/90 text-white animate-pulse' : isMaintenance ? 'bg-palette-copper/90 text-white' : 'bg-emerald-500/90 text-white'}`}>
                         {isActive ? t('session_active') : isMaintenance ? t('maintenance') : t('available_status')}
                      </span>
                   </div>
@@ -417,12 +417,12 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                       <div className="mt-2 space-y-3">
                          <div className="flex justify-between items-center text-xs">
                             <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-bold max-w-[65%] truncate">
-                                <div className="p-1 bg-palette-mustard/10 rounded-lg text-palette-mustard"><User size={10}/></div>
+                                <div className="p-1 bg-primary/10 rounded-lg text-primary"><User size={10}/></div>
                                 {session.tx.memberName}
                             </span>
-                            <span className="font-mono font-black text-slate-900 dark:text-palette-mustard text-sm bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-lg">{session.formattedRemaining}</span>
+                            <span className="font-mono font-black text-slate-900 dark:text-primary text-lg bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-lg">{session.formattedRemaining}</span>
                          </div>
-                         <div className="h-2 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+                         <div className="h-3 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
                             <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-gradient-to-r from-palette-mustard to-palette-purple'}`} style={{ width: `${session.progress}%` }}></div>
                          </div>
                          <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-slate-400">
@@ -433,7 +433,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                    ) : (
                       <div className="mt-2 flex-1 flex items-center text-slate-400 text-xs">
                          <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl w-full border border-dashed transition-colors ${isMaintenance ? 'bg-palette-copper/5 border-palette-copper/20 text-palette-copper' : 'bg-black/5 dark:bg-white/[0.02] border-slate-300 dark:border-white/10'}`}>
-                            {isMaintenance ? <Construction size={16}/> : <Clock size={16} className="text-palette-mustard" />}
+                            {isMaintenance ? <Construction size={16}/> : <Clock size={16} className="text-primary" />}
                             <span className="font-bold uppercase tracking-widest text-[10px]">{isMaintenance ? t('under_repair') : t('ready_to_play')}</span>
                          </div>
                       </div>
@@ -441,9 +441,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/5">
                       {isActive && session ? (
-                         <button onClick={() => initiateCheckout(session.tx)} className="w-full btn-glass bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/30 shadow-red-500/10"><Power size={16} /> {t('stop_session')}</button>
+                         <button onClick={() => initiateCheckout(session.tx)} className="w-full btn-primary bg-gradient-to-br from-red-500 to-red-700 shadow-lg shadow-red-500/40"><Power size={16} /> {t('stop_session')}</button>
                       ) : (
-                         <button onClick={() => setSelectedConsoleId(console.id)} disabled={isMaintenance} className={`w-full btn-glass ${isMaintenance ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed border border-white/5' : 'bg-palette-navy dark:bg-white text-white dark:text-palette-navy hover:-translate-y-0.5 hover:shadow-palette-mustard/20 shadow-black/20'}`}>
+                         <button onClick={() => setSelectedConsoleId(console.id)} disabled={isMaintenance} className={`w-full h-control rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isMaintenance ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed border border-white/5' : 'bg-gradient-to-br from-palette-green to-emerald-600 text-white hover:-translate-y-0.5 shadow-lg shadow-palette-green/30 active:scale-95'}`}>
                             {isMaintenance ? <span className="text-[10px]">Disabled</span> : <><Play size={16} fill="currentColor" /> {t('start_session')}</>}
                          </button>
                       )}
@@ -463,7 +463,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               <div className="p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center shrink-0">
                  <div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{t('new_rental_session')}</h3>
-                    <p className="text-[10px] font-black text-palette-mustard uppercase tracking-widest">Ziezan Terminal v1.1.0</p>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">Ziezan Terminal v1.1.0</p>
                  </div>
                  <button onClick={resetModal} className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"><X size={20} /></button>
               </div>
@@ -471,11 +471,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
               <div className="p-8 overflow-y-auto custom-scrollbar space-y-6">
                  {currentStep === 'INPUT' && (
                     <div className="space-y-6">
-                       <div className="space-y-3">
-                          <label className="text-label ml-1">{t('select_member')}</label>
+                       <div className="p-5 bg-black/5 dark:bg-black/20 rounded-3xl border border-slate-300 dark:border-white/10 shadow-inner">
+                          <label className="text-label ml-1 mb-3 block">{t('select_member')}</label>
                           <div className="relative" ref={dropdownRef}>
                              <div className="relative group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-focus-within:text-palette-mustard transition-colors" size={18} />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
                                 <input type="text" placeholder={t('search_placeholder')} value={memberSearchTerm} onFocus={() => setIsMemberDropdownOpen(true)} onChange={(e) => { setMemberSearchTerm(e.target.value); setIsMemberDropdownOpen(true); }} className="input-standard pl-12" />
                              </div>
                              
@@ -483,7 +483,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                 <div className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-palette-navy/95 border border-slate-300 dark:border-white/10 rounded-2xl shadow-2xl max-h-56 overflow-y-auto z-[160] backdrop-blur-2xl p-2 animate-zoom-in">
                                    {sortedAndFilteredMembers.length > 0 ? (
                                       sortedAndFilteredMembers.map(m => (
-                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname || m.name); setIsMemberDropdownOpen(false); }} className="p-4 hover:bg-palette-mustard hover:text-white rounded-xl cursor-pointer transition-colors border-b border-black/5 dark:border-white/5 last:border-0 group">
+                                         <div key={m.id} onClick={() => { setRentalMemberId(m.id); setMemberSearchTerm(m.nickname || m.name); setIsMemberDropdownOpen(false); }} className="p-4 hover:bg-primary hover:text-white rounded-xl cursor-pointer transition-colors border-b border-black/5 dark:border-white/5 last:border-0 group">
                                             <p className="text-sm font-black truncate text-slate-800 dark:text-white group-hover:text-white">{m.nickname}</p>
                                             <p className="text-[10px] font-bold opacity-60 group-hover:opacity-100">{m.membershipId}</p>
                                          </div>
@@ -491,21 +491,21 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                                    ) : (
                                       <div className="p-4 text-center">
                                          <p className="text-xs text-slate-500 mb-3 font-bold">{t('member_not_found')}</p>
-                                         <button onClick={handleQuickAddMember} className="w-full py-3 rounded-xl bg-palette-mustard/10 text-palette-mustard font-black text-xs uppercase tracking-widest hover:bg-palette-mustard hover:text-white transition-all flex items-center justify-center gap-2"><UserPlus size={14}/> {t('add_new')}</button>
+                                         <button onClick={handleQuickAddMember} className="w-full py-3 rounded-xl bg-primary/10 text-primary font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2"><UserPlus size={14}/> {t('add_new')}</button>
                                       </div>
                                    )}
                                 </div>
                              )}
                           </div>
-                          {rentalMemberId && <div className="text-xs text-emerald-500 font-black flex items-center gap-2 px-1 animate-slide-in"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> {t('member_selected')}</div>}
+                          {rentalMemberId && <div className="text-xs text-emerald-500 font-black flex items-center gap-2 px-1 mt-3 animate-slide-in"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> {t('member_selected')}</div>}
                        </div>
 
-                       <div className="space-y-3">
-                          <label className="text-label ml-1">{t('duration_hrs')}</label>
+                       <div className="p-5 bg-black/5 dark:bg-black/20 rounded-3xl border border-slate-300 dark:border-white/10 shadow-inner">
+                          <label className="text-label ml-1 mb-3 block">{t('duration_hrs')}</label>
                           <div className="flex items-center gap-5 bg-black/5 dark:bg-black/20 p-2 rounded-[2rem] border border-slate-300 dark:border-white/10">
                              <button onClick={() => setRentalDuration(Math.max(1, rentalDuration - 1))} className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 shadow-md flex items-center justify-center text-slate-900 dark:text-white hover:bg-slate-100 transition-all active:scale-90"><ChevronLeft size={24}/></button>
                              <div className="flex-1 text-center">
-                                <span className="text-4xl font-black text-slate-900 dark:text-white tabular-nums">{rentalDuration}</span>
+                                <span className="text-4xl font-black text-slate-900 dark:text-white font-mono">{rentalDuration}</span>
                                 <span className="text-[10px] font-black text-slate-500 block uppercase tracking-widest mt-1">{t('jam')}</span>
                              </div>
                              <button onClick={() => setRentalDuration(rentalDuration + 1)} className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 shadow-md flex items-center justify-center text-slate-900 dark:text-white hover:bg-slate-100 transition-all active:scale-90"><ChevronRight size={24}/></button>
@@ -516,30 +516,30 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
                  {currentStep === 'PAYMENT' && calculation && (
                     <div className="space-y-6 animate-fade-in">
-                       <div className="bg-palette-mustard/10 p-6 rounded-3xl border border-palette-mustard/20 space-y-3 backdrop-blur-md shadow-inner">
+                       <div className="bg-primary/10 p-6 rounded-3xl border border-primary/20 space-y-3 backdrop-blur-md shadow-inner">
                           <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                              <span className="text-slate-500">{t('normal_price')}</span>
-                             <span className="text-slate-900 dark:text-white">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
+                             <span className="text-slate-900 dark:text-white font-mono">Rp {(rentalDuration * settings.hourlyRate).toLocaleString()}</span>
                           </div>
                           {selectedPayment === 'BONUS' && calculation.freeHoursUsed > 0 && (
                              <div className="flex justify-between text-xs font-black text-emerald-500 uppercase tracking-wider">
                                 <span className="flex items-center gap-1"><Gift size={14}/> {t('use_bonus')}</span>
-                                <span>-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
+                                <span className="font-mono">-Rp {(calculation.freeHoursUsed * settings.hourlyRate).toLocaleString()}</span>
                              </div>
                           )}
-                          <div className="border-t border-palette-mustard/10 my-3"></div>
+                          <div className="border-t border-primary/10 my-3"></div>
                           <div className="flex justify-between items-end">
                              <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('total_bill')}</span>
-                             <span className="text-3xl font-black text-palette-mustard font-mono">Rp {calculation.totalCost.toLocaleString()}</span>
+                             <span className="text-3xl font-black text-primary font-mono">Rp {calculation.totalCost.toLocaleString()}</span>
                           </div>
                        </div>
 
                        <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => setSelectedPayment('CASH')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'CASH' ? 'border-palette-mustard bg-palette-mustard/10 text-palette-mustard shadow-lg shadow-palette-mustard/20 scale-105' : 'border-slate-300 dark:border-white/5 text-slate-500 hover:border-slate-400 dark:hover:border-white/40'}`}>
+                            <button onClick={() => setSelectedPayment('CASH')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'CASH' ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-300 dark:border-white/5 text-slate-500 hover:border-slate-400 dark:hover:border-white/40'}`}>
                                 <Wallet size={28} />
                                 <span className="text-label">{t('pay_cash')}</span>
                             </button>
-                            <button onClick={() => setSelectedPayment('QRIS')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'QRIS' ? 'border-palette-mustard bg-palette-mustard/10 text-palette-mustard shadow-lg shadow-palette-mustard/20 scale-105' : 'border-slate-300 dark:border-white/5 text-slate-500 hover:border-slate-400 dark:hover:border-white/40'}`}>
+                            <button onClick={() => setSelectedPayment('QRIS')} className={`p-5 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all backdrop-blur-md ${selectedPayment === 'QRIS' ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-300 dark:border-white/5 text-slate-500 hover:border-slate-400 dark:hover:border-white/40'}`}>
                                 <QrCode size={28} />
                                 <span className="text-label">QRIS</span>
                             </button>
@@ -553,7 +553,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
 
                  {currentStep === 'QRIS' && (
                     <div className="flex flex-col items-center justify-center py-6 animate-zoom-in">
-                       <div className="w-56 h-56 bg-white p-4 rounded-3xl shadow-2xl mb-6 ring-4 ring-palette-mustard/10">
+                       <div className="w-56 h-56 bg-white p-4 rounded-3xl shadow-2xl mb-6 ring-4 ring-primary/10">
                           <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MOCK_QRIS_PAYMENT" alt="QRIS" className="w-full h-full" />
                        </div>
                        <p className="text-lg font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">{t('scan_to_pay')}</p>
@@ -576,7 +576,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                  {currentStep === 'INPUT' ? (
                     <button onClick={handleNextStep} disabled={!rentalMemberId} className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed">{t('next_payment')}</button>
                  ) : currentStep === 'CONFIRM' ? (
-                    <button onClick={handleConfirmRental} className="w-full btn-primary bg-emerald-500 shadow-emerald-500/30">{t('start_session')}</button>
+                    <button onClick={handleConfirmRental} className="w-full btn-primary bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/30">{t('start_session')}</button>
                  ) : (
                     <div className="flex gap-4">
                        <button onClick={() => setCurrentStep('INPUT')} className="flex-1 btn-glass border-2 hover:bg-white/10">{t('back')}</button>
@@ -608,22 +608,22 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                     </div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
                         <span className="text-slate-500">{t('rental_duration')}</span>
-                        <span className="text-slate-900 dark:text-white">{checkoutTx.durationHours} {t('jam')}</span>
+                        <span className="text-slate-900 dark:text-white font-mono">{checkoutTx.durationHours} {t('jam')}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
                         <span className="text-slate-500">{t('base_cost')}</span>
-                        <span className="text-slate-900 dark:text-white">Rp {checkoutTx.cost.toLocaleString()}</span>
+                        <span className="text-slate-900 dark:text-white font-mono">Rp {checkoutTx.cost.toLocaleString()}</span>
                     </div>
                     
                     <div className="p-5 bg-black/5 dark:bg-black/20 rounded-3xl border-2 border-dashed border-slate-300 dark:border-white/10 shadow-inner">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard"><ShoppingBag size={18}/></div>
+                            <div className="p-2 bg-primary/10 rounded-xl text-primary"><ShoppingBag size={18}/></div>
                             <span className="text-label">{t('extra_cafe')}</span>
                         </div>
                         <FormattedNumberInput 
                             value={extraCost}
                             onChange={(v) => setExtraCost(v)}
-                            className="w-full bg-white dark:bg-palette-navy/60 border border-white/40 dark:border-white/10 rounded-2xl px-5 py-4 text-right font-mono font-black text-xl focus:ring-2 focus:ring-palette-mustard outline-none text-slate-900 dark:text-white shadow-inner backdrop-blur-md"
+                            className="w-full bg-white dark:bg-palette-navy/60 border border-white/40 dark:border-white/10 rounded-2xl px-5 py-4 text-right font-mono font-black text-xl focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white shadow-inner backdrop-blur-md"
                             placeholder="0"
                         />
                     </div>
@@ -639,14 +639,14 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                  <div className="space-y-4">
                     <label className="text-label ml-1">{t('payment_settlement')}</label>
                     <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setCheckoutPayment('CASH')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'CASH' ? 'bg-palette-mustard text-white border-palette-mustard shadow-lg shadow-palette-mustard/20' : 'border-slate-300 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><Wallet size={18} /> {t('cash')}</button>
-                        <button onClick={() => setCheckoutPayment('QRIS')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'QRIS' ? 'bg-palette-mustard text-white border-palette-mustard shadow-lg shadow-palette-mustard/20' : 'border-slate-300 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><QrCode size={18} /> QRIS</button>
+                        <button onClick={() => setCheckoutPayment('CASH')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'CASH' ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'border-slate-300 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><Wallet size={18} /> {t('cash')}</button>
+                        <button onClick={() => setCheckoutPayment('QRIS')} className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${checkoutPayment === 'QRIS' ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'border-slate-300 dark:border-white/10 text-slate-500 backdrop-blur-md'}`}><QrCode size={18} /> QRIS</button>
                     </div>
                  </div>
               </div>
 
               <div className="p-6 border-t border-slate-200 dark:border-white/5 bg-black/5 dark:bg-white/[0.02]">
-                 <button onClick={confirmCheckout} className="w-full btn-primary bg-red-600 hover:bg-red-700 shadow-red-500/30 gap-3"><Power size={20} /> {t('finish_save')}</button>
+                 <button onClick={confirmCheckout} className="w-full btn-primary bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 shadow-red-500/30 gap-3"><Power size={20} /> {t('finish_save')}</button>
               </div>
            </div>
         </div>
@@ -657,7 +657,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4 animate-fade-in">
             <div className="bg-white/95 dark:bg-palette-navyLight/95 w-full max-w-sm sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl p-8 border border-slate-200 dark:border-white/5 backdrop-blur-3xl">
                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3 uppercase tracking-tight">
-                  <div className="p-2 bg-palette-mustard/10 rounded-xl text-palette-mustard">{isAdding ? <PlusCircle size={22}/> : <Edit2 size={22}/>}</div>
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary">{isAdding ? <PlusCircle size={22}/> : <Edit2 size={22}/>}</div>
                   {isAdding ? t('add_unit') : t('edit_unit')}
                </h3>
                
@@ -669,7 +669,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                   <div className="space-y-2">
                      <label className="text-label ml-1">Image URL</label>
                      <div className="relative group">
-                        <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-focus-within:text-palette-mustard transition-colors" size={18} />
+                        <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
                         <input type="text" value={isAdding ? newConsoleImage : editingConsole?.imageUrl || ''} onChange={(e) => isAdding ? setNewConsoleImage(e.target.value) : setEditingConsole(prev => prev ? {...prev, imageUrl: e.target.value} : null)} className="input-standard pl-12" placeholder="https://..." />
                      </div>
                   </div>
@@ -691,7 +691,7 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                   <p className="text-sm font-bold text-slate-500 mb-8 px-4">{t('delete_console_msg', { name: deletingConsole.name })}</p>
                   <div className="grid grid-cols-2 gap-4">
                       <button onClick={() => setDeletingConsole(null)} className="btn-glass border-2 text-xs">{t('cancel')}</button>
-                      <button onClick={executeDelete} className="btn-primary bg-red-500 hover:bg-red-600 shadow-red-500/30 text-xs">{t('yes_delete')}</button>
+                      <button onClick={executeDelete} className="btn-primary bg-gradient-to-br from-red-500 to-red-700 text-xs shadow-red-500/30">{t('yes_delete')}</button>
                   </div>
               </div>
           </div>

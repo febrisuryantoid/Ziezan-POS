@@ -35,24 +35,27 @@ const Dashboard: React.FC = () => {
     };
   });
 
-  const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => (
-    <div className="glass-card p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group">
-      <div className={`absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
-      <div className="flex justify-between items-start relative z-10">
-        <div className="min-w-0 pr-2">
-          <p className="text-label mb-2 opacity-80">{title}</p>
-          <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} truncate tracking-tighter`}>{value}</h3>
+  const StatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass }: any) => {
+    const isPulse = title === t('active_consoles') && stats.activeConsoles > 0;
+    return (
+      <div className="glass-card p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group">
+        <div className={`absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
+        <div className="flex justify-between items-start relative z-10">
+          <div className="min-w-0 pr-2">
+            <p className="text-label mb-2 opacity-80">{title}</p>
+            <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} truncate tracking-tighter`}>{value}</h3>
+          </div>
+          <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')} ${isPulse ? 'animate-pulse' : ''}`}>
+            <Icon size={20} className="sm:w-6 sm:h-6" />
+          </div>
         </div>
-        <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')}`}>
-          <Icon size={20} className="sm:w-6 sm:h-6" />
+        <div className="mt-4 flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')} ${isPulse ? 'animate-pulse' : ''}`}></div>
+            <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold uppercase tracking-widest truncate">{sub}</p>
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')} animate-pulse`}></div>
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold uppercase tracking-widest truncate">{sub}</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in">
