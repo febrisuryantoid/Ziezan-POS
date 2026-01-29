@@ -22,20 +22,32 @@ const Settings = React.lazy(() => import('./components/Settings'));
 const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
 const Leaderboard = React.lazy(() => import('./components/Leaderboard')); 
 
+// Define session constants for security and maintainability
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SESSION_KEY = 'ziezan_admin_session';
+
 const App: React.FC = () => {
-  // Source of truth for navigation
   const [path, setPath] = useState(window.location.pathname);
   const [user, setUser] = useState<User | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
-    // Session recovery
-    const session = localStorage.getItem('ziezan_user');
-    if (session) {
+    // Enhanced session recovery with expiration check
+    const sessionString = localStorage.getItem(SESSION_KEY);
+    if (sessionString) {
       try {
-        setUser(JSON.parse(session));
+        const session = JSON.parse(sessionString);
+        // Check if the session is still valid (exists and not expired)
+        if (session && session.user && session.expiry > Date.now()) {
+          setUser(session.user);
+        } else {
+          // Session expired or invalid, clear it
+          localStorage.removeItem(SESSION_KEY);
+        }
       } catch (e) {
-        localStorage.removeItem('ziezan_user');
+        // Clear corrupted session data
+        console.error("Failed to parse session, clearing storage.", e);
+        localStorage.removeItem(SESSION_KEY);
       }
     }
 
@@ -65,27 +77,30 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (u: User) => {
+    const sessionData = {
+      user: u,
+      expiry: Date.now() + SESSION_DURATION,
+    };
     setUser(u);
-    localStorage.setItem('ziezan_user', JSON.stringify(u));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
     handleNavigate('/dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('ziezan_user');
+    localStorage.removeItem(SESSION_KEY);
     handleNavigate('/');
   };
 
   const handleNavigate = (newPath: string) => {
     const route = newPath.startsWith('/') ? newPath : `/${newPath}`;
     
-    // Safety check for browser history access
     try {
         if (window.history && window.history.pushState) {
             window.history.pushState(null, '', route);
         }
     } catch (e) {
-        console.warn('History API restricted in this environment. Using state-only routing.');
+        console.warn('History API restricted. Using state-only routing.');
     }
     
     setPath(route);
@@ -97,7 +112,6 @@ const App: React.FC = () => {
     </div>
   );
 
-  // Memoized route detection for performance
   const routeState = useMemo(() => {
     return {
         isRoot: path === '/' || path === '',
@@ -110,12 +124,10 @@ const App: React.FC = () => {
   }, [path]);
 
   const renderContent = () => {
-    // 1. PUBLIC LANDING PAGE
     if (routeState.isRoot) {
       return <LandingPage onNavigate={handleNavigate} />;
     }
 
-    // 2. UNPROTECTED PUBLIC ROUTES
     if (routeState.isTv) {
       return (
         <DataProvider>
@@ -148,7 +160,6 @@ const App: React.FC = () => {
       return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
     }
 
-    // 3. PROTECTED ADMIN ROUTES
     if (!user) {
       return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
     }

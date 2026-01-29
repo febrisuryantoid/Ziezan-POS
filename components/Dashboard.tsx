@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
         <div className="flex justify-between items-start relative z-10">
           <div className="min-w-0 pr-2">
             <p className="text-label mb-2 opacity-80">{title}</p>
-            <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} truncate tracking-tighter`}>{value}</h3>
+            <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} tracking-tighter break-words`}>{value}</h3>
           </div>
           <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')} ${isPulse ? 'animate-pulse' : ''}`}>
             <Icon size={20} className="sm:w-6 sm:h-6" />

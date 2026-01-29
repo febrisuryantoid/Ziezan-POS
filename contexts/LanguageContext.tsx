@@ -23,6 +23,9 @@ const dictionary = {
     all: "Semua",
     unknown: "Tidak Diketahui",
     jam: "Jam",
+    active: "Aktif",
+    inactive: "Nonaktif",
+    all_status: "Semua Status",
     
     // --- LANDING PAGE ---
     landing_subtitle: "Sistem Rental PlayStation",
@@ -263,6 +266,9 @@ const dictionary = {
     all: "All",
     unknown: "Unknown",
     jam: "Hours",
+    active: "Active",
+    inactive: "Inactive",
+    all_status: "All Status",
 
     // --- LANDING PAGE ---
     landing_subtitle: "PlayStation Rental System",

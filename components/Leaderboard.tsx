@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme } from '../utils/tierTheme';
 import GamingBackground from './GamingBackground';
 import { Trophy, Search, Loader2, Flame, Medal, Hexagon, ChevronUp, ChevronDown } from 'lucide-react';
-import { Member } from '../types';
+import { Member, MemberStatus } from '../types';
 import DragonIcon from './DragonIcon';
 
 // --- SUB-COMPONENTS ---
@@ -256,7 +256,9 @@ const Leaderboard: React.FC = () => {
   };
 
   const allRankings = useMemo(() => {
-      return [...members].sort((a, b) => getRealtimeScore(b) - getRealtimeScore(a));
+      return [...members]
+        .filter(m => m.status === MemberStatus.ACTIVE)
+        .sort((a, b) => getRealtimeScore(b) - getRealtimeScore(a));
   }, [members, transactions]);
 
   const filteredRankings = useMemo(() => {

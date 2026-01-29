@@ -1,37 +1,63 @@
 
 import { Transaction, AppSettings } from '../types';
 
-// Helper to fetch an image and convert it to a Base64 data URL
+// Cache for fetched resources to avoid re-downloading
+const resourceCache: Record<string, string> = {};
+
+// Helper to fetch an image or font and convert it to a Base64 data URL
 const urlToDataUrl = async (url: string): Promise<string> => {
+    if (resourceCache[url]) {
+        return resourceCache[url];
+    }
     try {
-        // Use a proxy for CORS issues if needed, but for now direct fetch
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok.');
+        if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                resourceCache[url] = dataUrl; // Cache the result
+                resolve(dataUrl);
+            };
             reader.onerror = reject;
             reader.readAsDataURL(blob);
         });
     } catch (error) {
         console.error('Error converting URL to Data URL:', error);
-        // Return a transparent pixel as a fallback
+        // Return a transparent pixel as a fallback for images
         return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     }
 };
 
 export const shareReceiptAsImage = async (transaction: Transaction, settings: AppSettings): Promise<{ success: boolean; message: string }> => {
-    // 1. Prepare data
-    const logoDataUrl = await urlToDataUrl(settings.businessLogo || 'https://beeimg.com/images/s77882238754.png');
-    const receiptWidth = 384; // Standard thermal printer width in pixels (80mm)
+    // 1. Prepare data by pre-fetching all external resources
+    const [logoDataUrl, interFontDataUrl, spaceMonoFontDataUrl] = await Promise.all([
+        urlToDataUrl(settings.businessLogo || 'https://beeimg.com/images/s77882238754.png'),
+        // Fetch WOFF2 font files for embedding
+        urlToDataUrl('https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7W0Q5n-wU.woff2'),
+        urlToDataUrl('https://fonts.gstatic.com/s/spacemono/v13/i7dMIFliZjgestTsoupSWfc-CiAG-sY-gA.woff2')
+    ]);
+
+    const receiptWidth = 384;
     const estimatedHeight = 550;
     
-    // 2. Construct HTML with inline styles and embedded font
+    // 2. Construct HTML with EMBEDDED styles (no external @import)
     const receiptHtml = `
         <div xmlns="http://www.w3.org/1999/xhtml" style="width: ${receiptWidth}px; padding: 20px; background-color: #ffffff; color: #000000; font-family: 'Inter', sans-serif; box-sizing: border-box;">
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono:wght@700&display=swap');
+                @font-face {
+                    font-family: 'Inter';
+                    src: url(${interFontDataUrl}) format('woff2');
+                    font-weight: 400 900;
+                    font-style: normal;
+                }
+                @font-face {
+                    font-family: 'Space Mono';
+                    src: url(${spaceMonoFontDataUrl}) format('woff2');
+                    font-weight: 700;
+                    font-style: normal;
+                }
                 * { box-sizing: border-box; }
             </style>
             <div style="text-align: center; margin-bottom: 15px;">

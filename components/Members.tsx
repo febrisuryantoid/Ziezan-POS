@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
@@ -19,6 +18,8 @@ const Members: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   const [filterTier, setFilterTier] = useState<string>('ALL');
+  // FIX: Use enum member for type safety and to resolve TypeScript error.
+  const [filterStatus, setFilterStatus] = useState<MemberStatus | 'ALL'>(MemberStatus.ACTIVE);
   const [now, setNow] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -48,7 +49,7 @@ const Members: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTier, sortOption]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTier, sortOption, filterStatus]);
 
   const getRealtimePlaytime = (member: Member) => {
      let total = member.totalPlayTime || 0;
@@ -72,7 +73,7 @@ const Members: React.FC = () => {
       const phone = m.phone || '';
       const term = searchTerm.toLowerCase();
       const matchesSearch = name.toLowerCase().includes(term) || nickname.toLowerCase().includes(term) || phone.includes(term);
-      const matchesStatus = m.status === 'ACTIVE'; 
+      const matchesStatus = filterStatus === 'ALL' ? true : m.status === filterStatus; 
       const matchesTier = filterTier === 'ALL' ? true : m.membershipId === filterTier;
       return matchesSearch && matchesStatus && matchesTier;
     }).sort((a, b) => {
@@ -86,7 +87,7 @@ const Members: React.FC = () => {
         default: return 0;
       }
     });
-  }, [members, transactions, searchTerm, sortOption, filterTier, now]);
+  }, [members, transactions, searchTerm, sortOption, filterTier, filterStatus, now]);
 
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
   const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -180,12 +181,12 @@ const Members: React.FC = () => {
           <p className="text-label">{t('manage_members_desc')}</p>
         </div>
 
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
-            <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
+        <div className="w-full xl:w-auto grid grid-cols-2 md:flex md:flex-row md:items-center gap-3">
+            <div className="relative col-span-2 md:flex-1 md:min-w-[200px]">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
                 <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-11" />
             </div>
-            <div className="relative col-span-1 md:col-span-6 lg:w-48">
+            <div className="relative col-span-1 md:w-40">
                 <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
                 <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-11 pr-8">
                     <option value="NAME_ASC">{t('sort_name_asc')}</option>
@@ -194,14 +195,22 @@ const Members: React.FC = () => {
                     <option value="JOIN_DATE_ASC">{t('sort_join')}</option>
                 </select>
             </div>
-            <div className="relative col-span-1 md:col-span-6 lg:w-40">
+             <div className="relative col-span-1 md:w-36">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as MemberStatus | 'ALL')} className="select-glass pl-11 pr-8">
+                    <option value="ALL">{t('all_status')}</option>
+                    <option value={MemberStatus.ACTIVE}>{t('active')}</option>
+                    <option value={MemberStatus.INACTIVE}>{t('inactive')}</option>
+                </select>
+            </div>
+            <div className="relative col-span-2 md:w-44">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
                 <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="select-glass pl-11 pr-8">
                     <option value="ALL">{t('all')}</option>
                     {membershipConfigs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
             </div>
-            <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto btn-primary px-6">
+            <button onClick={() => setIsAdding(true)} className="col-span-2 md:w-auto btn-primary px-6">
                 <UserPlus size={18} /> {t('add_member')}
             </button>
         </div>
@@ -210,7 +219,7 @@ const Members: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center gap-3 px-1">
           <div className="p-2 bg-palette-mustard/10 rounded-full text-palette-mustard shadow-sm"><Users size={18} /></div>
-          <h3 className="text-lg font-bold text-palette-navy dark:text-white uppercase tracking-tight">{t('active_status')}</h3>
+          <h3 className="text-lg font-bold text-palette-navy dark:text-white uppercase tracking-tight">{t('members')}</h3>
           <span className="ml-auto text-label bg-white/40 dark:bg-white/5 border border-slate-300 dark:border-white/20 px-3 py-1 rounded-full shadow-sm backdrop-blur-md normal-case">Total: {filteredMembers.length}</span>
         </div>
 
