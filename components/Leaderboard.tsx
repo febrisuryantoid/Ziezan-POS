@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getTierTheme } from '../utils/tierTheme';
 import GamingBackground from './GamingBackground';
-import { Trophy, Search, Loader2, Flame, Medal, Hexagon, ChevronUp, ChevronDown } from 'lucide-react';
+import { Trophy, Search, Loader2, Flame, Medal, Hexagon, ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react';
 import { Member, MemberStatus } from '../types';
 import DragonIcon from './DragonIcon';
 
@@ -212,8 +212,11 @@ const ChallengerRow: React.FC<ChallengerRowProps> = ({ member, rank, score, isPl
 };
 
 // --- MAIN COMPONENT ---
+interface LeaderboardProps {
+  onNavigateBack: (path: string) => void;
+}
 
-const Leaderboard: React.FC = () => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ onNavigateBack }) => {
   const { members, transactions, refreshData } = useData();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
@@ -290,6 +293,14 @@ const Leaderboard: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
         
+        <button 
+            onClick={() => onNavigateBack('/dashboard')}
+            className="absolute top-6 left-6 z-[60] w-12 h-12 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 border border-white/10 transition-all active:scale-90"
+            aria-label="Back to Dashboard"
+        >
+            <ArrowLeft size={24} />
+        </button>
+
         {/* Layer 0: Animated Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
             <GamingBackground />

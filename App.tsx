@@ -3,8 +3,7 @@ import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
-import TVReceiver from './components/TVReceiver';
-import LandingPage from './components/LandingPage';
+import SplashScreen from './components/SplashScreen';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -22,47 +21,44 @@ const Settings = React.lazy(() => import('./components/Settings'));
 const PublicMemberCard = React.lazy(() => import('./components/PublicMemberCard'));
 const Leaderboard = React.lazy(() => import('./components/Leaderboard')); 
 
-// Define session constants for security and maintainability
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SESSION_KEY = 'ziezan_admin_session';
 
 const App: React.FC = () => {
   const [path, setPath] = useState(window.location.pathname);
   const [user, setUser] = useState<User | null>(null);
+  const [isSessionChecked, setIsSessionChecked] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
-    // Enhanced session recovery with expiration check
     const sessionString = localStorage.getItem(SESSION_KEY);
     if (sessionString) {
       try {
         const session = JSON.parse(sessionString);
-        // Check if the session is still valid (exists and not expired)
         if (session && session.user && session.expiry > Date.now()) {
           setUser(session.user);
+          // If a valid session exists, immediately navigate to dashboard
+          if (window.location.pathname === '/' || window.location.pathname === '/login') {
+            setPath('/dashboard'); 
+          }
         } else {
-          // Session expired or invalid, clear it
           localStorage.removeItem(SESSION_KEY);
         }
       } catch (e) {
-        // Clear corrupted session data
         console.error("Failed to parse session, clearing storage.", e);
         localStorage.removeItem(SESSION_KEY);
       }
     }
+    setIsSessionChecked(true);
 
-    const handlePopState = () => {
-      setPath(window.location.pathname);
-    };
-
+    const handlePopState = () => setPath(window.location.pathname);
     window.addEventListener('popstate', handlePopState);
     
-    // PWA Install Prompt Logic
     const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
         setInstallPromptEvent(e);
     };
-
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     if (!isStandalone) {
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -77,10 +73,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (u: User) => {
-    const sessionData = {
-      user: u,
-      expiry: Date.now() + SESSION_DURATION,
-    };
+    const sessionData = { user: u, expiry: Date.now() + SESSION_DURATION };
     setUser(u);
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
     handleNavigate('/dashboard');
@@ -88,13 +81,13 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setUser(null);
+    setShowSplash(true); // Reset splash screen for next login
     localStorage.removeItem(SESSION_KEY);
     handleNavigate('/');
   };
 
   const handleNavigate = (newPath: string) => {
     const route = newPath.startsWith('/') ? newPath : `/${newPath}`;
-    
     try {
         if (window.history && window.history.pushState) {
             window.history.pushState(null, '', route);
@@ -102,7 +95,6 @@ const App: React.FC = () => {
     } catch (e) {
         console.warn('History API restricted. Using state-only routing.');
     }
-    
     setPath(route);
   };
 
@@ -114,9 +106,6 @@ const App: React.FC = () => {
 
   const routeState = useMemo(() => {
     return {
-        isRoot: path === '/' || path === '',
-        isLogin: path === '/login',
-        isTv: path === '/tv',
         isRank: path === '/rank',
         isMemberPublic: path.startsWith('/member/'),
         publicMemberNickname: path.startsWith('/member/') ? decodeURIComponent(path.split('/')[2] || '') : null
@@ -124,23 +113,15 @@ const App: React.FC = () => {
   }, [path]);
 
   const renderContent = () => {
-    if (routeState.isRoot) {
-      return <LandingPage onNavigate={handleNavigate} />;
-    }
-
-    if (routeState.isTv) {
-      return (
-        <DataProvider>
-          <TVReceiver />
-        </DataProvider>
-      );
+    if (!isSessionChecked) {
+      return <PageLoader />;
     }
 
     if (routeState.isRank) {
       return (
         <DataProvider>
           <Suspense fallback={<PageLoader />}>
-            <Leaderboard />
+            <Leaderboard onNavigateBack={handleNavigate} />
           </Suspense>
         </DataProvider>
       );
@@ -156,12 +137,11 @@ const App: React.FC = () => {
       );
     }
 
-    if (routeState.isLogin) {
-      return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
-    }
-
     if (!user) {
-      return <Login onLogin={handleLogin} onBack={() => handleNavigate('/')} />;
+      if (showSplash) {
+          return <SplashScreen onComplete={() => setShowSplash(false)} />;
+      }
+      return <Login onLogin={handleLogin} />;
     }
 
     const currentTab = path.replace('/', '') || 'dashboard';
@@ -175,7 +155,7 @@ const App: React.FC = () => {
           onLogout={handleLogout}
         >
           <Suspense fallback={<div className="p-10 flex justify-center"><Loader2 className="animate-spin text-palette-mustard" /></div>}>
-            {currentTab === 'dashboard' && <Dashboard />}
+            {currentTab === 'dashboard' && <Dashboard setTab={handleNavigate} />}
             {currentTab === 'consoles' && <Consoles operatorName={user.username} />}
             {currentTab === 'members' && <Members />}
             {currentTab === 'reports' && <Reports />}

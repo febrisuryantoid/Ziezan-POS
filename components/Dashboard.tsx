@@ -4,10 +4,14 @@ import { useData } from '../contexts/DataContext';
 import { ConsoleStatus } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2 } from 'lucide-react';
+import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2, Trophy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  setTab: (tab: string) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
   const { consoles, transactions, members } = useData();
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -56,6 +60,25 @@ const Dashboard: React.FC = () => {
       </div>
     );
   };
+  
+  const ClickableStatCard = ({ title, value, sub, icon: Icon, colorClass, bgClass, onClick }: any) => (
+    <button onClick={onClick} className="text-left w-full glass-card p-5 sm:p-6 hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group focus:outline-none focus:ring-2 focus:ring-ring rounded-[1.5rem]">
+       <div className={`absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10 group-hover:scale-125 group-hover:opacity-20 transition-all duration-700 ${bgClass.replace('/10', '/40').replace('/20', '/60')}`}></div>
+       <div className="flex justify-between items-start relative z-10">
+         <div className="min-w-0 pr-2">
+           <p className="text-label mb-2 opacity-80">{title}</p>
+           <h3 className={`text-2xl sm:text-3xl font-black ${colorClass} tracking-tighter break-words`}>{value}</h3>
+         </div>
+         <div className={`p-3.5 sm:p-4 rounded-2xl shrink-0 shadow-lg ${bgClass} ${colorClass.replace('text', 'text-opacity-100')} group-hover:scale-110 transition-transform`}>
+           <Icon size={20} className="sm:w-6 sm:h-6" />
+         </div>
+       </div>
+       <div className="mt-4 flex items-center gap-2">
+           <div className={`w-1.5 h-1.5 rounded-full ${bgClass.replace('/10', '/100')}`}></div>
+           <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-bold uppercase tracking-widest truncate">{sub}</p>
+       </div>
+    </button>
+  );
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 animate-fade-in">
@@ -64,7 +87,7 @@ const Dashboard: React.FC = () => {
         <p className="text-label">{t('overview_subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
         <StatCard 
           title={t('active_consoles')}
           value={`${stats.activeConsoles} / ${consoles.length}`}
@@ -96,6 +119,15 @@ const Dashboard: React.FC = () => {
           icon={Users}
           colorClass="text-palette-red"
           bgClass="bg-palette-red/10"
+        />
+        <ClickableStatCard
+            title={t('leaderboard_title')}
+            value="Rank"
+            sub={t('view_board')}
+            icon={Trophy}
+            colorClass="text-palette-yellow"
+            bgClass="bg-palette-yellow/10"
+            onClick={() => setTab('rank')}
         />
       </div>
 

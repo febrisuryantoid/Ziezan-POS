@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Lock, LogIn, Globe, ArrowLeft } from 'lucide-react';
+import { User, Lock, LogIn, Globe } from 'lucide-react';
 import { User as UserType } from '../types';
 import * as Storage from '../services/storage';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -8,10 +8,9 @@ import GamingBackground from './GamingBackground';
 
 interface LoginProps {
   onLogin: (user: UserType) => void;
-  onBack?: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState(''); 
   const [error, setError] = useState('');
@@ -34,15 +33,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
       <GamingBackground />
 
       <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full animate-fade-in">
-        {onBack && (
-            <button 
-                onClick={onBack} 
-                className="absolute -top-12 left-0 text-slate-400 hover:text-white flex items-center gap-2 text-xs font-bold transition-colors z-20 cursor-pointer h-control-sm uppercase tracking-widest"
-            >
-                <ArrowLeft size={16} /> {t('back')}
-            </button>
-        )}
-
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow opacity-60"></div>
         </div>

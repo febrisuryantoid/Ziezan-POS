@@ -1,65 +1,96 @@
 
-import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gamepad2, Users, Cloud, Printer, ArrowRight } from 'lucide-react';
+import GamingBackground from './GamingBackground';
 
-const SplashScreen: React.FC = () => {
-  const [loadingStep, setLoadingStep] = useState(0);
-  const steps = [
-      'INITIALIZING SYSTEM...', 
-      'CONNECTING TO SERVER...', 
-      'SYNCING DATA...', 
-      'READY TO LAUNCH'
-  ];
+interface SplashScreenProps {
+  onComplete: () => void;
+}
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-        setLoadingStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
-    }, 700);
+const features = [
+  {
+    icon: Gamepad2,
+    title: "Real-time Console Control",
+    description: "Monitor and manage all PlayStation units from one screen with automatic timers.",
+  },
+  {
+    icon: Users,
+    title: "Advanced Member System",
+    description: "Build customer loyalty with a tiered ranking system, playtime bonuses, and digital member cards.",
+  },
+  {
+    icon: Cloud,
+    title: "Smart Cloud Sync",
+    description: "Your data is always safe and accessible. Work offline and sync automatically when connected.",
+  },
+  {
+    icon: Printer,
+    title: "Bluetooth Receipt Printing",
+    description: "Print transaction receipts directly to a thermal printer without needing a PC or cables.",
+  },
+];
 
-    return () => clearInterval(interval);
-  }, []);
+const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
+  const [step, setStep] = useState(0);
+
+  const handleNext = () => {
+    if (step < features.length - 1) {
+      setStep(step + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  const currentFeature = features[step];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-gradient-to-br from-palette-mustard via-palette-purple to-palette-navy bg-[length:400%_400%] animate-gradient-xy text-white overflow-hidden selection:bg-none cursor-wait h-[100dvh] w-full">
-       
-       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vmin] h-[60vmin] bg-white/10 rounded-full blur-[100px] animate-pulse-slow pointer-events-none"></div>
+    <div className="h-[100dvh] w-full bg-[#050b14] relative overflow-hidden flex flex-col items-center justify-between p-6 sm:p-8 text-white font-sans">
+      <GamingBackground />
+      
+      <div className="relative z-10 w-full flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <img src="https://beeimg.com/images/t47564105964.png" alt="Logo" className="w-8 h-8 rounded-lg" />
+          <span className="font-bold text-lg tracking-tighter">Ziezan Station</span>
+        </div>
+        <button onClick={onComplete} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">
+          Skip
+        </button>
+      </div>
 
-       <div className="flex-1 flex flex-col items-center justify-evenly w-full min-h-0 px-6 py-4 relative z-10">
-          
-          <div className="hidden sm:block flex-[0.5]"></div>
+      <div className="relative z-10 w-full max-w-md text-center flex flex-col items-center animate-fade-in">
+        <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
+          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse-slow"></div>
+          <div className="relative w-28 h-28 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl">
+            <currentFeature.icon size={56} className="text-primary drop-shadow-lg" strokeWidth={1.5} />
+          </div>
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4">
+          {currentFeature.title}
+        </h2>
+        <p className="text-base text-slate-400 max-w-xs mx-auto leading-relaxed">
+          {currentFeature.description}
+        </p>
+      </div>
 
-          <div className="relative shrink-0 group">
-            <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full scale-110 animate-pulse-slow"></div>
-            
-            <img 
-              src="https://beeimg.com/images/t47564105964.png" 
-              alt="Ziezan POS" 
-              className="w-[25vmin] h-[25vmin] max-w-[160px] max-h-[160px] rounded-[22%] shadow-2xl shadow-palette-navy/50 relative z-10 object-cover ring-1 ring-white/20 animate-zoom-in"
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-6">
+          {features.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === step ? 'bg-primary scale-125' : 'bg-slate-700'
+              }`}
             />
-          </div>
-
-          <div className="text-center space-y-2 shrink-0 animate-slide-in max-w-full">
-             <h1 className="text-[clamp(1.5rem,5vmin,3rem)] font-extrabold tracking-tight text-white drop-shadow-md font-sans truncate leading-tight">
-               Ziezan Station
-             </h1>
-             <div className="h-1 w-[15vmin] bg-white/30 mx-auto rounded-full my-[2vmin]"></div>
-             <p className="text-white/90 text-[clamp(0.7rem,2.5vmin,1rem)] font-medium tracking-[0.2em] uppercase">
-               PlayStation Rental System
-             </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 h-10 shrink-0 justify-center">
-             <Loader2 className="w-[5vmin] h-[5vmin] max-w-[24px] max-h-[24px] animate-spin text-white/80" />
-             <span className="text-[10px] sm:text-xs text-white/60 font-mono tracking-widest uppercase font-bold min-w-[180px] text-center">
-               {steps[loadingStep]}
-             </span>
-          </div>
-
-           <div className="shrink-0 flex flex-col items-center gap-1 text-white/40 text-[10px] font-medium tracking-wide">
-              <span>v1.1.0 (Stable)</span>
-              <span>&copy; 2026 Febri Suryanto</span>
-           </div>
-       </div>
+          ))}
+        </div>
+        <button
+          onClick={handleNext}
+          className="w-full h-14 bg-primary rounded-2xl font-bold text-lg text-white flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
+        >
+          {step === features.length - 1 ? "Get Started" : "Next"}
+          {step < features.length - 1 && <ArrowRight size={20} />}
+        </button>
+      </div>
     </div>
   );
 };
