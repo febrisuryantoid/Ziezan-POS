@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="id" class="dark">
   <head>
@@ -20,7 +19,7 @@
     <link rel="apple-touch-icon" href="https://beeimg.com/images/s77882238754.png" />
     
     <!-- Theme Color for Browser Address Bar -->
-    <meta name="theme-color" content="#7c3aed" />
+    <meta name="theme-color" content="#0f0720" />
 
     <link rel="icon" href="https://beeimg.com/images/s77882238754.png" />
     <title>Ziezan Station POS</title>
@@ -37,9 +36,17 @@
               mono: ['"Space Mono"', 'monospace'],
             },
             fontSize: {
-              'xs': ['10px', { lineHeight: '14px' }], 'sm': ['11px', { lineHeight: '16px' }], 'base': ['13px', { lineHeight: '18px' }], 'lg': ['14px', { lineHeight: '20px' }], 'xl': ['16px', { lineHeight: '24px' }], '2xl': ['18px', { lineHeight: '26px' }], '3xl': ['20px', { lineHeight: '28px' }], '4xl': ['24px', { lineHeight: '32px' }], '5xl': ['30px', { lineHeight: '36px' }],
+              'xs': ['10px', { lineHeight: '14px', letterSpacing: '0.02em' }], 
+              'sm': ['12px', { lineHeight: '18px' }], 
+              'base': ['14px', { lineHeight: '22px' }], 
+              'lg': ['16px', { lineHeight: '24px' }], 
+              'xl': ['18px', { lineHeight: '26px' }], 
+              '2xl': ['20px', { lineHeight: '30px' }], 
+              '3xl': ['24px', { lineHeight: '32px' }], 
+              '4xl': ['30px', { lineHeight: '38px' }], 
+              '5xl': ['36px', { lineHeight: '42px' }],
             },
-            height: { 'control': '40px', 'control-textArea': '160px', },
+            height: { 'control': '44px', 'control-textArea': '160px', },
             zIndex: { 'glass': '10', 'sticky': '40', 'overlay': '50', 'modal': '100', 'toast': '9999', },
             colors: {
               border: "hsl(var(--border))",
@@ -55,11 +62,34 @@
               popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))", },
               card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))", },
               palette: {
-                mustard: '#7c3aed', copper: '#f97316', green: '#10b981', navy: '#0f0720', navyLight: '#1e1b38', purple: '#8b5cf6', red: '#f43f5e', yellow: '#facc15', brown: '#2e1065', cream: '#ede9fe', creamLight: '#f5f3ff',
+                mustard: '#8b5cf6', // Shifted to Purple as primary brand
+                copper: '#f59e0b',  // Warning/Orange
+                green: '#10b981',   // Success
+                navy: '#0b0c15',    // Deep Dark BG
+                navyLight: '#151621', // Card BG
+                purple: '#a855f7',
+                pink: '#ec4899',
+                cyan: '#06b6d4',
               },
             },
-            animation: { 'fade-in': 'fadeIn 0.3s ease-out', 'slide-in': 'slideIn 0.3s ease-out', 'zoom-in': 'zoomIn 0.2s ease-out', 'spin-slow': 'spin 6s linear infinite', 'border-glow-anim': 'borderGlowAnim 4s linear infinite', 'float': 'float 6s ease-in-out infinite', 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite', 'shimmer': 'shimmer 3s infinite linear', 'pulse-border': 'pulseBorder 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', 'flash': 'flash 0.5s ease-in-out', },
-            keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }, slideIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { opacity: '1' } }, zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { opacity: '1' } }, shimmer: { '0%': { transform: 'translateX(-150%) skewX(-20deg)' }, '100%': { transform: 'translateX(200%) skewX(-20deg)' } }, float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } }, pulseBorder: { '0%, 100%': { boxShadow: '0 0 0 0 hsl(var(--primary) / 0.4)' }, '50%': { boxShadow: '0 0 0 4px hsl(var(--primary) / 0)' } }, flash: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.2' } }, borderGlowAnim: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }
+            animation: { 
+              'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)', 
+              'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)', 
+              'zoom-in': 'zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
+              'spin-slow': 'spin 8s linear infinite', 
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite', 
+              'shimmer': 'shimmer 2.5s infinite linear', 
+              'float': 'float 6s ease-in-out infinite',
+              'bounce-soft': 'bounceSoft 2s infinite',
+            },
+            keyframes: { 
+              fadeIn: { '0%': { opacity: '0', transform: 'translateY(5px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, 
+              slideIn: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, 
+              zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { opacity: '1', transform: 'scale(1)' } }, 
+              shimmer: { '0%': { transform: 'translateX(-150%) skewX(-20deg)' }, '100%': { transform: 'translateX(200%) skewX(-20deg)' } }, 
+              float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+              bounceSoft: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-5px)' } }
+            }
           }
         },
       }
@@ -67,13 +97,13 @@
     <style type="text/tailwindcss">
       @layer base {
         :root {
-          --background: 250 60% 98%; /* light lavender */
-          --foreground: 240 10% 3.9%; /* near black */
-          --card: 0 0% 100%; /* white */
+          --background: 260 30% 98%; 
+          --foreground: 240 10% 3.9%;
+          --card: 0 0% 100%;
           --card-foreground: 240 10% 3.9%;
           --popover: 0 0% 100%;
           --popover-foreground: 240 10% 3.9%;
-          --primary: 258 84% 60%; /* #7c3aed */
+          --primary: 262 83% 58%; /* Vivid Purple */
           --primary-foreground: 0 0% 100%;
           --secondary: 240 5% 96%;
           --secondary-foreground: 240 10% 3.9%;
@@ -81,19 +111,19 @@
           --muted-foreground: 240 4% 46%;
           --destructive: 0 84% 60%;
           --destructive-foreground: 0 0% 100%;
-          --border: 240 6% 84%;
+          --border: 240 6% 90%;
           --input: 240 6% 93%;
-          --ring: 258 84% 60%;
+          --ring: 262 83% 58%;
         }
 
         .dark {
-          --background: 240 22% 5%; /* palette-navy */
-          --foreground: 0 0% 98%; /* near white */
-          --card: 240 19% 9%; /* slightly lighter than bg */
+          --background: 240 20% 4%; /* #08080c */
+          --foreground: 0 0% 98%;
+          --card: 240 15% 8%;
           --card-foreground: 0 0% 98%;
-          --popover: 240 19% 9%;
+          --popover: 240 15% 8%;
           --popover-foreground: 0 0% 98%;
-          --primary: 258 84% 60%;
+          --primary: 263 70% 50%; /* Deep Purple */
           --primary-foreground: 0 0% 100%;
           --secondary: 240 4% 16%;
           --secondary-foreground: 0 0% 98%;
@@ -103,78 +133,64 @@
           --destructive-foreground: 0 0% 100%;
           --border: 240 4% 16%;
           --input: 240 4% 12%;
-          --ring: 258 84% 60%;
+          --ring: 263 70% 50%;
         }
       }
       
       @layer base {
         html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-        body { @apply bg-background text-foreground transition-colors duration-300 text-base; }
+        body { 
+          @apply bg-background text-foreground transition-colors duration-300 antialiased selection:bg-primary/30 selection:text-primary; 
+        }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         
-        /* --- ZIEZAN DESIGN SYSTEM v1.7 (Semantic Colors) --- */
+        /* --- PREMIUM GLASS UI v2.0 --- */
         
-        .glass-panel { @apply bg-card/60 backdrop-blur-xl border border-border rounded-[2rem] shadow-sm noise; }
-        .glass-card { @apply bg-card/60 backdrop-blur-xl border border-border rounded-[1.5rem] shadow-sm transition-all duration-300 noise; }
-        .text-label { @apply text-xs font-black uppercase tracking-widest text-muted-foreground; }
+        .glass-panel { 
+          @apply bg-white/70 dark:bg-[#12121a]/70 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[24px] shadow-lg; 
+        }
         
+        .glass-card { 
+          @apply bg-white/50 dark:bg-[#181824]/60 backdrop-blur-md border border-white/30 dark:border-white/5 rounded-[20px] shadow-md transition-all duration-300; 
+        }
+        
+        .text-label { 
+          @apply text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80; 
+        }
+        
+        /* Inputs & Controls */
         .input-standard, .input-glass, .select-glass {
-          @apply h-control w-full bg-input border border-border rounded-2xl px-4 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all shadow-inner placeholder:text-muted-foreground;
+          @apply h-control w-full bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:text-muted-foreground/50;
         }
-        .select-glass { @apply appearance-none cursor-pointer truncate; }
+        .select-glass { @apply appearance-none cursor-pointer; }
         
-        .textarea-standard {
-          @apply h-control-textArea w-full bg-input border border-border rounded-[1.5rem] p-4 text-sm font-bold text-foreground focus:outline-none focus:border-ring/60 focus:ring-2 focus:ring-ring/20 transition-all placeholder:text-muted-foreground resize-none shadow-inner;
-        }
-
         .btn-primary {
-          @apply h-control bg-gradient-to-br from-primary to-purple-600 text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2;
+          @apply h-control bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2;
         }
         .btn-glass {
-          @apply h-control px-4 rounded-2xl bg-secondary hover:bg-muted text-secondary-foreground border border-border font-black text-xs tracking-widest transition-all active:scale-95 shadow-sm backdrop-blur-md flex items-center justify-center gap-2;
+          @apply h-control px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-foreground border border-white/10 font-bold text-xs tracking-widest transition-all active:scale-95 backdrop-blur-md flex items-center justify-center gap-2;
         }
         .btn-icon {
-          @apply h-control w-[40px] flex items-center justify-center rounded-xl bg-card/40 border border-border text-foreground transition-all hover:scale-105 active:scale-90 shadow-sm backdrop-blur-md;
+          @apply h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-foreground transition-all hover:scale-110 active:scale-90;
         }
 
-        /* --- ZIEZAN Custom Auto-Hide Scrollbar --- */
-        .custom-scrollbar {
-          scrollbar-width: thin; /* For Firefox */
-          scrollbar-color: hsl(var(--primary) / 0.4) transparent; /* For Firefox */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-slate-400 dark:hover:bg-white/20; }
+        
+        /* Subtle Noise Texture for "Paper" feel */
+        .noise-bg {
+          position: relative;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: transparent;
-          border-radius: 10px;
-          border: 3px solid transparent;
-          background-clip: content-box;
-        }
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-          background-color: hsl(var(--primary) / 0.4);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: hsl(var(--primary) / 0.6);
+        .noise-bg::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+          pointer-events: none;
+          z-index: 0;
         }
       }
-      
-      @layer utilities {
-        .shimmer-surface {
-          @apply relative overflow-hidden;
-        }
-        .shimmer-surface::after {
-          content: '';
-          @apply absolute inset-0 bg-[linear-gradient(110deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)] animate-shimmer pointer-events-none;
-        }
-      }
-
-      .holo-gradient { background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%); }
-      .noise { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); }
     </style>
     <script type="importmap">
 {

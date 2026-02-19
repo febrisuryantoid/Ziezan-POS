@@ -337,33 +337,35 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
       <div className="glass-panel p-4 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="mb-2 xl:mb-0 px-2">
           <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase">{t('consoles')}</h2>
-          <p className="text-label">{t('manage_units_desc')}</p>
+          <p className="text-xs font-bold text-muted-foreground mt-1">{t('manage_units_desc')}</p>
         </div>
         
-        <div className="w-full xl:w-auto grid grid-cols-2 md:grid-cols-12 lg:flex lg:flex-row gap-2 sm:gap-3 items-center min-w-0">
-           <div className="relative col-span-2 md:col-span-12 lg:flex-1 lg:w-auto lg:min-w-[200px]">
+        <div className="w-full xl:w-auto flex flex-col sm:flex-row gap-3 items-stretch sm:items-center min-w-0">
+           <div className="relative flex-1 sm:min-w-[200px]">
             {/* Updated Icon Color for Visibility */}
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-            <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-10" />
+            <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-10 w-full" />
           </div>
-          <div className="relative col-span-1 md:col-span-6 lg:w-48">
-             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-             <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-10 pr-8">
-                <option value="NAME_ASC">{t('sort_name_asc')}</option>
-                <option value="NAME_DESC">{t('sort_name_desc')}</option>
-                <option value="USAGE_DESC">{t('sort_usage_desc')}</option>
-                <option value="STATUS">{t('status')}</option>
-             </select>
+          <div className="flex gap-2">
+              <div className="relative flex-1 sm:w-40">
+                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                 <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-10 pr-8 w-full">
+                    <option value="NAME_ASC">{t('sort_name_asc')}</option>
+                    <option value="NAME_DESC">{t('sort_name_desc')}</option>
+                    <option value="USAGE_DESC">{t('sort_usage_desc')}</option>
+                    <option value="STATUS">{t('status')}</option>
+                 </select>
+              </div>
+              <div className="relative flex-1 sm:w-36">
+                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-glass pl-10 pr-8 w-full">
+                    <option value="ALL">{t('filter_all')}</option>
+                    <option value="AVAILABLE">{t('filter_avail')}</option>
+                    <option value="IN_USE">{t('filter_in_use')}</option>
+                 </select>
+              </div>
           </div>
-          <div className="relative col-span-1 md:col-span-6 lg:w-40">
-             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-glass pl-10 pr-8">
-                <option value="ALL">{t('filter_all')}</option>
-                <option value="AVAILABLE">{t('filter_avail')}</option>
-                <option value="IN_USE">{t('filter_in_use')}</option>
-             </select>
-          </div>
-          <button onClick={() => setIsAdding(true)} className="col-span-2 md:col-span-12 lg:w-auto btn-primary px-6">
+          <button onClick={() => setIsAdding(true)} className="btn-primary px-6 w-full sm:w-auto">
             <Plus size={18} /> {t('add_unit')}
           </button>
         </div>

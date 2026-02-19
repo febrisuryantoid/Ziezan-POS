@@ -192,29 +192,29 @@ const Settings: React.FC = () => {
   };
 
   const MobileMenuItem = ({ section, icon: Icon, label, desc }: { section: SettingsSection, icon: any, label: string, desc: string }) => (
-    <button onClick={() => navigateToSection(section)} className="w-full glass-panel p-5 flex items-center justify-between group active:scale-95 transition-all shadow-sm mb-4">
-        <div className="flex items-center gap-5">
-            <div className="p-3.5 bg-palette-mustard/10 rounded-2xl text-palette-mustard group-hover:bg-palette-mustard group-hover:text-white transition-all shadow-inner">
-                <Icon size={24} />
-            </div>
-            <div className="text-left">
-                <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight">{label}</h4>
-                <p className="text-label">{desc}</p>
-            </div>
+    <button onClick={() => navigateToSection(section)} className="w-full glass-panel p-4 flex items-center gap-4 active:scale-[0.98] transition-all shadow-sm mb-3 min-h-[88px] border border-white/20 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-palette-mustard/0 to-palette-mustard/0 group-hover:from-palette-mustard/5 group-hover:to-transparent transition-all duration-500"></div>
+        <div className="p-3.5 bg-palette-mustard/10 rounded-2xl text-palette-mustard group-hover:bg-palette-mustard group-hover:text-white transition-all shadow-inner shrink-0">
+            <Icon size={24} />
         </div>
-        <ChevronRight size={20} className="text-slate-400 group-hover:text-palette-mustard group-hover:translate-x-1 transition-all" />
+        <div className="text-left flex-1 min-w-0">
+            <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight truncate">{label}</h4>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{desc}</p>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-palette-mustard group-hover:translate-x-1 transition-all">
+            <ChevronRight size={16} />
+        </div>
     </button>
   );
 
   const renderDesktopNavItem = ({ section, icon: Icon, label }: { section: SettingsSection, icon: any, label: string }) => {
     const isActive = activeSection === section;
     return (
-        <button onClick={() => setActiveSection(section)} className={`w-full flex items-center gap-4 px-5 py-5 rounded-2xl transition-all relative overflow-hidden group ${isActive ? 'bg-palette-mustard text-white shadow-xl shadow-palette-mustard/30 scale-[1.05]' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'}`}>
+        <button onClick={() => setActiveSection(section)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all relative overflow-hidden group ${isActive ? 'bg-palette-mustard text-white shadow-xl shadow-palette-mustard/30 scale-[1.02]' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'}`}>
             {isActive && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/40"></div>}
             <Icon size={20} className={`shrink-0 ${isActive ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-            {/* Added whitespace-nowrap to prevent text stacking/wrapping */}
-            <span className="font-black text-sm tracking-[0.15em] uppercase whitespace-nowrap">{label}</span>
-            {isActive && <ChevronRight size={18} className="ml-auto opacity-50 shrink-0" />}
+            <span className="font-black text-xs tracking-[0.15em] uppercase whitespace-nowrap flex-1 text-left">{label}</span>
+            {isActive && <ChevronRight size={16} className="opacity-50 shrink-0" />}
         </button>
     );
   };
@@ -462,13 +462,13 @@ const Settings: React.FC = () => {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto h-full lg:h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-10 lg:pb-6 relative px-2">
-      <div className={`lg:hidden w-full ${isMobileMenuOpen ? 'block' : 'hidden'} animate-fade-in pb-24`}>
-          <div className="mb-8 px-2 pt-8">
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{t('system_settings')}</h2>
-            <p className="text-label mt-2">{t('config_subtitle')}</p>
+    <div className="max-w-[1600px] mx-auto h-full lg:h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-6 lg:gap-10 lg:pb-6 relative px-4 lg:px-2">
+      <div className={`lg:hidden w-full ${isMobileMenuOpen ? 'block' : 'hidden'} animate-fade-in pb-32`}>
+          <div className="mb-6 pt-4">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{t('system_settings')}</h2>
+            <p className="text-xs font-bold text-muted-foreground mt-1">{t('config_subtitle')}</p>
           </div>
-          <div className="space-y-1">
+          <div className="flex flex-col gap-3">
               <MobileMenuItem section="BUSINESS" icon={Building2} label={t('business_profile')} desc="Identitas & Branding" />
               <MobileMenuItem section="GENERAL" icon={Banknote} label={t('general_settings')} desc="Tarif & Biaya" />
               <MobileMenuItem section="CONNECTIVITY" icon={Bluetooth} label={t('tv_connectivity')} desc="IoT & Smart Link" />
@@ -481,31 +481,31 @@ const Settings: React.FC = () => {
          UPDATED: Width increased to w-80 (20rem / 320px) to prevent wrapping. 
          Added flex-shrink-0 to ensure it doesn't collapse. 
       */}
-      <nav className="hidden lg:flex w-80 flex-shrink-0 flex-col gap-8">
-          <div className="pl-4 pt-4">
-            <h2 className="text-3xl font-black text-palette-navy dark:text-white tracking-tight uppercase leading-none">{t('system_settings')}</h2>
-            <p className="text-label mt-3">{t('config_subtitle')}</p>
+      <nav className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-6 h-full">
+          <div className="pl-2 pt-2">
+            <h2 className="text-2xl font-black text-palette-navy dark:text-white tracking-tight uppercase leading-none">{t('system_settings')}</h2>
+            <p className="text-xs font-bold text-muted-foreground mt-2">{t('config_subtitle')}</p>
           </div>
-          <div className="glass-panel p-4 shadow-2xl space-y-2">
+          <div className="glass-panel p-3 shadow-2xl flex flex-col gap-2 overflow-y-auto custom-scrollbar flex-1">
               {renderDesktopNavItem({ section: "BUSINESS", icon: Building2, label: t('business_profile') })}
               {renderDesktopNavItem({ section: "GENERAL", icon: Banknote, label: t('general_settings') })}
               {renderDesktopNavItem({ section: "CONNECTIVITY", icon: Bluetooth, label: t('tv_connectivity') })}
               {renderDesktopNavItem({ section: "DATA", icon: Database, label: t('data_management') })}
               {renderDesktopNavItem({ section: "MEMBERSHIP", icon: Crown, label: t('membership_settings') })}
           </div>
-          <div className="mt-auto px-2">
-            <button onClick={handleSave} disabled={isSaving} className={`btn-primary w-full h-[40px] ${isSaving ? 'bg-emerald-600 scale-95' : 'bg-palette-mustard hover:shadow-palette-mustard/30'}`}>
+          <div className="mt-auto pt-2">
+            <button onClick={handleSave} disabled={isSaving} className={`btn-primary w-full h-[48px] text-sm ${isSaving ? 'bg-emerald-600 scale-95' : 'bg-palette-mustard hover:shadow-palette-mustard/30'}`}>
                 {isSaving ? <Loader2 size={20} className="animate-spin"/> : <><Save size={20} /> {t('save_changes')}</>}
             </button>
           </div>
       </nav>
 
-      <main className={`flex-1 min-w-0 ${!isMobileMenuOpen ? 'fixed inset-0 z-modal bg-slate-50 dark:bg-[#030712] overflow-y-auto px-6 pb-32 pt-6' : 'hidden lg:block lg:overflow-y-auto lg:pr-4 custom-scrollbar'}`}>
-          <div className="lg:hidden flex items-center gap-5 mb-8 sticky top-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md z-sticky py-4 border-b border-slate-200 dark:border-white/10 -mx-6 px-6">
-              <button onClick={() => setIsMobileMenuOpen(true)} className="p-3 rounded-2xl bg-white/40 dark:bg-white/10 text-slate-900 dark:text-white shadow-lg border border-slate-300 dark:border-white/20"><ArrowLeft size={24} /></button>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{(activeSection as any).replace('_', ' ')}</h3>
+      <main className={`flex-1 min-w-0 ${!isMobileMenuOpen ? 'fixed inset-0 z-modal bg-slate-50 dark:bg-[#030712] overflow-y-auto px-4 pb-32 pt-4' : 'hidden lg:block lg:overflow-y-auto lg:pr-2 custom-scrollbar'}`}>
+          <div className="lg:hidden flex items-center gap-4 mb-6 sticky top-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md z-sticky py-3 border-b border-slate-200 dark:border-white/10 -mx-4 px-4 shadow-sm">
+              <button onClick={() => setIsMobileMenuOpen(true)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/10 text-slate-900 dark:text-white shadow-sm border border-slate-300 dark:border-white/20 active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{(activeSection as any).replace('_', ' ')}</h3>
           </div>
-          <div className="max-w-4xl pb-10">
+          <div className="max-w-4xl pb-10 mx-auto">
             {activeSection === 'BUSINESS' && renderBusinessSettings()}
             {activeSection === 'GENERAL' && renderGeneralSettings()}
             {activeSection === 'CONNECTIVITY' && renderConnectivity()}

@@ -178,39 +178,41 @@ const Members: React.FC = () => {
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white/40 dark:bg-white/[0.02] p-4 rounded-[2.5rem] border border-slate-300 dark:border-white/5 backdrop-blur-xl shadow-sm">
         <div className="mb-2 xl:mb-0 px-2">
           <h2 className="text-2xl font-black text-palette-navy dark:text-white uppercase tracking-tight">{t('members')}</h2>
-          <p className="text-label">{t('manage_members_desc')}</p>
+          <p className="text-xs font-bold text-muted-foreground mt-1">{t('manage_members_desc')}</p>
         </div>
 
-        <div className="w-full xl:w-auto grid grid-cols-2 md:flex md:flex-row md:items-center gap-3">
-            <div className="relative col-span-2 md:flex-1 md:min-w-[200px]">
+        <div className="w-full xl:w-auto flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            <div className="relative flex-1 sm:min-w-[200px]">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-11" />
+                <input type="search" placeholder={t('search_placeholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-glass pl-11 w-full" />
             </div>
-            <div className="relative col-span-1 md:w-40">
-                <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-11 pr-8">
-                    <option value="NAME_ASC">{t('sort_name_asc')}</option>
-                    <option value="NAME_DESC">{t('sort_name_desc')}</option>
-                    <option value="PLAYTIME_DESC">{t('sort_playtime')}</option>
-                    <option value="JOIN_DATE_ASC">{t('sort_join')}</option>
-                </select>
+            <div className="grid grid-cols-2 sm:flex gap-2">
+                <div className="relative col-span-1 sm:w-32">
+                    <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                    <select value={sortOption} onChange={(e) => setSortOption(e.target.value as SortOption)} className="select-glass pl-11 pr-8 w-full text-xs">
+                        <option value="NAME_ASC">{t('sort_name_asc')}</option>
+                        <option value="NAME_DESC">{t('sort_name_desc')}</option>
+                        <option value="PLAYTIME_DESC">{t('sort_playtime')}</option>
+                        <option value="JOIN_DATE_ASC">{t('sort_join')}</option>
+                    </select>
+                </div>
+                 <div className="relative col-span-1 sm:w-32">
+                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as MemberStatus | 'ALL')} className="select-glass pl-11 pr-8 w-full text-xs">
+                        <option value="ALL">{t('all_status')}</option>
+                        <option value={MemberStatus.ACTIVE}>{t('active')}</option>
+                        <option value={MemberStatus.INACTIVE}>{t('inactive')}</option>
+                    </select>
+                </div>
             </div>
-             <div className="relative col-span-1 md:w-36">
+            <div className="relative w-full sm:w-36">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as MemberStatus | 'ALL')} className="select-glass pl-11 pr-8">
-                    <option value="ALL">{t('all_status')}</option>
-                    <option value={MemberStatus.ACTIVE}>{t('active')}</option>
-                    <option value={MemberStatus.INACTIVE}>{t('inactive')}</option>
-                </select>
-            </div>
-            <div className="relative col-span-2 md:w-44">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="select-glass pl-11 pr-8">
+                <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="select-glass pl-11 pr-8 w-full text-xs">
                     <option value="ALL">{t('all')}</option>
                     {membershipConfigs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
             </div>
-            <button onClick={() => setIsAdding(true)} className="col-span-2 md:w-auto btn-primary px-6">
+            <button onClick={() => setIsAdding(true)} className="w-full sm:w-auto btn-primary px-6">
                 <UserPlus size={18} /> {t('add_member')}
             </button>
         </div>

@@ -160,9 +160,9 @@ const Reports: React.FC = () => {
         
       {/* Search & Filter Bar - Glass Effect */}
       <div className="bg-white/40 dark:bg-white/[0.03] backdrop-blur-2xl rounded-[2.5rem] p-5 border border-slate-300 dark:border-white/5 shadow-sm">
-        <div className="grid grid-cols-2 md:grid-cols-12 gap-4 items-end">
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end">
            
-           <div className="col-span-2 md:col-span-4 flex gap-2 items-center bg-white/40 dark:bg-black/40 p-1.5 rounded-2xl border border-slate-300 dark:border-white/10 backdrop-blur-md shadow-inner">
+           <div className="flex-1 flex gap-2 items-center bg-white/40 dark:bg-black/40 p-1.5 rounded-2xl border border-slate-300 dark:border-white/10 backdrop-blur-md shadow-inner">
               <div className="relative flex-1">
                   <input 
                      type="date" 
@@ -182,50 +182,48 @@ const Reports: React.FC = () => {
               </div>
            </div>
 
-           <div className="relative col-span-2 md:col-span-3">
+           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
             <input 
               type="text" 
               placeholder={t('search_placeholder')} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-glass pl-11"
+              className="input-glass pl-11 w-full"
             />
           </div>
 
-          <div className="col-span-1 md:col-span-2">
-             <div className="relative">
-                <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <select 
-                    value={paymentFilter}
-                    onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | PaymentMethod)}
-                    className="select-glass pl-11 pr-4"
-                >
-                    <option value="ALL">{t('all')}</option>
-                    <option value="CASH">CASH</option>
-                    <option value="QRIS">QRIS</option>
-                    <option value="BONUS">BONUS</option>
-                </select>
-             </div>
+          <div className="grid grid-cols-2 gap-3 md:flex md:gap-3">
+              <div className="relative md:w-32">
+                 <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                 <select 
+                     value={paymentFilter}
+                     onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | PaymentMethod)}
+                     className="select-glass pl-11 pr-4 w-full text-xs"
+                 >
+                     <option value="ALL">{t('all')}</option>
+                     <option value="CASH">CASH</option>
+                     <option value="QRIS">QRIS</option>
+                     <option value="BONUS">BONUS</option>
+                 </select>
+              </div>
+
+              <div className="relative md:w-36">
+                 <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+                 <select 
+                     value={sortOption}
+                     onChange={(e) => setSortOption(e.target.value as SortOption)}
+                     className="select-glass pl-11 pr-4 w-full text-xs"
+                 >
+                     <option value="DATE_DESC">Baru - Lama</option>
+                     <option value="DATE_ASC">Lama - Baru</option>
+                     <option value="COST_DESC">Nominal ↑</option>
+                     <option value="COST_ASC">Nominal ↓</option>
+                 </select>
+              </div>
           </div>
 
-          <div className="col-span-1 md:col-span-2">
-             <div className="relative">
-                <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
-                <select 
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value as SortOption)}
-                    className="select-glass pl-11 pr-4"
-                >
-                    <option value="DATE_DESC">Baru - Lama</option>
-                    <option value="DATE_ASC">Lama - Baru</option>
-                    <option value="COST_DESC">Nominal ↑</option>
-                    <option value="COST_ASC">Nominal ↓</option>
-                </select>
-             </div>
-          </div>
-
-          <button onClick={handleExportCSV} className="col-span-2 md:col-span-1 btn-primary" title={t('export_csv')}>
+          <button onClick={handleExportCSV} className="btn-primary w-full md:w-auto px-4" title={t('export_csv')}>
             <Download size={20} />
           </button>
         </div>

@@ -21,25 +21,26 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   useEffect(() => {
     const metaThemeColor = document.querySelector("meta[name=theme-color]");
     if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", theme === 'dark' ? '#0f0720' : '#f5f3ff');
+      metaThemeColor.setAttribute("content", theme === 'dark' ? '#0b0c15' : '#f8fafc');
     }
   }, [theme]);
   
   const NavItemDesktop = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => {
     const isActive = currentTab === id;
     return (
-      <div 
+      <button 
         onClick={() => setTab(id)} 
-        className={`group relative flex items-center justify-center w-14 h-14 mx-auto rounded-[1.2rem] cursor-pointer transition-all duration-500 mb-4
+        className={`group relative flex items-center justify-start w-full px-4 py-3.5 mb-2 rounded-xl transition-all duration-300
         ${isActive 
-          ? 'bg-primary text-primary-foreground shadow-2xl shadow-primary/40 scale-110 border border-white/20 backdrop-blur-md' 
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-105'}`}
+          ? 'bg-primary/10 text-primary shadow-inner font-bold' 
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground'}`}
       >
-        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-        <div className="absolute left-full ml-5 px-3 py-1.5 bg-popover/90 border border-border text-popover-foreground text-[9px] font-black uppercase tracking-[0.2em] rounded-lg opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-[100] shadow-2xl backdrop-blur-xl">
-          {label}
-        </div>
-      </div>
+        {isActive && (
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
+        )}
+        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`mr-4 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
+        <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+      </button>
     );
   };
 
@@ -51,12 +52,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     };
 
     return (
-      <button onClick={handleClick} className="flex-1 flex flex-col items-center justify-center relative group h-full active:scale-90 transition-transform duration-100 min-w-0">
-        <div className={`transition-all duration-500 ease-out flex items-center justify-center rounded-2xl mb-1 relative ${isActive ? 'w-12 h-10 bg-primary/20 text-primary' : 'w-auto h-auto text-muted-foreground'}`}>
-           {isActive && <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>}
-           <Icon size={isActive ? 22 : 24} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
+      <button onClick={handleClick} className="relative flex flex-col items-center justify-center flex-1 h-full min-w-0 group">
+        <div className={`relative z-10 transition-all duration-300 ease-out flex items-center justify-center rounded-2xl mb-1 ${isActive ? '-translate-y-2' : ''}`}>
+           <div className={`p-2.5 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/40 rotate-3' : 'text-slate-400 dark:text-slate-500 group-active:scale-90'}`}>
+             <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+           </div>
         </div>
-        <span className={`text-[8px] font-black leading-none tracking-[0.1em] transition-all duration-500 truncate w-full text-center uppercase ${isActive ? 'text-primary scale-105' : 'text-muted-foreground scale-90 opacity-60'}`}>{label}</span>
+        <span className={`absolute bottom-2 text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0 text-primary' : 'opacity-0 translate-y-2'}`}>
+            {label}
+        </span>
       </button>
     );
   };
@@ -65,67 +69,79 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
   const appName = settings.businessName || "Ziezan Station";
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden font-sans transition-colors duration-300 fixed inset-0">
+    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden font-sans transition-colors duration-300 fixed inset-0 noise-bg">
       
-      <aside className="hidden md:flex w-28 bg-card/60 backdrop-blur-3xl border-r border-border flex-col items-center py-10 z-30 shadow-2xl transition-all duration-500 overflow-visible shrink-0 relative">
-        <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-primary/30 to-transparent opacity-40"></div>
-
-        <div className="mb-12 w-16 h-16 relative group">
-           <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-           <img 
-             src={appLogo} 
-             alt={appName} 
-             className="w-full h-full object-cover cursor-pointer group-hover:scale-110 transition-all rounded-[1.5rem] shadow-2xl bg-black border border-white/20 relative z-10"
-             onClick={() => setTab('dashboard')}
-             onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")}
-           />
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col py-6 px-4 z-30 shadow-2xl transition-all duration-500 relative">
+        <div className="flex items-center gap-3 px-2 mb-10">
+           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-white/10 shrink-0 bg-black">
+             <img src={appLogo} alt={appName} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")} />
+           </div>
+           <div className="min-w-0">
+               <h1 className="font-black text-sm uppercase tracking-tight truncate">{appName}</h1>
+               <p className="text-[10px] text-muted-foreground font-bold tracking-widest">Admin Terminal</p>
+           </div>
         </div>
 
-        <nav className="flex-1 w-full flex flex-col items-center">
+        <nav className="flex-1 w-full space-y-1">
+            <p className="px-4 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-2 mt-2">Main Menu</p>
             <NavItemDesktop id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
             <NavItemDesktop id="consoles" icon={Gamepad2} label={t('consoles')} />
             <NavItemDesktop id="members" icon={Users} label={t('members')} />
-            <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-8"></div>
+            
+            <p className="px-4 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-2 mt-6">Management</p>
             <NavItemDesktop id="reports" icon={FileBarChart} label={t('reports')} />
             {user.role === 'ADMIN' && <NavItemDesktop id="settings" icon={Settings} label={t('settings')} />}
         </nav>
 
-        <div className="mt-auto flex flex-col items-center gap-6 pb-2">
-           <button onClick={onLogout} className="group relative flex items-center justify-center w-12 h-12 rounded-2xl text-muted-foreground hover:text-white hover:bg-red-500/80 transition-all border border-transparent hover:border-red-500/40 backdrop-blur-md shadow-inner" title={t('logout')}><LogOut size={20} /></button>
+        <div className="mt-auto pt-6 border-t border-dashed border-border flex flex-col gap-2">
+           <button onClick={onLogout} className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-xs font-bold uppercase tracking-wider">
+               <LogOut size={18} /> {t('logout')}
+           </button>
         </div>
       </aside>
 
+      {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
         
-        <header className="bg-background/50 backdrop-blur-xl border-b border-border h-20 flex justify-between items-center px-6 md:px-10 sticky top-0 z-20 transition-all duration-500 shrink-0">
-          <div className="flex items-center gap-4 md:hidden">
-             <div className="w-11 h-11 rounded-[1rem] shadow-xl border border-white/20 overflow-hidden shrink-0 bg-black animate-zoom-in">
-                <img src={appLogo} alt={appName} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")} />
+        {/* HEADER */}
+        <header className="h-20 px-6 md:px-8 flex justify-between items-center z-20 shrink-0">
+          <div className="flex flex-col md:hidden">
+             <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-black overflow-hidden border border-white/20">
+                    <img src={appLogo} alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-black text-lg tracking-tight">ZIEZAN<span className="text-primary">.</span></span>
              </div>
-             <span className="font-black text-xl text-foreground tracking-tighter uppercase">ZIEZAN<span className="text-primary">.</span></span>
           </div>
           
           <div className="hidden md:block">
-            <h2 className="text-xl font-black uppercase tracking-[0.1em] text-foreground flex items-center gap-4 animate-fade-in">
-                <div className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-primary shadow-[0_0_15px_#7c3aed]"></span></div>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3 animate-fade-in">
                 {t(currentTab as any)}
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} className="btn-glass"><Languages size={16} /> {language}</button>
-            <button onClick={toggleTheme} className="btn-icon">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
-            <button onClick={onLogout} className="md:hidden btn-icon bg-red-500/10 text-red-500 border-red-500/20"><LogOut size={18} /></button>
+          <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+            <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} className="h-9 px-3 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-all text-[10px] font-black uppercase flex items-center gap-2">
+                <Languages size={14} /> {language}
+            </button>
+            <div className="w-[1px] h-4 bg-border"></div>
+            <button onClick={toggleTheme} className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-all text-foreground">
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
         </header>
 
+        {/* SCROLLABLE CONTENT */}
         <main className="flex-1 overflow-y-auto scroll-smooth overscroll-contain relative custom-scrollbar">
-          <div className="w-full min-h-full p-4 sm:p-6 lg:p-10 pb-32 md:pb-12 relative">
+          <div className="w-full min-h-full p-4 sm:p-6 lg:p-8 pb-32 md:pb-12 max-w-[1920px] mx-auto">
             {children}
           </div>
         </main>
 
-        <nav className="md:hidden fixed bottom-6 left-6 right-6 bg-popover/80 backdrop-blur-2xl border border-border flex justify-between items-center px-4 pb-safe z-40 shadow-2xl rounded-[2rem] h-[72px] animate-slide-in">
+        {/* MOBILE FLOATING NAV (ISLAND STYLE) */}
+        <nav className="md:hidden fixed bottom-6 left-4 right-4 h-[72px] bg-white/80 dark:bg-[#15151e]/80 backdrop-blur-2xl border border-white/20 dark:border-white/5 rounded-[24px] flex justify-between items-center px-2 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] animate-slide-in">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />
