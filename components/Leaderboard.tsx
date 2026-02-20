@@ -35,8 +35,8 @@ const RankBadge = ({ rank }: { rank: number }) => {
     }
 
     return (
-      <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 ${bg} ${text} ${border} ${shadow} flex items-center justify-center font-black text-xs rounded-lg rotate-45 border-2 z-50`}>
-          <span className="-rotate-45 drop-shadow-md font-mono">{rank}</span>
+      <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 ${bg} ${text} ${border} ${shadow} flex items-center justify-center font-black text-xs rounded-lg border-2 z-50`}>
+          <span className="drop-shadow-md font-mono">{rank}</span>
       </div>
     );
 };
@@ -115,7 +115,7 @@ const PodiumCard: React.FC<PodiumCardProps> = ({ member, rank, score, isPlaying 
                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-[#0a0a0a]/90 backdrop-blur-xl rounded-t-[1.5rem] border-t border-x border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-hidden group-hover:border-white/30 transition-colors">
                      
                      {/* LUXURY SHIMMER EFFECT (On Hover) */}
-                     <div className="absolute inset-0 -translate-x-[150%] group-hover:animate-[shimmer_1s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] pointer-events-none z-10"></div>
+                     <div className="absolute inset-0 -translate-x-[150%] group-hover:animate-[shimmer_1s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-10"></div>
 
                      {/* DRAGON WATERMARK (NEW) */}
                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full flex items-end justify-center overflow-hidden opacity-20 pointer-events-none z-0 pb-10">
@@ -384,15 +384,23 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ onNavigateBack }) => {
                         <span className="bg-white/10 text-white text-[9px] font-bold px-2 py-0.5 rounded-full ml-1">{challengers.length}</span>
                     </div>
                     
-                    <div className="relative group w-32 focus-within:w-40 transition-all duration-300">
-                        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white" />
-                        <input 
-                            type="text" 
-                            placeholder={t('search_player')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-full py-1.5 pl-9 pr-3 text-[10px] font-bold text-white focus:outline-none focus:border-palette-mustard/50 transition-colors placeholder:text-slate-600"
-                        />
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => onNavigateBack('/reports')}
+                            className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-colors"
+                        >
+                            Histori Main
+                        </button>
+                        <div className="relative group w-32 focus-within:w-40 transition-all duration-300">
+                            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white" />
+                            <input 
+                                type="text" 
+                                placeholder={t('search_player')}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded-full py-1.5 pl-9 pr-3 text-[10px] font-bold text-white focus:outline-none focus:border-palette-mustard/50 transition-colors placeholder:text-slate-600"
+                            />
+                        </div>
                     </div>
                 </div>
 

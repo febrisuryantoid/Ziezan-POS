@@ -243,6 +243,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isInitialSyncComplete, rawMembers.length, settings.birthdayBonusHours]); 
 
+  // Auto-Stop Logic
+  useEffect(() => {
+    if (!transactions) return;
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        transactions.forEach(tx => {
+            if (tx.status === 'ACTIVE' && tx.startTime) {
+                const startTime = new Date(tx.startTime).getTime();
+                const durationMs = tx.durationHours * 60 * 60 * 1000;
+                const endTime = startTime + durationMs;
+                
+                // Check if time is up (with a small buffer of 5 seconds to avoid premature stops)
+                if (now.getTime() > endTime + 5000) {
+                    // Auto-stop the rental
+                    stopRental(tx.id, 0, tx.paymentMethod, 'Auto-stopped by system');
+                }
+            }
+        });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [transactions]);
+
   const safeSave = (fn: () => void) => {
     try { fn(); } 
     catch (e) { console.error("Storage Error:", e); }

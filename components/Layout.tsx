@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         {isActive && (
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
         )}
-        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`mr-4 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
+        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={`mr-4 transition-transform ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} />
         <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
       </button>
     );
@@ -54,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     return (
       <button onClick={handleClick} className="relative flex flex-col items-center justify-center flex-1 h-full min-w-0 group">
         <div className={`relative z-10 transition-all duration-300 ease-out flex items-center justify-center rounded-2xl mb-1 ${isActive ? '-translate-y-2' : ''}`}>
-           <div className={`p-2.5 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/40 rotate-3' : 'text-slate-400 dark:text-slate-500 group-active:scale-90'}`}>
+           <div className={`p-2.5 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/40' : 'text-slate-400 dark:text-slate-500 group-active:scale-95'}`}>
              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
            </div>
         </div>
