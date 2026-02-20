@@ -1,21 +1,37 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { ConsoleStatus } from '../types';
+import { ConsoleStatus, Transaction } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2, Trophy, TrendingUp, ArrowRight } from 'lucide-react';
+import { Activity, CreditCard, Clock, Users, MonitorPlay, Gamepad2, Trophy, TrendingUp, ArrowRight, Share2, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
+import { shareReceiptAsImage } from '../utils/shareReceipt';
+import { useToast } from '../contexts/ToastContext';
 
 interface DashboardProps {
   setTab: (tab: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
-  const { consoles, transactions, members } = useData();
+  const { consoles, transactions, members, settings } = useData();
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { addToast } = useToast();
+  const [isSharing, setIsSharing] = useState<string | null>(null);
 
+  const handleShare = async (tx: Transaction) => {
+    setIsSharing(tx.id);
+    const result = await shareReceiptAsImage(tx, settings);
+    if (result.success) {
+      addToast('success', 'Berhasil', result.message);
+    } else {
+      if (result.message !== 'Dibatalkan.') {
+        addToast('error', 'Gagal', result.message);
+      }
+    }
+    setIsSharing(null);
+  };
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const todaysTx = transactions.filter(t => t.startTime && t.startTime.startsWith(today));
@@ -218,9 +234,18 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
                                 </span>
                             </div>
                         </div>
-                        <div className="text-right">
-                             <span className="block font-mono text-sm font-black text-foreground">{tx.durationHours}h</span>
-                             <span className="text-[10px] text-muted-foreground font-medium">{new Date(tx.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <div className="flex items-center gap-3">
+                            <div className="text-right">
+                                <span className="block font-mono text-sm font-black text-foreground">{tx.durationHours}h</span>
+                                <span className="text-[10px] text-muted-foreground font-medium">{new Date(tx.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <button 
+                                onClick={() => handleShare(tx)} 
+                                disabled={isSharing === tx.id}
+                                className="p-2 rounded-xl bg-primary/10 text-primary active:scale-95 transition-all"
+                            >
+                                {isSharing === tx.id ? <Loader2 size={16} className="animate-spin"/> : <Share2 size={16}/>}
+                            </button>
                         </div>
                     </div>
                 ))}
