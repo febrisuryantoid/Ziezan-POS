@@ -32,23 +32,27 @@ const App: React.FC = () => {
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
-    const sessionString = localStorage.getItem(SESSION_KEY);
-    if (sessionString) {
-      try {
-        const session = JSON.parse(sessionString);
-        if (session && session.user && session.expiry > Date.now()) {
-          setUser(session.user);
-          // If a valid session exists, immediately navigate to dashboard
-          if (window.location.pathname === '/' || window.location.pathname === '/login') {
-            setPath('/dashboard'); 
+    try {
+        const sessionString = localStorage.getItem(SESSION_KEY);
+        if (sessionString) {
+          try {
+            const session = JSON.parse(sessionString);
+            if (session && session.user && session.expiry > Date.now()) {
+              setUser(session.user);
+              // If a valid session exists, immediately navigate to dashboard
+              if (window.location.pathname === '/' || window.location.pathname === '/login') {
+                setPath('/dashboard'); 
+              }
+            } else {
+              localStorage.removeItem(SESSION_KEY);
+            }
+          } catch (e) {
+            console.error("Failed to parse session, clearing storage.", e);
+            localStorage.removeItem(SESSION_KEY);
           }
-        } else {
-          localStorage.removeItem(SESSION_KEY);
         }
-      } catch (e) {
-        console.error("Failed to parse session, clearing storage.", e);
-        localStorage.removeItem(SESSION_KEY);
-      }
+    } catch (e) {
+        console.warn("LocalStorage access denied or failed", e);
     }
     setIsSessionChecked(true);
 
@@ -100,7 +104,7 @@ const App: React.FC = () => {
 
   const PageLoader = () => (
     <div className="flex items-center justify-center h-screen w-full bg-[#050b14]">
-      <Loader2 className="w-10 h-10 animate-spin text-palette-mustard" />
+      <Loader2 className="w-10 h-10 animate-spin text-white" />
     </div>
   );
 

@@ -53,10 +53,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
       </div>
 
       {/* BENTO GRID LAYOUT */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         
         {/* BIG CARD: ACTIVE STATUS */}
-        <div className="md:col-span-2 glass-panel p-5 sm:p-6 relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20">
+        <div className="col-span-2 glass-panel p-5 sm:p-6 relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20">
             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Gamepad2 size={100} className="sm:w-[120px] sm:h-[120px]" />
             </div>
@@ -79,40 +79,40 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
         </div>
 
         {/* REVENUE CARD */}
-        <div className="glass-panel p-5 sm:p-6 flex flex-row md:flex-col justify-between items-center md:items-start gap-4 group hover:border-emerald-500/30 transition-colors">
-            <div className="flex justify-between items-start w-full md:w-auto md:mb-4">
-                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500">
-                    <CreditCard size={24} />
+        <div className="col-span-1 glass-panel p-4 sm:p-6 flex flex-col justify-between gap-2 group hover:border-emerald-500/30 transition-colors">
+            <div className="flex justify-between items-start">
+                <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-2xl text-emerald-500">
+                    <CreditCard size={20} className="sm:w-6 sm:h-6" />
                 </div>
-                <TrendingUp size={20} className="text-emerald-500 opacity-50 hidden md:block" />
+                <TrendingUp size={16} className="text-emerald-500 opacity-50 hidden sm:block" />
             </div>
-            <div className="text-right md:text-left">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t('gross_revenue')}</p>
-                <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">Rp {stats.revenueToday.toLocaleString('id-ID')}</h3>
+            <div>
+                <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">{t('gross_revenue')}</p>
+                <h3 className="text-lg sm:text-2xl font-black text-foreground tracking-tight truncate">Rp {stats.revenueToday.toLocaleString('id-ID')}</h3>
             </div>
         </div>
 
         {/* DURATION CARD */}
-        <div className="glass-panel p-5 sm:p-6 flex flex-row md:flex-col justify-between items-center md:items-start gap-4 group hover:border-orange-500/30 transition-colors">
-            <div className="flex justify-between items-start w-full md:w-auto md:mb-4">
-                <div className="p-3 bg-orange-500/10 rounded-2xl text-orange-500">
-                    <Clock size={24} />
+        <div className="col-span-1 glass-panel p-4 sm:p-6 flex flex-col justify-between gap-2 group hover:border-orange-500/30 transition-colors">
+            <div className="flex justify-between items-start">
+                <div className="p-2.5 sm:p-3 bg-orange-500/10 rounded-2xl text-orange-500">
+                    <Clock size={20} className="sm:w-6 sm:h-6" />
                 </div>
             </div>
-            <div className="text-right md:text-left">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t('total_duration_sub')}</p>
-                <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">{stats.hoursToday} {t('hour_short')}</h3>
+            <div>
+                <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">{t('total_duration_sub')}</p>
+                <h3 className="text-lg sm:text-2xl font-black text-foreground tracking-tight truncate">{stats.hoursToday} {t('hour_short')}</h3>
             </div>
         </div>
 
         {/* CHART SECTION (WIDE) */}
-        <div className="md:col-span-2 lg:col-span-3 glass-panel p-6 sm:p-8 min-h-[300px]">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-sm uppercase tracking-wider flex items-center gap-3">
-                    <MonitorPlay size={18} className="text-primary"/> {t('console_util')}
+        <div className="col-span-2 lg:col-span-3 glass-panel p-4 sm:p-8 min-h-[250px] sm:min-h-[300px]">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 sm:gap-3">
+                    <MonitorPlay size={16} className="text-primary sm:w-[18px] sm:h-[18px]"/> {t('console_util')}
                 </h3>
             </div>
-            <div className="h-[250px] w-full">
+            <div className="h-[200px] sm:h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={consoleUsageData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
@@ -149,27 +149,30 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
         </div>
 
         {/* RANK CTA CARD */}
-        <button onClick={() => setTab('rank')} className="glass-panel p-6 flex flex-col justify-center items-center text-center gap-4 group hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-pointer">
-            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
-                <Trophy size={32} />
+        <button onClick={() => setTab('rank')} className="col-span-2 md:col-span-1 glass-panel p-4 sm:p-6 flex flex-row md:flex-col justify-start md:justify-center items-center text-left md:text-center gap-4 group hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-pointer">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform shrink-0">
+                <Trophy size={24} className="sm:w-8 sm:h-8" />
             </div>
             <div>
-                <h3 className="font-black text-lg text-foreground uppercase tracking-tight">{t('leaderboard_title')}</h3>
-                <p className="text-xs text-muted-foreground font-bold mt-1">{t('view_board')}</p>
+                <h3 className="font-black text-base sm:text-lg text-foreground uppercase tracking-tight">{t('leaderboard_title')}</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-bold mt-0.5 sm:mt-1">{t('view_board')}</p>
             </div>
+            <ArrowRight size={16} className="ml-auto md:hidden text-muted-foreground" />
         </button>
 
-        {/* RECENT TRANSACTIONS TABLE */}
-        <div className="md:col-span-3 lg:col-span-4 glass-panel overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-border flex justify-between items-center">
-                <h3 className="font-black text-sm uppercase tracking-wider flex items-center gap-3">
-                    <Activity size={18} className="text-primary"/> {t('recent_tx')}
+        {/* RECENT TRANSACTIONS */}
+        <div className="col-span-2 md:col-span-3 lg:col-span-4 glass-panel overflow-hidden flex flex-col">
+            <div className="p-4 sm:p-6 border-b border-border flex justify-between items-center">
+                <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 sm:gap-3">
+                    <Activity size={16} className="text-primary sm:w-[18px] sm:h-[18px]"/> {t('recent_tx')}
                 </h3>
                 <button onClick={() => setTab('reports')} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">
                     See All <ArrowRight size={12}/>
                 </button>
             </div>
-            <div className="overflow-x-auto">
+            
+            {/* DESKTOP TABLE */}
+            <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-muted/30 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         <tr>
@@ -198,12 +201,36 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
                         ))}
                     </tbody>
                 </table>
-                {stats.recentTx.length === 0 && (
-                    <div className="p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-widest opacity-50">
-                        {t('no_tx')}
-                    </div>
-                )}
             </div>
+
+            {/* MOBILE LIST VIEW */}
+            <div className="sm:hidden flex flex-col divide-y divide-border">
+                {stats.recentTx.map(tx => (
+                    <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-sm text-foreground">{tx.memberName}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{tx.consoleName}</span>
+                                <span className={`text-[9px] font-black uppercase tracking-wider ${
+                                    tx.status === 'ACTIVE' ? 'text-emerald-500' : 'text-slate-500'
+                                }`}>
+                                    {tx.status}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                             <span className="block font-mono text-sm font-black text-foreground">{tx.durationHours}h</span>
+                             <span className="text-[10px] text-muted-foreground font-medium">{new Date(tx.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {stats.recentTx.length === 0 && (
+                <div className="p-8 text-center text-muted-foreground text-xs font-bold uppercase tracking-widest opacity-50">
+                    {t('no_tx')}
+                </div>
+            )}
         </div>
 
       </div>
