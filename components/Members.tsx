@@ -239,11 +239,11 @@ const Members: React.FC = () => {
                     return (
                     <div 
                         key={member.id} 
-                        className="group relative h-full aspect-[3/5] rounded-[1.5rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden border border-white/20 dark:border-white/5"
+                        className="group relative h-full rounded-[1.2rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden border border-white/20 dark:border-white/5"
                     >
                         <div className={`absolute inset-0 ${theme.bg_tint} opacity-40 group-hover:opacity-60 transition-opacity`}></div>
                         <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
-                           <DragonIcon className={`w-32 h-32 opacity-[0.05] -mr-5 -mb-5 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-10 group-hover:scale-110`} />
+                           <DragonIcon className={`w-28 h-28 opacity-[0.05] -mr-4 -mb-4 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-10 group-hover:scale-110`} />
                         </div>
 
                         {/* Action Buttons - Absolute Top Right */}
@@ -253,30 +253,30 @@ const Members: React.FC = () => {
                                  <button onClick={() => setDeletingMemberId(member.id)} className="p-1.5 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md"><Trash2 size={12} /></button>
                             </div>
 
-                            <div className="relative p-3 flex flex-col items-center text-center gap-3 h-full">
-                                <div className="relative shrink-0 mt-2">
-                                    <div className={`relative w-14 h-14 rounded-[1rem] p-0.5 bg-gradient-to-br ${theme.conic} shadow-lg group-hover:scale-105 transition-transform duration-500`}>
-                                        <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-[0.8rem] object-cover bg-black border border-black/20" />
-                                        {isPlaying && <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0f1016] animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
+                            <div className="relative p-3 flex flex-col items-center text-center gap-2 h-full">
+                                <div className="relative shrink-0 mt-1">
+                                    <div className={`relative w-12 h-12 rounded-[0.8rem] p-0.5 bg-gradient-to-br ${theme.conic} shadow-lg group-hover:scale-105 transition-transform duration-500`}>
+                                        <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-[0.6rem] object-cover bg-black border border-black/20" />
+                                        {isPlaying && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0f1016] animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
                                     </div>
-                                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-md flex items-center justify-center ${theme.badge} border border-white dark:border-[#0f1016] shadow-md overflow-hidden z-10`}><img src={theme.iconUrl} className="w-3 h-3 object-contain" /></div>
+                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-md flex items-center justify-center ${theme.badge} border border-white dark:border-[#0f1016] shadow-md overflow-hidden z-10`}><img src={theme.iconUrl} className="w-2.5 h-2.5 object-contain" /></div>
                                 </div>
                                 <div className="w-full min-w-0">
-                                    <h3 className={`font-black text-sm leading-tight truncate drop-shadow-sm ${theme.text} mb-1`}>{member.nickname || t('unknown')}</h3>
+                                    <h3 className={`font-black text-xs leading-tight truncate drop-shadow-sm ${theme.text} mb-0.5`}>{member.nickname || t('unknown')}</h3>
                                     <div className="flex justify-center opacity-80">
                                         <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-white/20 border border-white/10 ${theme.text}`}>{theme.name}</span>
                                     </div>
                                 </div>
                                 
                                 <div className="w-full mt-auto pt-2">
-                                    <div className="grid grid-cols-1 gap-2">
-                                        <div className="bg-white/40 dark:bg-black/20 rounded-xl p-2 flex items-center justify-between border border-white/20 shadow-sm backdrop-blur-md">
-                                            <div className="flex items-center gap-1 text-slate-500"><Clock size={10} /></div>
-                                            <span className={`text-xs font-black font-mono ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        <div className="bg-white/40 dark:bg-black/20 rounded-lg p-1.5 flex items-center justify-center gap-1 border border-white/20 shadow-sm backdrop-blur-md">
+                                            <Clock size={10} className="text-slate-500 shrink-0" />
+                                            <span className={`text-[10px] font-black font-mono ${theme.text} truncate`}>{realtimePlaytime.toFixed(0)}h</span>
                                         </div>
-                                        <div className="bg-white/40 dark:bg-black/20 rounded-xl p-2 flex items-center justify-between border border-white/20 shadow-sm backdrop-blur-md">
-                                            <div className="flex items-center gap-1 text-slate-500"><Gift size={10} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /></div>
-                                            <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{member.freeHoursBalance}h</span>
+                                        <div className="bg-white/40 dark:bg-black/20 rounded-lg p-1.5 flex items-center justify-center gap-1 border border-white/20 shadow-sm backdrop-blur-md">
+                                            <Gift size={10} className={`shrink-0 ${member.freeHoursBalance > 0 ? "text-emerald-500" : "text-slate-500"}`} />
+                                            <span className="text-[10px] font-black text-slate-900 dark:text-white font-mono truncate">{member.freeHoursBalance}h</span>
                                         </div>
                                     </div>
                                 </div>
