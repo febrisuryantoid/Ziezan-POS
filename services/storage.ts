@@ -208,6 +208,7 @@ export const getMembers = (): Member[] => {
           name: safeName.trim(),
           nickname: safeNick, 
           membershipId: tier || 'WARRIOR',
+          status: m.status || 'ACTIVE', // Default to ACTIVE
           address: m.address || '-', 
           totalAmountPaid: Number(m.totalAmountPaid) || 0,
           totalPlayTime: Number(m.totalPlayTime) || 0, 

@@ -57,12 +57,12 @@ const Dashboard: React.FC<DashboardProps> = ({ setTab }) => {
   return (
     <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in pb-20 sm:pb-10">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 px-2">
+      <div className="flex flex-row justify-between items-center gap-4 px-2">
         <div>
             <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter uppercase leading-none mb-1">{t('dashboard')}</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium">{t('overview_subtitle')}</p>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+        <div className="flex items-center gap-2 text-[10px] font-black bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             SYSTEM ONLINE
         </div>
