@@ -17,6 +17,7 @@ interface DataContextType {
   refreshData: () => void;
   updateSettings: (s: AppSettings) => void;
   updateMembershipConfig: (config: MembershipConfig) => void;
+  updateMembershipConfigs: (configs: MembershipConfig[]) => void;
   
   // Console Actions
   addConsole: (c: Omit<Console, 'id' | 'status' | 'totalHoursUsed'>) => void;
@@ -136,8 +137,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 4. Calculate Usage and Balance
         const bonusUsed = memberHistory
-            .filter(t => t.paymentMethod === 'BONUS')
-            .reduce((sum, t) => sum + (t.durationHours || 0), 0);
+            .reduce((sum, t) => {
+                if (t.paymentMethod === 'BONUS') {
+                    // Calculate actual bonus hours used based on discount
+                    const totalValue = t.cost + t.discountApplied;
+                    if (totalValue > 0) {
+                        const hoursCovered = (t.discountApplied * t.durationHours) / totalValue;
+                        return sum + hoursCovered;
+                    }
+                    return sum + t.durationHours;
+                }
+                return sum;
+            }, 0);
 
         // Include manual adjustments (e.g. Birthday bonus) from the raw member data
         const manualBonus = member.freeHoursBalance || 0; 
@@ -243,30 +254,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isInitialSyncComplete, rawMembers.length, settings.birthdayBonusHours]); 
 
-  // Auto-Stop Logic
-  useEffect(() => {
-    if (!transactions) return;
-
-    const interval = setInterval(() => {
-        const now = new Date();
-        transactions.forEach(tx => {
-            if (tx.status === 'ACTIVE' && tx.startTime) {
-                const startTime = new Date(tx.startTime).getTime();
-                const durationMs = tx.durationHours * 60 * 60 * 1000;
-                const endTime = startTime + durationMs;
-                
-                // Check if time is up (with a small buffer of 5 seconds to avoid premature stops)
-                if (now.getTime() > endTime + 5000) {
-                    // Auto-stop the rental
-                    stopRental(tx.id, 0, tx.paymentMethod, 'Auto-stopped by system');
-                }
-            }
-        });
-    }, 10000); // Check every 10 seconds
-
-    return () => clearInterval(interval);
-  }, [transactions]);
-
   const safeSave = (fn: () => void) => {
     try { fn(); } 
     catch (e) { console.error("Storage Error:", e); }
@@ -281,6 +268,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = membershipConfigs.map(c => c.id === config.id ? config : c);
     safeSave(() => Storage.saveMemberships(updated));
     setMembershipConfigs(updated);
+  };
+
+  const updateMembershipConfigs = (configs: MembershipConfig[]) => {
+    safeSave(() => Storage.saveMemberships(configs));
+    setMembershipConfigs(configs);
   };
 
   const addConsole = (data: Omit<Console, 'id' | 'status' | 'totalHoursUsed'>) => {
@@ -532,6 +524,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
+  // Auto-Stop Logic
+  useEffect(() => {
+    if (!transactions) return;
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        transactions.forEach(tx => {
+            if (tx.status === 'ACTIVE' && tx.startTime) {
+                const startTime = new Date(tx.startTime).getTime();
+                const durationMs = tx.durationHours * 60 * 60 * 1000;
+                const endTime = startTime + durationMs;
+                
+                // Check if time is up (with a small buffer of 5 seconds to avoid premature stops)
+                if (now.getTime() > endTime + 5000) {
+                    // Auto-stop the rental
+                    stopRental(tx.id, 0, tx.paymentMethod, 'Auto-stopped by system');
+                }
+            }
+        });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [transactions]);
+
   return (
     <DataContext.Provider value={{
       consoles: computedConsoles, 
@@ -539,7 +555,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       membershipConfigs: membershipConfigs || [],
       transactions: transactions || [],
       settings,
-      refreshData, updateSettings, updateMembershipConfig,
+      refreshData, updateSettings, updateMembershipConfig, updateMembershipConfigs,
       addConsole, updateConsole, updateConsoleStatus, deleteConsole,
       addMember, updateMember, deleteMember, adjustBonusHours, upgradeMember, resetSeason,
       startRental, stopRental

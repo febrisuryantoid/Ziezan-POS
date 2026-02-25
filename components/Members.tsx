@@ -22,7 +22,7 @@ const Members: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<MemberStatus | 'ALL'>(MemberStatus.ACTIVE);
   const [now, setNow] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 24;
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
@@ -231,7 +231,7 @@ const Members: React.FC = () => {
                 <p className="text-slate-500 font-black uppercase tracking-widest text-xs opacity-50">{t('no_data_members')}</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-8 gap-3">
                 {currentMembers.map(member => {
                     const theme = getTierTheme(member.membershipId);
                     const realtimePlaytime = getRealtimePlaytime(member);
@@ -239,40 +239,44 @@ const Members: React.FC = () => {
                     return (
                     <div 
                         key={member.id} 
-                        className="group relative rounded-[2rem] bg-white/60 dark:bg-[#0f1016]/60 backdrop-blur-xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border border-slate-300/80 dark:border-white/10"
+                        className="group relative rounded-[1.5rem] bg-white/80 dark:bg-[#0f1016]/80 backdrop-blur-2xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border border-slate-200 dark:border-white/5 h-full"
                     >
-                        <div className={`absolute inset-0 ${theme.bg_tint} opacity-50`}></div>
+                        <div className={`absolute inset-0 ${theme.bg_tint} opacity-40 group-hover:opacity-60 transition-opacity`}></div>
                         <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
-                           <DragonIcon className={`w-40 h-40 opacity-[0.06] blur-sm -mr-10 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-20 group-hover:blur-[2px]`} />
+                           <DragonIcon className={`w-32 h-32 opacity-[0.03] -mr-5 -mb-5 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-10 group-hover:scale-110`} />
                         </div>
 
-                        <div className="relative p-5 flex items-center gap-5">
+                        {/* Action Buttons - Absolute Top Right */}
+                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button onClick={() => setEditingMember(member)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-primary shadow-sm backdrop-blur-md"><Edit2 size={12} /></button>
+                             <button onClick={() => handleCopyLink(member.nickname)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-blue-500 shadow-sm backdrop-blur-md"><Copy size={12} /></button>
+                             <button onClick={() => setDeletingMemberId(member.id)} className="p-1.5 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md"><Trash2 size={12} /></button>
+                        </div>
+
+                        <div className="relative p-3 flex flex-col items-center text-center gap-3">
                             <div className="relative shrink-0">
-                                <div className={`relative w-16 h-16 rounded-full p-1 bg-gradient-to-br ${theme.conic} shadow-2xl`}>
-                                    <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-full object-cover bg-black border border-black/50" />
-                                    {isPlaying && <div className="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-black animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
+                                <div className={`relative w-14 h-14 rounded-[1rem] p-0.5 bg-gradient-to-br ${theme.conic} shadow-lg group-hover:scale-105 transition-transform duration-500`}>
+                                    <img src={member.photoUrl || "https://beeimg.com/images/s77882238754.png"} className="w-full h-full rounded-[0.8rem] object-cover bg-black border border-black/20" />
+                                    {isPlaying && <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0f1016] animate-pulse z-20 shadow-lg shadow-emerald-500/50"></div>}
                                 </div>
-                                <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-xl flex items-center justify-center ${theme.badge} border-2 border-white dark:border-black shadow-xl overflow-hidden`}><img src={theme.iconUrl} className="w-5 h-5 object-contain" /></div>
+                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-md flex items-center justify-center ${theme.badge} border border-white dark:border-[#0f1016] shadow-md overflow-hidden z-10`}><img src={theme.iconUrl} className="w-3 h-3 object-contain" /></div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className={`font-black text-lg leading-tight truncate drop-shadow-sm ${theme.text}`}>{member.nickname || t('unknown')}</h3>
-                                <div className="flex items-center gap-2 mt-1 opacity-70"><span className={`text-xs font-black uppercase tracking-[0.2em] ${theme.text}`}>{theme.name}</span></div>
-                            </div>
-                            <div className="flex flex-col gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 z-20">
-                                <button onClick={() => setEditingMember(member)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-primary shadow-sm backdrop-blur-md transition-all"><Edit2 size={14} /></button>
-                                <button onClick={() => handleCopyLink(member.nickname)} className="p-2.5 rounded-xl bg-white/40 dark:bg-white/5 text-slate-500 hover:text-blue-500 shadow-sm backdrop-blur-md transition-all"><Copy size={14} /></button>
-                                <button onClick={() => setDeletingMemberId(member.id)} className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md transition-all"><Trash2 size={14} /></button>
+                            <div className="w-full min-w-0">
+                                <h3 className={`font-black text-sm leading-tight truncate drop-shadow-sm ${theme.text} mb-1`}>{member.nickname || t('unknown')}</h3>
+                                <div className="flex justify-center opacity-80">
+                                    <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-white/20 border border-white/10 ${theme.text}`}>{theme.name}</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="px-5 pb-5 mt-auto relative z-10">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Clock size={12} /><span className="text-[9px] font-black uppercase tracking-widest">{t('play_stat')}</span></div>
-                                    <span className={`text-sm font-black font-mono ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
+                        <div className="px-3 pb-3 mt-auto relative z-10">
+                            <div className="grid grid-cols-1 gap-2">
+                                <div className="bg-white/40 dark:bg-black/20 rounded-xl p-2 flex items-center justify-between border border-white/20 shadow-sm backdrop-blur-md">
+                                    <div className="flex items-center gap-1 text-slate-500"><Clock size={10} /></div>
+                                    <span className={`text-xs font-black font-mono ${theme.text}`}>{realtimePlaytime.toFixed(0)}h</span>
                                 </div>
-                                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-3 flex items-center justify-between border border-white/10 shadow-inner backdrop-blur-md">
-                                    <div className="flex items-center gap-2 text-slate-500"><Gift size={12} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /><span className="text-[9px] font-black uppercase tracking-widest">{t('bonus_stat')}</span></div>
-                                    <span className="text-sm font-black text-slate-900 dark:text-white font-mono">{member.freeHoursBalance}h</span>
+                                <div className="bg-white/40 dark:bg-black/20 rounded-xl p-2 flex items-center justify-between border border-white/20 shadow-sm backdrop-blur-md">
+                                    <div className="flex items-center gap-1 text-slate-500"><Gift size={10} className={member.freeHoursBalance > 0 ? "text-emerald-500" : ""} /></div>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{member.freeHoursBalance}h</span>
                                 </div>
                             </div>
                         </div>

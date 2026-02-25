@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   useEffect(() => {
+    let sessionValid = false;
     try {
         const sessionString = localStorage.getItem(SESSION_KEY);
         if (sessionString) {
@@ -39,6 +40,7 @@ const App: React.FC = () => {
             const session = JSON.parse(sessionString);
             if (session && session.user && session.expiry > Date.now()) {
               setUser(session.user);
+              sessionValid = true;
               // If a valid session exists, immediately navigate to dashboard
               if (window.location.pathname === '/' || window.location.pathname === '/login') {
                 setPath('/dashboard'); 
@@ -79,14 +81,22 @@ const App: React.FC = () => {
   const handleLogin = (u: User) => {
     const sessionData = { user: u, expiry: Date.now() + SESSION_DURATION };
     setUser(u);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    } catch (e) {
+      console.warn("Could not save session to localStorage", e);
+    }
     handleNavigate('/dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
     setShowSplash(true); // Reset splash screen for next login
-    localStorage.removeItem(SESSION_KEY);
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+      console.warn("Could not remove session from localStorage", e);
+    }
     handleNavigate('/');
   };
 

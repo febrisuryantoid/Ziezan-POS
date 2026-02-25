@@ -175,7 +175,11 @@ export const getMemberships = (): MembershipConfig[] => {
 };
 
 export const saveMemberships = (configs: MembershipConfig[]) => {
-  localStorage.setItem(K_MEMBERSHIPS, JSON.stringify(configs));
+  try {
+    localStorage.setItem(K_MEMBERSHIPS, JSON.stringify(configs));
+  } catch (e) {
+    console.warn("localStorage setItem failed", e);
+  }
 };
 
 export const getMembers = (): Member[] => {
@@ -227,7 +231,11 @@ export const getMembers = (): Member[] => {
 };
 
 export const saveMembers = (members: Member[]) => {
-  localStorage.setItem(K_MEMBERS, JSON.stringify(members));
+  try {
+    localStorage.setItem(K_MEMBERS, JSON.stringify(members));
+  } catch (e) {
+    console.warn("localStorage setItem failed", e);
+  }
 };
 
 export const getTransactions = (): Transaction[] => {
@@ -253,7 +261,11 @@ export const getTransactions = (): Transaction[] => {
 };
 
 export const saveTransactions = (txs: Transaction[]) => {
-  localStorage.setItem(K_TRANSACTIONS, JSON.stringify(txs));
+  try {
+    localStorage.setItem(K_TRANSACTIONS, JSON.stringify(txs));
+  } catch (e) {
+    console.warn("localStorage setItem failed", e);
+  }
 };
 
 export const getSettings = (): AppSettings => {
@@ -274,7 +286,11 @@ export const getSettings = (): AppSettings => {
 };
 
 export const saveSettings = (s: AppSettings) => {
-  localStorage.setItem(K_SETTINGS, JSON.stringify(s));
+  try {
+    localStorage.setItem(K_SETTINGS, JSON.stringify(s));
+  } catch (e) {
+    console.warn("localStorage setItem failed", e);
+  }
 };
 
 export const checkLogin = (username: string, password?: string): User | null => {

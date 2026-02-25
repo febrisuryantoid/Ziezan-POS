@@ -92,7 +92,7 @@ const FormattedNumberInput: React.FC<FormattedNumberInputProps> = ({ value, onCh
 };
 
 const Settings: React.FC = () => {
-  const { settings, membershipConfigs, updateSettings, updateMembershipConfig, resetSeason } = useData();
+  const { settings, membershipConfigs, updateSettings, updateMembershipConfigs, resetSeason } = useData();
   const { t } = useLanguage();
   const { isConnected: isBtConnected, connect: connectBt, disconnect: disconnectBt } = useBluetooth();
   const { addToast } = useToast();
@@ -117,7 +117,7 @@ const Settings: React.FC = () => {
     setIsSaving(true);
     try {
         updateSettings(localSettings);
-        localMemberships.forEach(m => updateMembershipConfig(m));
+        updateMembershipConfigs(localMemberships);
         await syncService.syncNow();
         addToast('success', t('saved'), t('saved'));
     } catch (e) {

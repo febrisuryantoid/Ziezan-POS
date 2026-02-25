@@ -32,7 +32,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="h-[100dvh] w-full bg-[#050b14] flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
       <GamingBackground />
 
-      <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full animate-fade-in">
+      <div className="relative w-full max-w-sm z-10 group flex flex-col max-h-full">
         <div className="absolute -inset-[2px] rounded-[24px] overflow-hidden z-0">
              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[conic-gradient(#7c3aed,#ec4899,#7c3aed,#ec4899,#7c3aed)] animate-spin-slow opacity-60"></div>
         </div>

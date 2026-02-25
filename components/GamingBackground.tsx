@@ -103,7 +103,7 @@ const GamingBackground: React.FC = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none bg-[#050505]" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none w-full h-full" style={{ backgroundColor: '#050505' }} />;
 }
 
 export default GamingBackground;

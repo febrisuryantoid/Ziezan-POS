@@ -57,18 +57,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         </button>
       </div>
 
-      <div className="relative z-10 w-full max-w-md text-center flex flex-col items-center animate-fade-in">
+      <div className="relative z-10 w-full max-w-md text-center flex flex-col items-center">
         <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse-slow"></div>
           <div className="relative w-28 h-28 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl">
-            <currentFeature.icon size={56} className="text-primary drop-shadow-lg" strokeWidth={1.5} />
+            {currentFeature && currentFeature.icon && React.createElement(currentFeature.icon, { size: 56, className: "text-primary drop-shadow-lg", strokeWidth: 1.5 })}
           </div>
         </div>
         <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4">
-          {currentFeature.title}
+          {currentFeature?.title}
         </h2>
         <p className="text-base text-slate-400 max-w-xs mx-auto leading-relaxed">
-          {currentFeature.description}
+          {currentFeature?.description}
         </p>
       </div>
 
