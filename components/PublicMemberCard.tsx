@@ -83,8 +83,11 @@ const PublicMemberCard: React.FC<{ nickname: string }> = ({ nickname }) => {
           > 
               <div className="absolute inset-0 w-full h-full overflow-hidden rounded-[27px]">
                   <div 
-                      className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] animate-border-glow-anim"
-                      style={{'--tier-color': theme.particleColor, background: `conic-gradient(from 180deg at 50% 50%, transparent 50%, var(--tier-color) 75%, transparent 100%)`} as React.CSSProperties}
+                      className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] animate-spin"
+                      style={{
+                          backgroundImage: `conic-gradient(from 0deg, transparent 50%, ${theme.particleColor} 100%)`,
+                          animationDuration: '7s'
+                      }}
                   />
               </div>
 

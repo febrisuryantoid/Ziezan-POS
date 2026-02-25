@@ -239,27 +239,14 @@ const Members: React.FC = () => {
                     return (
                     <div 
                         key={member.id} 
-                        className="group relative h-full rounded-[1.5rem] transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden"
+                        className="group relative h-full aspect-[3/5] rounded-[1.5rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden border border-white/20 dark:border-white/5"
                     >
-                        {/* Rotating Border Animation */}
-                        <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-0">
-                            <div 
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] animate-spin"
-                                style={{ 
-                                    backgroundImage: `conic-gradient(from 0deg, transparent 50%, ${theme?.particleColor || '#ccc'} 100%)`,
-                                    animationDuration: '7s'
-                                }}
-                            />
+                        <div className={`absolute inset-0 ${theme.bg_tint} opacity-40 group-hover:opacity-60 transition-opacity`}></div>
+                        <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
+                           <DragonIcon className={`w-32 h-32 opacity-[0.05] -mr-5 -mb-5 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-10 group-hover:scale-110`} />
                         </div>
 
-                        {/* Card Content */}
-                        <div className="absolute inset-[2px] rounded-[1.4rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl overflow-hidden flex flex-col z-10">
-                            <div className={`absolute inset-0 ${theme.bg_tint} opacity-40 group-hover:opacity-60 transition-opacity`}></div>
-                            <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
-                               <DragonIcon className={`w-32 h-32 opacity-[0.05] -mr-5 -mb-5 text-transparent bg-clip-text bg-gradient-to-br ${theme.dragon_gradient} transition-all duration-500 group-hover:opacity-10 group-hover:scale-110`} />
-                            </div>
-
-                            {/* Action Buttons - Absolute Top Right */}
+                        {/* Action Buttons - Absolute Top Right */}
                             <div className="absolute top-2 right-2 flex flex-col gap-1 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
                                  <button onClick={() => setEditingMember(member)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-primary shadow-sm backdrop-blur-md"><Edit2 size={12} /></button>
                                  <button onClick={() => handleCopyLink(member.nickname)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-blue-500 shadow-sm backdrop-blur-md"><Copy size={12} /></button>
@@ -295,8 +282,7 @@ const Members: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )})}
+                    )})}
             </div>
         )}
         {renderPagination()}
