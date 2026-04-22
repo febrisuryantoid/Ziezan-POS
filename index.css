@@ -46,20 +46,44 @@
 }
 
 @layer base {
-  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; font-size: clamp(14px, 1.2vw, 16px); }
   body { 
-    @apply bg-background text-foreground transition-colors duration-300 antialiased selection:bg-primary/30 selection:text-primary; 
+    @apply bg-background text-foreground transition-colors duration-300 antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden; 
   }
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
   
+  /* --- PORTRAIT ENFORCER --- */
+  #portrait-enforcer {
+    @apply fixed inset-0 z-[9999999] bg-[#0b0c15] text-white flex-col items-center justify-center text-center p-8 hidden;
+  }
+  
+  /* Target mobile and tablet devices in landscape mode */
+  @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+    #portrait-enforcer {
+      display: flex !important;
+    }
+    #root {
+      display: none !important;
+    }
+  }
+
   /* --- PREMIUM GLASS UI v2.0 --- */
   
   .glass-panel { 
-    @apply bg-white/70 dark:bg-[#12121a]/70 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[24px] shadow-lg; 
+    @apply bg-white/70 dark:bg-[#12121a]/70 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[20px] shadow-lg; 
   }
   
   .glass-card { 
     @apply bg-white/50 dark:bg-[#181824]/60 backdrop-blur-md border border-white/30 dark:border-white/5 rounded-[20px] shadow-md transition-all duration-300; 
+  }
+
+  /* Global Constraint for Border Radius (Max 20px) */
+  .rounded-\[2rem\], .rounded-3xl, .rounded-\[2\.5rem\], .rounded-\[3rem\], .rounded-\[24px\], .rounded-\[22px\] {
+    border-radius: 20px !important;
+  }
+  .rounded-t-\[2rem\], .rounded-t-3xl, .rounded-t-\[2\.5rem\], .rounded-t-\[3rem\] {
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
   }
   
   .text-label { 
@@ -67,10 +91,11 @@
   }
   
   /* Inputs & Controls */
-  .input-standard, .input-glass, .select-glass {
+  .input-standard, .input-glass, .select-glass, .textarea-standard {
     @apply h-control w-full bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:text-muted-foreground/50;
   }
   .select-glass { @apply appearance-none cursor-pointer; }
+  .textarea-standard { @apply h-auto py-3 min-h-[100px] resize-y; }
   
   .btn-primary {
     @apply h-control bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2;

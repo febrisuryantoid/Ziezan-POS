@@ -69,37 +69,70 @@ const Reports: React.FC = () => {
   });
 
   const handleExportCSV = () => {
-    // Localized Headers for CSV
+    // Pilihan delimiter ; (semicolon) menyesuaikan format regional Indonesia di Excel
+    const delimiter = ";";
+    
+    // Escape string for CSV format to handle quotes, delimiter, and newlines safely
+    const escapeCSV = (value: any) => {
+        if (value == null) return '';
+        let str = String(value);
+        if (str.includes(delimiter) || str.includes('\\n') || str.includes('"')) {
+            str = '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    };
+
+    // Header dipisah terstruktur per entitas kolom yang murni
     const headers = [
-        "ID", 
-        t('tx_time'), 
-        t('member_identity'), 
-        t('unit_used'), 
-        t('duration_hrs'), 
-        t('method'), 
-        t('nominal'), 
-        "Operator", 
-        t('status')
+        "Waktu Transaksi", 
+        "ID Transaksi",
+        "Nama Member", 
+        "Unit Digunakan",
+        "Durasi (Jam)",
+        "Metode Pembayaran", 
+        "Tarif Awal",
+        "Diskon",
+        "Nominal Akhir"
     ];
-    const rows = filteredTransactions.map(tx => [
-        tx.id,
-        new Date(tx.startTime).toLocaleDateString() + ' ' + new Date(tx.startTime).toLocaleTimeString(),
-        `"${tx.memberName || t('unknown')}"`,
-        `"${tx.consoleName || t('unknown')}"`,
-        tx.durationHours,
-        tx.paymentMethod,
-        tx.cost,
-        tx.operatorName,
-        tx.status
-    ]);
-    const csvContent = "\uFEFF" + "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
+    
+    // Values match string without complex groupings or formatting masks inside columns
+    const rows = filteredTransactions.map(tx => {
+        const { datePart, timePart } = formatDateTime(tx.startTime);
+        
+        const timeStr = `${datePart} ${timePart}`;
+        const txIdStr = tx.id.substring(0,8);
+        const memberStr = tx.memberName || t('unknown');
+        const unitStr = tx.consoleName || t('unknown');
+        const durationStr = tx.durationHours;
+        const methodStr = tx.paymentMethod || 'CASH';
+        
+        const nominalAkhir = tx.cost;
+        const diskon = tx.discountApplied || 0;
+        const tarifAwal = nominalAkhir + diskon;
+
+        return [
+            escapeCSV(timeStr),
+            escapeCSV(txIdStr),
+            escapeCSV(memberStr),
+            escapeCSV(unitStr),
+            escapeCSV(durationStr),
+            escapeCSV(methodStr),
+            escapeCSV(tarifAwal),
+            escapeCSV(diskon),
+            escapeCSV(nominalAkhir)
+        ];
+    });
+    
+    const csvText = headers.map(escapeCSV).join(delimiter) + "\\n" + rows.map(e => e.join(delimiter)).join("\\n");
+    const blob = new Blob(["\\uFEFF", csvText], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `Laporan_Ziezan_${startDate}_${endDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handlePrintWifi = () => { if (selectedTxForPrint) { printReceiptBrowser(selectedTxForPrint, settings); setSelectedTxForPrint(null); } };

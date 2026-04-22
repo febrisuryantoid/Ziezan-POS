@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { MemberStatus, Member, MembershipTierId } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera, History, Banknote, Gamepad2, PlusCircle, MinusCircle } from 'lucide-react';
+import { Search, UserPlus, Trash2, Gift, Clock, Edit2, X, Users, Copy, Loader2, ImagePlus, ArrowUpDown, Filter, AlertTriangle, ChevronLeft, ChevronRight, MapPin, Phone, FileText, Camera, History, Banknote, Gamepad2, PlusCircle, MinusCircle, CheckCircle } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 import { getTierTheme } from '../utils/tierTheme';
 import DragonIcon from './DragonIcon'; // Import DragonIcon
@@ -11,7 +11,7 @@ import DragonIcon from './DragonIcon'; // Import DragonIcon
 type SortOption = 'NAME_ASC' | 'NAME_DESC' | 'PLAYTIME_DESC' | 'JOIN_DATE_ASC';
 
 const Members: React.FC = () => {
-  const { members, transactions, membershipConfigs, addMember, deleteMember, updateMember, adjustBonusHours } = useData();
+  const { members, transactions, membershipConfigs, addMember, deleteMember, updateMember, adjustBonusHours, reactivateMember } = useData();
   const { t, language } = useLanguage();
   const { addToast } = useToast();
 
@@ -231,7 +231,7 @@ const Members: React.FC = () => {
                 <p className="text-slate-500 font-black uppercase tracking-widest text-xs opacity-50">{t('no_data_members')}</p>
             </div>
         ) : (
-            <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
                 {currentMembers.map(member => {
                     const theme = getTierTheme(member.membershipId) || getTierTheme('WARRIOR');
                     const realtimePlaytime = getRealtimePlaytime(member);
@@ -239,7 +239,7 @@ const Members: React.FC = () => {
                     return (
                     <div 
                         key={member.id} 
-                        className="group relative h-full rounded-[1.2rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden border border-white/20 dark:border-white/5"
+                        className={`group relative h-full rounded-[1.2rem] bg-white/90 dark:bg-[#0f1016]/90 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 overflow-hidden border border-white/20 dark:border-white/5 ${member.status === MemberStatus.INACTIVE ? 'grayscale opacity-70' : ''}`}
                     >
                         <div className={`absolute inset-0 ${theme.bg_tint} opacity-40 group-hover:opacity-60 transition-opacity`}></div>
                         <div className="absolute inset-0 flex items-center justify-end overflow-hidden pointer-events-none z-0">
@@ -247,10 +247,14 @@ const Members: React.FC = () => {
                         </div>
 
                         {/* Action Buttons - Absolute Top Right */}
-                            <div className="absolute top-2 right-2 flex flex-col gap-1 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <div className="absolute top-2 right-2 flex flex-col gap-1 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
                                  <button onClick={() => setEditingMember(member)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-primary shadow-sm backdrop-blur-md"><Edit2 size={12} /></button>
                                  <button onClick={() => handleCopyLink(member.nickname)} className="p-1.5 rounded-lg bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-blue-500 shadow-sm backdrop-blur-md"><Copy size={12} /></button>
-                                 <button onClick={() => setDeletingMemberId(member.id)} className="p-1.5 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md"><Trash2 size={12} /></button>
+                                 {member.status === MemberStatus.INACTIVE ? (
+                                    <button onClick={() => { reactivateMember(member.id); addToast('success', 'Member Aktif', 'Member berhasil diaktifkan kembali.'); }} className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white shadow-sm backdrop-blur-md" title="Aktifkan Kembali"><CheckCircle size={12} /></button>
+                                 ) : (
+                                    <button onClick={() => setDeletingMemberId(member.id)} className="p-1.5 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white shadow-sm backdrop-blur-md"><Trash2 size={12} /></button>
+                                 )}
                             </div>
 
                             <div className="relative p-3 flex flex-col items-center text-center gap-2 h-full">

@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBluetooth } from '../contexts/BluetoothContext';
 import { useToast } from '../contexts/ToastContext';
-import { Save, Crown, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Phone, Database, Upload, Download, CloudLightning, ImageIcon, Camera, Loader2, RefreshCw, ChevronRight, ArrowLeft, Banknote, Building2, MapPin, Gift, Trophy, Zap, HardDrive, Link as LinkIcon } from 'lucide-react';
+import { Save, Crown, Bluetooth, BluetoothConnected, BluetoothOff, Globe, Phone, Database, Upload, Download, CloudLightning, ImageIcon, Camera, Loader2, RefreshCw, ChevronRight, ArrowLeft, Banknote, Building2, MapPin, Gift, Trophy, Zap, HardDrive, Link as LinkIcon, Bell, Music, Volume2, Play, Square } from 'lucide-react';
 import { MembershipConfig, AppSettings } from '../types';
 import * as Storage from '../services/storage';
 import { optimizeImage } from '../utils/imageOptimizer';
@@ -147,6 +147,64 @@ const Settings: React.FC = () => {
     }
   };
 
+  const [testAudioCtx, setTestAudioCtx] = useState<AudioContext | null>(null);
+  const [isTestingSound, setIsTestingSound] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleTestSound = () => {
+      if (isTestingSound) {
+          if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+          }
+          setIsTestingSound(false);
+          return;
+      }
+      
+      const url = localSettings.alarmSoundUrl || 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg';
+      const audio = new Audio(url);
+      audio.loop = true;
+      audio.crossOrigin = "anonymous"; // Needed for AudioContext if playing external URLs
+      audioRef.current = audio;
+
+      try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          const ctx = testAudioCtx || new AudioContextClass();
+          if (!testAudioCtx) setTestAudioCtx(ctx);
+          
+          if (ctx.state === 'suspended') {
+              ctx.resume();
+          }
+
+          const source = ctx.createMediaElementSource(audio);
+          const gainNode = ctx.createGain();
+          gainNode.gain.value = 10.0; // Amplify 10x (1000%)
+          
+          source.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          
+      } catch (e) {
+          console.warn("AudioContext amplification failed, falling back to standard volume:", e);
+          audio.volume = 1.0;
+      }
+      
+      audio.play().then(() => {
+          setIsTestingSound(true);
+      }).catch(err => {
+          console.error("Autoplay prevented:", err);
+          addToast('error', 'Audio Error', 'Gagal memutar suara.');
+      });
+  };
+
+  // Clean up audio on unmount or when stopping
+  useEffect(() => {
+      return () => {
+          if (audioRef.current) {
+              audioRef.current.pause();
+          }
+      };
+  }, []);
+
   const handleBackup = () => {
       try {
           const data = { consoles: Storage.getConsoles(), members: Storage.getMembers(), transactions: Storage.getTransactions(), settings: Storage.getSettings(), memberships: Storage.getMemberships(), timestamp: new Date().toISOString(), version: "1.1.0" };
@@ -259,7 +317,7 @@ const Settings: React.FC = () => {
                         </InputGroup>
                     </div>
                     <InputGroup label={t('full_address')} icon={MapPin}>
-                        <StyledTextArea value={localSettings.businessAddress} onChange={(e) => handleSettingsChange('businessAddress', e.target.value)} />
+                        <StyledTextArea value={localSettings.businessAddress || ''} onChange={(e) => handleSettingsChange('businessAddress', e.target.value)} />
                     </InputGroup>
                 </div>
             </div>
@@ -297,6 +355,56 @@ const Settings: React.FC = () => {
                     <FormattedNumberInput value={localSettings.birthdayBonusHours} onChange={(val) => handleSettingsChange('birthdayBonusHours', val)} suffix={t('jam')} style={{ textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace', borderRadius: '1.5rem', height: '60px' }} />
                  </div>
              </div>
+         </div>
+
+         <div className="mt-8 border-t border-slate-200 dark:border-white/10 pt-10">
+            <SectionHeader title={'Alarm & Reminder'} sub={'Session End Notification'} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="glass-panel p-8 relative overflow-hidden group shadow-xl">
+                     <div className="flex items-center justify-between gap-5 mb-8">
+                         <div className="flex items-center gap-5">
+                             <div className="p-4 bg-purple-500/10 rounded-[1.5rem] text-purple-500 shadow-inner"><Bell size={32}/></div>
+                             <div>
+                                <h4 className="font-black text-slate-900 dark:text-white text-lg tracking-tight uppercase">Session Alarm</h4>
+                                <p className="text-label">Notify before time is up</p>
+                             </div>
+                         </div>
+                         <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked={localSettings.enableAlarm} onChange={(e) => handleSettingsChange('enableAlarm', e.target.checked)} className="sr-only peer" />
+                            <div className="w-11 h-6 bg-black/10 dark:bg-black/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+                        </label>
+                     </div>
+                     <div className="space-y-3 relative z-10">
+                         <label className="text-label">Reminder Minutes</label>
+                         <FormattedNumberInput value={localSettings.reminderMinutes || 1} onChange={(val) => handleSettingsChange('reminderMinutes', val)} suffix="min" style={{ textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace', borderRadius: '1.5rem', height: '60px' }} />
+                     </div>
+                </div>
+
+                <div className="glass-panel p-8 relative overflow-hidden group shadow-xl">
+                     <div className="flex items-center gap-5 mb-8">
+                         <div className="p-4 bg-indigo-500/10 rounded-[1.5rem] text-indigo-500 shadow-inner"><Music size={32}/></div>
+                         <div>
+                            <h4 className="font-black text-slate-900 dark:text-white text-lg tracking-tight uppercase">Sound Settings</h4>
+                            <p className="text-label">Select notification tone</p>
+                         </div>
+                     </div>
+                     <div className="space-y-4 relative z-10">
+                         <select 
+                            value={localSettings.alarmSoundUrl || 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'}
+                            onChange={(e) => handleSettingsChange('alarmSoundUrl', e.target.value)}
+                            className="select-glass w-full"
+                         >
+                            <option value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">Digital Watch</option>
+                            <option value="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">Retro Alarm Clock</option>
+                            <option value="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">Short Beep</option>
+                            <option value="https://actions.google.com/sounds/v1/alarms/mechanical_clock_ring.ogg">Mechanical Ring</option>
+                         </select>
+                         <button onClick={toggleTestSound} className={`w-full h-[50px] font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md ${isTestingSound ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}>
+                            {isTestingSound ? <><Square size={16} fill="currentColor"/> Stop Sound</> : <><Play size={16} fill="currentColor"/> Play Sound</>}
+                         </button>
+                     </div>
+                </div>
+            </div>
          </div>
     </div>
   );

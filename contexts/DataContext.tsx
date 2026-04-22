@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Console, Member, Transaction, AppSettings, ConsoleStatus, MemberStatus, PaymentMethod, MembershipConfig, MembershipTierId 
 } from '../types';
@@ -29,6 +29,7 @@ interface DataContextType {
   addMember: (m: Omit<Member, 'id' | 'totalPlayTime' | 'hoursProgressToNextBonus' | 'freeHoursBalance' | 'totalBonusHoursUsed' | 'totalAmountPaid'> & { freeHoursBalance?: number }) => string;
   updateMember: (m: Member) => void;
   deleteMember: (id: string) => boolean;
+  reactivateMember: (id: string) => void;
   adjustBonusHours: (memberId: string, amount: number) => void;
   upgradeMember: (memberId: string, newTierId: MembershipTierId) => void;
   resetSeason: () => void;
@@ -387,6 +388,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  const reactivateMember = (id: string) => {
+    const updated = rawMembers.map(m => 
+        m.id === id 
+        ? { ...m, status: MemberStatus.ACTIVE, synced: false, updatedAt: new Date().toISOString() } 
+        : m
+    );
+    safeSave(() => Storage.saveMembers(updated));
+    setRawMembers(updated);
+    syncService.syncNow();
+  };
+
   const upgradeMember = (memberId: string, newTierId: MembershipTierId) => {
     const member = rawMembers.find(m => m.id === memberId);
     if (!member) return;
@@ -524,9 +536,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncService.syncNow();
   };
 
-  // Auto-Stop Logic
+  // Auto-Stop & Alarm Reminder Logic
+  const notifiedAlarmsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (!transactions) return;
+    if (!transactions || !settings) return;
+
+    let audio: HTMLAudioElement | null = null;
+    if (settings.enableAlarm && settings.alarmSoundUrl) {
+        audio = new Audio(settings.alarmSoundUrl);
+        audio.volume = 1.0;
+    }
 
     const interval = setInterval(() => {
         const now = new Date();
@@ -535,6 +555,41 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const startTime = new Date(tx.startTime).getTime();
                 const durationMs = tx.durationHours * 60 * 60 * 1000;
                 const endTime = startTime + durationMs;
+                const remainingMs = endTime - now.getTime();
+                
+                // Alarm Logic
+                if (settings.enableAlarm && settings.reminderMinutes) {
+                    const reminderMs = settings.reminderMinutes * 60 * 1000;
+                    // Trigger alarm within a 10-second window
+                    if (remainingMs > 0 && remainingMs <= reminderMs && !notifiedAlarmsRef.current.has(tx.id)) {
+                        notifiedAlarmsRef.current.add(tx.id);
+                        
+                        // Try to play audio
+                        if (audio) {
+                            audio.play().catch(e => console.log('Audio play blocked:', e));
+                        }
+                        
+                        // Try System Notification
+                        if (Notification.permission === 'granted') {
+                            try {
+                                navigator.serviceWorker.ready.then(reg => {
+                                reg.showNotification('Session Time Warning', {
+                                    body: `Session for ${tx.memberName} on ${tx.consoleName} ends in ${settings.reminderMinutes} minute(s).`,
+                                    icon: '/icon-192x192.png',
+                                    vibrate: [200, 100, 200, 100, 200, 100, 200],
+                                    requireInteraction: true
+                                } as any);
+                                });
+                            } catch(e) {
+                                new Notification('Session Time Warning', {
+                                    body: `Session for ${tx.memberName} on ${tx.consoleName} ends in ${settings.reminderMinutes} minute(s).`
+                                });
+                            }
+                        } else if (Notification.permission !== 'denied') {
+                            Notification.requestPermission();
+                        }
+                    }
+                }
                 
                 // Check if time is up (with a small buffer of 5 seconds to avoid premature stops)
                 if (now.getTime() > endTime + 5000) {
@@ -546,7 +601,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(interval);
-  }, [transactions]);
+  }, [transactions, settings, stopRental]);
 
   return (
     <DataContext.Provider value={{
@@ -557,7 +612,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       settings,
       refreshData, updateSettings, updateMembershipConfig, updateMembershipConfigs,
       addConsole, updateConsole, updateConsoleStatus, deleteConsole,
-      addMember, updateMember, deleteMember, adjustBonusHours, upgradeMember, resetSeason,
+      addMember, updateMember, deleteMember, reactivateMember, adjustBonusHours, upgradeMember, resetSeason,
       startRental, stopRental
     }}>
       {children}

@@ -130,8 +130,10 @@ class SyncService {
                  businessLogo: cloudSettings.business_logo,
                  hourlyRate: cloudSettings.hourly_rate,
                  cloudRetentionDays: cloudSettings.cloud_retention_days,
-                 // Fix: Map birthday_bonus_hours from cloud correctly to AppSettings
-                 birthdayBonusHours: cloudSettings.birthday_bonus_hours
+                 birthdayBonusHours: cloudSettings.birthday_bonus_hours,
+                 enableAlarm: cloudSettings.enable_alarm !== undefined ? cloudSettings.enable_alarm : true,
+                 reminderMinutes: cloudSettings.reminder_minutes !== undefined ? cloudSettings.reminder_minutes : 1,
+                 alarmSoundUrl: cloudSettings.alarm_sound_url || 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'
              };
              Storage.saveSettings(settings);
           } else if (setErr && (setErr as any).code !== 'PGRST205') {
@@ -303,6 +305,9 @@ class SyncService {
         hourly_rate: settings.hourlyRate,
         cloud_retention_days: settings.cloudRetentionDays,
         birthday_bonus_hours: settings.birthdayBonusHours,
+        enable_alarm: settings.enableAlarm,
+        reminder_minutes: settings.reminderMinutes,
+        alarm_sound_url: settings.alarmSoundUrl,
         updated_at: new Date().toISOString()
      };
      

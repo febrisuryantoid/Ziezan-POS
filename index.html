@@ -26,6 +26,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   </head>
   <body>
+    <div id="portrait-enforcer">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2rem; animation: rotatePhonePortrait 2s infinite ease-in-out;">
+        <rect width="20" height="14" x="2" y="5" rx="2" ry="2"/>
+        <path d="M18 12h.01"/>
+      </svg>
+      <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">Rotate Device</h2>
+      <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; color: #94a3b8; max-width: 300px; line-height: 1.5;">Aplikasi ini membutuhkan mode portrait untuk pengalaman mobile/tablet terbaik.</p>
+      
+      <style>
+        @keyframes rotatePhonePortrait {
+          0% { transform: rotate(0deg); }
+          50% { transform: rotate(90deg); }
+          100% { transform: rotate(90deg); }
+        }
+      </style>
+    </div>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

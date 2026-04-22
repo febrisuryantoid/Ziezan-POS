@@ -52,15 +52,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     };
 
     return (
-      <button onClick={handleClick} className="relative flex flex-col items-center justify-center flex-1 h-full min-w-0 group">
-        <div className={`relative z-10 transition-all duration-300 ease-out flex items-center justify-center rounded-2xl mb-1 ${isActive ? '-translate-y-2' : ''}`}>
-           <div className={`p-2.5 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/40' : 'text-slate-400 dark:text-slate-500 group-active:scale-95'}`}>
-             <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+      <button onClick={handleClick} className="relative flex flex-col items-center flex-1 h-full min-w-0 group justify-center pt-1 pb-safe">
+        <div className={`relative z-10 transition-all duration-300 ease-out flex flex-col items-center justify-center`}>
+           <div className={`p-1.5 sm:p-2 rounded-[14px] transition-all duration-300 mb-1 ${isActive ? 'bg-primary text-white shadow-md shadow-primary/40 scale-110' : 'text-slate-400 dark:text-slate-500 group-active:scale-95'}`}>
+             <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className="sm:w-5 sm:h-5" />
            </div>
+           <span className={`text-[8px] sm:text-[9px] font-black tracking-widest uppercase transition-all duration-300 w-full text-center truncate px-1 max-w-[60px] ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}>
+              {label}
+           </span>
         </div>
-        <span className={`absolute bottom-2 text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0 text-primary' : 'opacity-0 translate-y-2'}`}>
-            {label}
-        </span>
       </button>
     );
   };
@@ -72,31 +72,31 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden font-sans transition-colors duration-300 fixed inset-0 noise-bg">
       
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col py-6 px-4 z-30 shadow-2xl transition-all duration-500 relative">
-        <div className="flex items-center gap-3 px-2 mb-10">
-           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-white/10 shrink-0 bg-black">
+      <aside className="hidden md:flex w-56 lg:w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col py-4 lg:py-6 px-3 lg:px-4 z-30 shadow-2xl transition-all duration-500 relative shrink-0">
+        <div className="flex items-center gap-3 px-2 mb-6 lg:mb-10 shrink-0">
+           <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl overflow-hidden shadow-lg border border-white/10 shrink-0 bg-black">
              <img src={appLogo} alt={appName} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "https://beeimg.com/images/t47564105964.png")} />
            </div>
            <div className="min-w-0">
-               <h1 className="font-black text-sm uppercase tracking-tight truncate">{appName}</h1>
-               <p className="text-[10px] text-muted-foreground font-bold tracking-widest">Admin Terminal</p>
+               <h1 className="font-black text-xs lg:text-sm uppercase tracking-tight truncate">{appName}</h1>
+               <p className="text-[9px] lg:text-[10px] text-muted-foreground font-bold tracking-widest">Admin Terminal</p>
            </div>
         </div>
 
-        <nav className="flex-1 w-full space-y-1">
-            <p className="px-4 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-2 mt-2">Main Menu</p>
+        <nav className="flex-1 w-full space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
+            <p className="px-3 lg:px-4 text-[9px] lg:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-1 lg:mb-2 mt-1 lg:mt-2">Main Menu</p>
             <NavItemDesktop id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
             <NavItemDesktop id="consoles" icon={Gamepad2} label={t('consoles')} />
             <NavItemDesktop id="members" icon={Users} label={t('members')} />
             
-            <p className="px-4 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-2 mt-6">Management</p>
+            <p className="px-3 lg:px-4 text-[9px] lg:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-1 lg:mb-2 mt-4 lg:mt-6">Management</p>
             <NavItemDesktop id="reports" icon={FileBarChart} label={t('reports')} />
             {user.role === 'ADMIN' && <NavItemDesktop id="settings" icon={Settings} label={t('settings')} />}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-dashed border-border flex flex-col gap-2">
-           <button onClick={onLogout} className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-xs font-bold uppercase tracking-wider">
-               <LogOut size={18} /> {t('logout')}
+        <div className="mt-2 lg:mt-auto pt-4 lg:pt-6 border-t border-dashed border-border flex flex-col gap-2 shrink-0">
+           <button onClick={onLogout} className="flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all text-[10px] lg:text-xs font-bold uppercase tracking-wider">
+               <LogOut size={16} className="lg:w-[18px] lg:h-[18px]" /> {t('logout')}
            </button>
         </div>
       </aside>
@@ -141,7 +141,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentTab, setTab, user, onL
         </main>
 
         {/* MOBILE FLOATING NAV (ISLAND STYLE) */}
-        <nav className="md:hidden fixed bottom-6 left-4 right-4 h-[72px] bg-white/80 dark:bg-[#15151e]/80 backdrop-blur-2xl border border-white/20 dark:border-white/5 rounded-[24px] flex justify-between items-center px-2 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] animate-slide-in">
+        <nav className="md:hidden fixed bottom-4 sm:bottom-6 left-4 right-4 pb-1 pt-1 min-h-[64px] bg-white/80 dark:bg-[#15151e]/80 backdrop-blur-2xl border border-white/20 dark:border-white/5 rounded-[20px] sm:rounded-[24px] flex justify-between items-center px-2 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] animate-slide-in overflow-hidden">
              <MobileNavItem id="dashboard" icon={LayoutDashboard} label={t('dashboard')} />
              <MobileNavItem id="consoles" icon={Gamepad2} label={t('consoles')} />
              <MobileNavItem id="members" icon={Users} label={t('members')} />

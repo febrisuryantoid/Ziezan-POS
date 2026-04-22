@@ -115,7 +115,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   businessLogo: 'https://beeimg.com/images/s77882238754.png',
   hourlyRate: 5000,
   cloudRetentionDays: 90,
-  birthdayBonusHours: 2
+  birthdayBonusHours: 2,
+  enableAlarm: true,
+  reminderMinutes: 1,
+  alarmSoundUrl: 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'
 };
 
 const DEFAULT_USERS: User[] = [

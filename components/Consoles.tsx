@@ -298,7 +298,8 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
      const elapsedMs = currentTimeMs - startTime;
      const progress = Math.min(100, Math.max(0, (elapsedMs / durationMs) * 100));
      const isOvertime = timeRemainingMs < 0;
-     const isWarning = timeRemainingMs > 0 && timeRemainingMs <= (15 * 60 * 1000); 
+     const reminderMs = (settings.reminderMinutes || 1) * 60 * 1000;
+     const isWarning = timeRemainingMs > 0 && timeRemainingMs <= reminderMs; 
      return { tx, progress, isOvertime, isWarning, formattedElapsed: formatTime(elapsedMs), formattedRemaining: formatTime(timeRemainingMs) };
   }
 
@@ -400,9 +401,9 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                   )}
                   
                   <div className="absolute top-3 right-3 flex flex-col md:flex-row gap-2 opacity-0 group-hover:opacity-100 transition-all z-20 translate-y-2 group-hover:translate-y-0">
-                     <button onClick={() => toggleMaintenance(console)} className={`p-2.5 backdrop-blur-md rounded-full text-white transition-all shadow-lg ${isMaintenance ? 'bg-palette-copper hover:bg-palette-copper/80' : 'bg-white/10 hover:bg-white/20 border border-white/10'}`} title={isMaintenance ? t('repair_done') : t('repair_mode')}><Wrench size={14} /></button>
-                     <button onClick={() => setEditingConsole(console)} className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 border border-white/10 shadow-lg"><Edit2 size={14} /></button>
-                     <button onClick={() => setDeletingConsole(console)} className="p-2.5 bg-red-500/20 backdrop-blur-md rounded-full text-red-200 hover:bg-red-500/40 border border-red-500/20 shadow-lg"><Trash2 size={14} /></button>
+                     <button onClick={() => toggleMaintenance(console)} className={`p-2.5 backdrop-blur-md rounded-full transition-all shadow-lg ${isMaintenance ? 'bg-palette-copper text-white hover:bg-palette-copper/80' : 'bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-primary'}`} title={isMaintenance ? t('repair_done') : t('repair_mode')}><Wrench size={14} /></button>
+                     <button onClick={() => setEditingConsole(console)} className="p-2.5 bg-white/80 dark:bg-black/40 text-slate-600 dark:text-slate-300 hover:text-primary backdrop-blur-md rounded-full shadow-lg"><Edit2 size={14} /></button>
+                     <button onClick={() => setDeletingConsole(console)} className="p-2.5 bg-white/80 dark:bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white backdrop-blur-md rounded-full shadow-lg"><Trash2 size={14} /></button>
                   </div>
 
                   <div className="absolute top-3 left-3 z-20">
@@ -425,11 +426,11 @@ const Consoles: React.FC<{ operatorName: string }> = ({ operatorName }) => {
                             <span className="font-mono font-black text-slate-900 dark:text-primary text-lg bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-lg">{session.formattedRemaining}</span>
                          </div>
                          <div className="h-3 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
-                            <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-striped' : session.isWarning ? 'bg-palette-copper' : 'bg-gradient-to-r from-palette-mustard to-palette-purple'}`} style={{ width: `${session.progress}%` }}></div>
+                            <div className={`h-full transition-all duration-1000 ${session.isOvertime ? 'bg-red-500 animate-pulse' : session.isWarning ? 'bg-palette-copper animate-pulse' : 'bg-gradient-to-r from-palette-mustard to-palette-purple'}`} style={{ width: `${session.progress}%` }}></div>
                          </div>
                          <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter text-slate-400">
                             <span>{t('elapsed')} {session.formattedElapsed}</span>
-                            <span className={session.isWarning ? 'text-palette-copper' : ''}>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
+                            <span className={session.isWarning ? 'text-palette-copper animate-pulse' : ''}>{session.isOvertime ? 'Overtime' : t('remaining')}</span>
                          </div>
                       </div>
                    ) : (

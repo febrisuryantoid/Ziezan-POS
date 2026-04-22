@@ -124,6 +124,11 @@ export interface AppSettings {
   hourlyRate: number;
   cloudRetentionDays: number; 
   birthdayBonusHours: number; 
+  
+  // Alarm & Reminder
+  enableAlarm: boolean;
+  reminderMinutes: number;
+  alarmSoundUrl: string;
 }
 
 export interface DashboardStats {

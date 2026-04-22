@@ -1,0 +1,22 @@
+{
+  "name": "Ziezan Station POS",
+  "short_name": "Ziezan",
+  "description": "Ziezan Station POS App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08080c",
+  "theme_color": "#08080c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://beeimg.com/images/s77882238754.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://beeimg.com/images/s77882238754.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
